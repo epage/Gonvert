@@ -5,9 +5,6 @@ the return value is the converted value to or from base
 """
 
 
-import evil_globals
-
-
 # used for Computer numbers base definitions.
 ALPHA_NUMERIC = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
@@ -230,7 +227,7 @@ class base_converter(object):
 		position = len(value) #length of the string that is to be converted
 		for x in value:
 			position = position-1
-			result = long(result + long(long(string.find(ALPHA_NUMERIC,x))*(long(base)**long(position))))
+			result = long(result + long(long(ALPHA_NUMERIC.find(x))*(long(base)**long(position))))
 		return result
 
 	def from_base(self,value,base):
@@ -265,11 +262,11 @@ class function(object):
 	#value is assumed to be a string
 	#convert from a defined function to base
 	def to_base(self,value,(to_base,from_base)):
-		exec "y="+to_base[:string.find(to_base,'x')]+str(value)+to_base[string.find(to_base,'x')+1:]
+		exec "y="+to_base[:to_base.find('x')]+str(value)+to_base[to_base.find('x')+1:]
 		return y
 
 	def from_base(self,value,(to_base,from_base)):
-		exec "y="+from_base[:string.find(from_base,'x')]+str(value)+from_base[string.find(from_base,'x')+1:]
+		exec "y="+from_base[:from_base.find('x')]+str(value)+from_base[from_base.find('x')+1:]
 		return y
 
 
