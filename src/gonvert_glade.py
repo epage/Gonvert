@@ -584,6 +584,10 @@ def main():
 	global entry3
 	global entry4
 	global label2
+	global find_label
+	global find_entry
+	global col
+	global edit_shortlist1
 
 	logging.basicConfig(level=logging.DEBUG)
 
