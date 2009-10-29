@@ -1,31 +1,37 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: UTF8 -*-
-version = "0.2.23"   # keep version information here on third line since Makefile reads it.
 
-import pygtk
-pygtk.require('2.0')
-import gtk,gobject,gtk.glade,gtk.gdk
-import shelve,pickle
+import os
+import pickle
+import math
+import string
+import sys
+import gettext
 from math import *
-import string,os,sys,glob,os.path,gettext
+
+import gobject
+import gtk
+import gtk.glade
+import gtk.gdk
+
+import constants
 
 #--------- variable definitions ---------------- 
-nums = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'	# used for Computer numbers base definitions.
-global calcsuppress	#semaphore used to suppress cyclic calculations when a unit is clicked.
+nums = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ' # used for Computer numbers base definitions.
+global calcsuppress #semaphore used to suppress cyclic calculations when a unit is clicked.
 global selected_category
-global window_size	#window size used for saving and restoring application window size
+global window_size #window size used for saving and restoring application window size
 
 calcsuppress=0
 unit_sort_direction  = False
 value_sort_direction = False
 units_sort_direction = False
-find_result=[]		#empty find result list
-find_count=0		#default to find result number zero
-selected_category=''	#preset to no selected category
-selected_units={}	#empty dictionary for later use
-window_size=(0,0)		#empty tuple for filling later
+find_result=[] #empty find result list
+find_count=0 #default to find result number zero
+selected_category='' #preset to no selected category
+selected_units={} #empty dictionary for later use
+window_size=(0,0) #empty tuple for filling later
 
-import gettext
 gettext.bindtextdomain('gonvert', '/usr/share/locale')
 gettext.textdomain('gonvert')
 _ = gettext.gettext
@@ -55,35 +61,37 @@ def clear_selections(a):
 	selected_units={}
 
 def exitprogram(a):
-	global selected_units
-	#This routine saves the selections to a file, and 
-	# should therefore only be called when exiting the program.
-	#
-	# Update selections dictionary which consists of the following keys:
-	# 'selected_category': full name of selected category
-	#    'selected_units': selected_units dictionary which contains:
-	#			[categoryname: #1 displayed unit, #2 displayed unit]
+	"""
+	This routine saves the selections to a file, and 
+	 should therefore only be called when exiting the program.
 	
+	 Update selections dictionary which consists of the following keys:
+	 'selected_category': full name of selected category
+	    'selected_units': selected_units dictionary which contains:
+				[categoryname: #1 displayed unit, #2 displayed unit]
+	"""
+	global selected_units
+
 	#Determine the contents of the selected category row
 	selected,iter= cat_clist.get_selection().get_selected()
 	selected_category = cat_model.get_value(iter,0)
-	
+
 	selections = {'selected_category':selected_category, 'selected_units':selected_units}
 	pickle.dump(selections,open(home+'/.gonvert/selections.dat','w'))
 
 	#Get last size of app and save it
 	window_settings = {'size':window_size}
 	pickle.dump(window_settings,open(home+'/.gonvert/window.dat','w'))
-	
+
 	gtk.mainquit
 	sys.exit()
 
 def find_entry_changed(a):
 	#Clear out find results since the user wants to look for something new
 	global find_result
-	find_result=[]		#empty find result list
-	find_count=0		#default to find result number zero
-	find_label.set_text('')	#clear result
+	find_result=[] #empty find result list
+	find_count=0 #default to find result number zero
+	find_label.set_text('') #clear result
 
 def find_key_press(a,b):
 	#Check if the key pressed was an ASCII key
@@ -111,7 +119,7 @@ def find_units(a):
 
 	#new-find = run the find algorithm which also selects the first found unit
 	#         = find_count=0 and find_result=[]
-	
+
 	#last-find = restart from top again
 	#          = find_count=len(find_result)
 
@@ -125,16 +133,16 @@ def find_units(a):
 	  if len(find_string)>0:
 	    categories=list_dic.keys()
 	    categories.sort()
-	    found_a_unit=0	#reset the 'found-a-unit' flag
+	    found_a_unit=0 #reset the 'found-a-unit' flag
 	    cat_no=0
 	    for category in categories:
 	      units=list_dic[category].keys()
 	      units.sort()
-	      del units[0]	# do not display .base_unit description key
+	      del units[0] # do not display .base_unit description key
 	      unit_no=0
 	      for unit in units:
 		if string.find(string.lower(unit), find_string)>=0:
-		  found_a_unit=1	#indicate that a unit was found
+		  found_a_unit=1 #indicate that a unit was found
 		  #print "'",find_string,"'"," found at category=", category," unit =",unit
 		  find_result.append((category,unit,cat_no,unit_no))
 		unit_no=unit_no+1
@@ -150,8 +158,8 @@ def find_units(a):
 	      if len(find_result)>1:
 		find_label.set_text(('  Press Find for next unit. '+ str(len(find_result))+' result(s).'))
 	    else:
-	      find_label.set_text('  Text not found')	#Display error
-	else:	#must be next-find or last-find
+	      find_label.set_text('  Text not found') #Display error
+	else: #must be next-find or last-find
 	  #check for last-find
 	  if find_count==len(find_result)-1:
 	    #select first result
@@ -282,13 +290,13 @@ def click_column(col):
 	return
 
 def click_category(row):
-	global unit_sort_direction 
+	global unit_sort_direction
 	global value_sort_direction
 	global units_sort_direction
 	global unit_model, cat_model
 	global selected_category, selected_units
 	global unit_dic, list_dic
-	
+
 	#Clear out the previous list of units
 	unit_model = gtk.ListStore(gobject.TYPE_STRING,gobject.TYPE_STRING,gobject.TYPE_STRING)
 	clist1.set_model(unit_model)
@@ -304,7 +312,7 @@ def click_category(row):
 	selected,iter= row.get_selection().get_selected()
 
 	selected_category = cat_model.get_value(iter,0)
-	
+
 	unit_sort_direction  = False
 	value_sort_direction = False
 	units_sort_direction = False
@@ -315,7 +323,7 @@ def click_category(row):
 	unit_dic=list_dic[selected.get_value(iter,0)]
 	keys = unit_dic.keys()
 	keys.sort()
-	del keys[0]	# do not display .base_unit description key
+	del keys[0] # do not display .base_unit description key
 
 	#Fill up the units descriptions and clear the value cells
 	for key in keys:
@@ -328,13 +336,13 @@ def click_category(row):
 	entry4.set_text('')
 	label1.set_text('')
 	label2.set_text('')
-	
+
 	restore_units()
 
 def restore_units():
 	global selected_category, selected_units
 	global unit_dic, list_dic
-	
+
 	# Restore the previous historical settings of previously selected units in this newly selected category
 	#Since category has just been clicked, the list will be sorted already.
 	if selected_units.has_key(selected_category):
@@ -344,8 +352,8 @@ def restore_units():
 
 		units=list_dic[selected_category].keys()
 		units.sort()
-		del units[0]	# do not display .base_unit description key
-		
+		del units[0] # do not display .base_unit description key
+
 		#Restore oldest selection first.
 		if selected_units[selected_category][1]:
 			unit_no=0
@@ -353,14 +361,14 @@ def restore_units():
 				if unit==selected_units[selected_category][1]:
 					clist1.set_cursor(unit_no,column1,True)
 				unit_no=unit_no+1
-		
+
 		#Restore newest selection second.
 		unit_no=0
 		for unit in units:
 			if unit==selected_units[selected_category][0]:
 				clist1.set_cursor(unit_no,column1,True)
 			unit_no=unit_no+1
-	
+
 	# select the text so user can start typing right away
 	entry2.grab_focus()
 	entry2.select_region(0,-1)
@@ -373,8 +381,8 @@ def click_unit(row):
 	global calcsuppress
 	global selected_units
 
-	calcsuppress = 1	#suppress calculations
-	
+	calcsuppress = 1 #suppress calculations
+
 	#Determine the contents of the selected row.
 	selected,iter= clist1.get_selection().get_selected()
 
@@ -397,16 +405,16 @@ def click_unit(row):
 		else:
 			label2.set_text(label1.get())
 	entry1.set_text(selected_unit)
-	
+
 	entry2.set_text(selected.get_value(iter,1))
-	
-	label1.set_text(unit_spec[1])	# put units into label text
+
+	label1.set_text(unit_spec[1]) # put units into label text
 	if entry2.get_text() =='':
 		if selected_category == "Computer Numbers":
 			entry2.set_text("0")
 		else:
 			entry2.set_text("0.0")
-	
+
 	#For historical purposes, record this unit as the most recent one in this category.
 	# Also, if a previous unit exists, then shift that previous unit to oldest unit.
 	if selected_units.has_key(selected_category):
@@ -414,12 +422,12 @@ def click_unit(row):
 	    selected_units[selected_category]=[selected_unit,selected_units[selected_category][0]]
 	else:
 	  selected_units[selected_category]=[selected_unit,'']
-	
+
 	# select the text so user can start typing right away
 	entry2.grab_focus()
 	entry2.select_region(0,-1)
-	
-	calcsuppress = 0	#enable calculations
+
+	calcsuppress = 0 #enable calculations
 
 def write_units(a):
 	''"Write the list of categories and units to stdout for documentation purposes.''"
@@ -433,14 +441,17 @@ def write_units(a):
 	category_keys.sort()
 	total_categories = 0
 	total_units = 0
-	print 'gonvert-',version,_(u' - Unit Conversion Utility  - Convertible units listing:')
+	print 'gonvert-%s%s' % (
+		constants.__version__,
+		_(u' - Unit Conversion Utility  - Convertible units listing:')
+	)
 	for category_key in category_keys:
 		total_categories = total_categories + 1
 		print category_key,":"
 		unit_dic=list_dic[category_key]
 		unit_keys = unit_dic.keys()
 		unit_keys.sort()
-		del unit_keys[0]	# do not display .base_unit description key
+		del unit_keys[0] # do not display .base_unit description key
 		for unit_key in unit_keys:
 			total_units = total_units + 1
 			print "\t",unit_key
@@ -449,14 +460,14 @@ def write_units(a):
 	messagebox_model = gtk.TextBuffer(None)
 	messageboxtext.set_buffer(messagebox_model)
 	messagebox_model.insert_at_cursor(_(u'The units list has been written to stdout. You can capture this printout by starting gonvert from the command line as follows:\n$ gonvert > file.txt'),-1)
- 
+
 def makeBase(x, base = len(nums), table=nums):
 	''"Convert from base 10 to any other base. ''"
 	d, m = divmod(x, base)
 	if d:
 		return makeBase(d,base, table) + table[int(m)]
 	else:
-		return table[int(m)] 
+		return table[int(m)]
 
 # roman numerals
 roman_group = { 1: ('i','v'),
@@ -496,12 +507,12 @@ def toroman( n ):
 	    n = (n-digit)/10
 	    s = roman_value[digit](i,v,x) + s
 	return s
-	
+
 def fromroman( s, rbase=1 ):
 	''' convert a roman numeral (in lowercase) to a decimal integer '''
 	if len(s) == 0:
 	    return 0
-	if rbase > 1000: 
+	if rbase > 1000:
 	    return 0
 	i,v = roman_group[rbase]
 	x,l = roman_group[rbase*10]
@@ -523,7 +534,7 @@ class Ccalculate:
 	  global calcsuppress
 	  global unit_model
 	  global testvalue
-	  
+
 	  if calcsuppress == 1:
 	    #calcsuppress = 0
 	    return
@@ -540,8 +551,8 @@ class Ccalculate:
 	      value = float(entry2.get_text())
 
 	  if entry1.get_text() <> '':
-	    func,arg = unit_dic[entry1.get_text()][0]	#retrieve the conversion function and value from the selected unit
-	    base = apply(func.to_base,(value,arg,))	#determine the base unit value
+	    func,arg = unit_dic[entry1.get_text()][0] #retrieve the conversion function and value from the selected unit
+	    base = apply(func.to_base,(value,arg,)) #determine the base unit value
 
 	    keys = unit_dic.keys()
 	    keys.sort()
@@ -554,17 +565,17 @@ class Ccalculate:
 	    while (iter):
 	      #get the formula from the name at the row
 	      func,arg = unit_dic[unit_model.get_value(iter,0)][0]
-	      
+
 	      #set the result in the value column
 	      unit_model.set(iter,1,str(apply(func.from_base,(base,arg,))))
-	      
+
 	      #point to the next row in the unit_model
 	      iter=unit_model.iter_next(iter)
 
 	    # if the second row has a unit then update its value
 	    if entry3.get_text() <> '':
 	      calcsuppress=1
-	      func,arg = unit_dic[entry3.get_text()][0] 
+	      func,arg = unit_dic[entry3.get_text()][0]
 	      entry4.set_text(str(apply(func.from_base,(base,arg,))))
 	      calcsuppress=0
 
@@ -586,42 +597,42 @@ class Ccalculate:
 	      value = float(entry4.get_text())
 
 	  if entry3.get_text() <> '':
-	    func,arg = unit_dic[entry3.get_text()][0]	#retrieve the conversion function and value from the selected unit
-	    base = apply(func.to_base,(value,arg,))	#determine the base unit value
+	    func,arg = unit_dic[entry3.get_text()][0] #retrieve the conversion function and value from the selected unit
+	    base = apply(func.to_base,(value,arg,)) #determine the base unit value
 
 	    keys = unit_dic.keys()
 	    keys.sort()
 	    del keys[0]
 	    row = 0
-	    
+
 	    #point to the first row
 	    iter=unit_model.get_iter_first()
 
 	    while (iter):
 	      #get the formula from the name at the row
 	      func,arg = unit_dic[unit_model.get_value(iter,0)][0]
-	      
+
 	      #set the result in the value column
 	      unit_model.set(iter,1,str(apply(func.from_base,(base,arg,))))
-	      
+
 	      #point to the next row in the unit_model
 	      iter=unit_model.iter_next(iter)
 
 	    # if the second row has a unit then update its value
 	    if entry1.get_text() <> '':
 	      calcsuppress=1
-	      func,arg = unit_dic[entry1.get_text()][0] 
+	      func,arg = unit_dic[entry1.get_text()][0]
 	      entry2.set_text(str(apply(func.from_base,(base,arg,))))
 	      calcsuppress=0
 
-	
+
 #All classes for conversions are defined below:
 # each class should have one method for converting "to_base and another for converting "from_base"
 #the return value is the converted value to or from base
 class simple_multiplier:
-	def to_base(self,value,multiplier): 
+	def to_base(self,value,multiplier):
 		return value * (multiplier)
-	def from_base(self,value,multiplier): 
+	def from_base(self,value,multiplier):
 		if multiplier == 0:
 			return 0.0
 		else:
@@ -637,7 +648,7 @@ class simple_inverter:
 		if value == 0:
 			return 0.0
 		else:
-			return (multiplier) / value 
+			return (multiplier) / value
 class simple_gain_offset:
 	def to_base(self,value,(gain,offset)):
 		return (value * (gain)) + offset
@@ -771,12 +782,12 @@ else:
   #Maximize if no previous window.dat file was found
   app1.maximize()
 
-app1.set_title('gonvert-'+version+' - Unit Conversion Utility');
+app1.set_title('gonvert- %s - Unit Conversion Utility' % constants.__version__);
 if  os.path.exists(pixmapspath  + 'gonvert.png'):
 	app1.set_icon(gtk.gdk.pixbuf_new_from_file(pixmapspath  + 'gonvert.png'))
 else:
 	print "Error: Could find gonvert icon, it should be here: "
-	print pixmapspath 
+	print pixmapspath
 
 #--------- function definitions from classes ------------
 m=simple_multiplier()
@@ -852,7 +863,7 @@ messageboxtext = widgets.get_widget('msgboxtext')
 about_image = widgets.get_widget('about_image')
 about_image.set_from_file(pixmapspath  +'gonvert.png')
 versionlabel = widgets.get_widget('versionlabel')
-versionlabel.set_text(version)
+versionlabel.set_text(constants.__version__)
 
 label1 =widgets.get_widget('label1')
 label2 =widgets.get_widget('label2')
@@ -871,7 +882,7 @@ find_label = widgets.get_widget('find_label')
 # 	where function can be m and argument is the multiplying factor to_base
 # 	or function can be any other arbitrary function and argument can be a single argument
 list_dic = {
- 	_(u"Acceleration"):{".base_unit":_(u"meter per second squared"),
+	_(u"Acceleration"):{".base_unit":_(u"meter per second squared"),
 		_(u"free fall"):
 			[(m,9.80665),_(u"gn"),_(u"The ideal falling motion of a body that is subject only to the earth's gravitational field.")],
 		_(u"meter per second squared"):
@@ -885,7 +896,7 @@ list_dic = {
 		_(u"millimeter per second squared"):
 			[(m,1/1000.0),u"mm/s\xb2",'']
 	},
-	
+
 	_(u"Angle"):{".base_unit":_(u"radian"),
 		_(u"revolution / circle / perigon / turn"):
 			[(m,2.0*pi),"r",_(u"The act of revolving, or turning round on an axis or a center; the motion of a body round a fixed point or line; rotation; as, the revolution of a wheel, of a top, of the earth on its axis, etc.")],
@@ -950,7 +961,7 @@ list_dic = {
 		_(u"kilohertz"):
 			[(m,1e3*2*pi),"kHz",_(u"One thousand hertz.")],
 	},
- 	_(u"Area"):{".base_unit":_(u"square meter"),
+	_(u"Area"):{".base_unit":_(u"square meter"),
 		_(u"meter diameter circle"):
 			[(f,('pi*(x/2.0)**2','2.0*(x/pi)**(0.5)')),"m dia.",_(u"Type the diameter of the circle in meters to find its area displayed in other fields.")],
 		_(u"centimeter diameter circle"):
@@ -1066,7 +1077,7 @@ list_dic = {
 		_(u"plethron (Greek)"):
 			[(m,951.01483),'',''],
 	},
-	
+
 	_(u"Atomic Physics"):{".base_unit":_(u"radian per second"),
 		_(u"kilogram"):
 			[(m,2.997925e8**2*(1.0/1.054e-34)),"kg",''],
@@ -1253,7 +1264,7 @@ list_dic = {
 		_(u"ton (US | short) per cubic foot"):
 			[(m,32040.0),u"ton/ft\xb3",''],
 	},
-	
+
 	_(u"Electrical Current"):{".base_unit":_(u"ampere"),
 		_(u"ampere"):
 			[(m,1.0),"A",u"Named after the French physicist Andr\x82 Marie Amp\x82re (1775-1836). The unit of electric current; -- defined by the International Electrical Congress in 1893 and by U. S. Statute as, one tenth of the unit of current of the C. G. S. system of electro-magnetic units, or the practical equivalent of the unvarying current which, when passed through a standard solution of nitrate of silver in water, deposits silver at the rate of 0.001118 grams per second."],
@@ -1468,8 +1479,8 @@ list_dic = {
 			[(m,1.055e3*135000),"",'1 gallon of kerosene or light distillate oil = 135,000 Btu '],
 		_(u"gallon middle distillate or diesel fuel oil"):
 			[(m,1.055e3*138690),"",'1 gallon middle distillate or diesel fuel oil = 138,690 Btu '],
-		
-		
+
+
 		_(u"gallon residential fuel oil"):
 			[(m,1.055e3*149690),"",'1 gallon residential fuel oil = 149,690 Btu'],
 		_(u"gallon of gasoline"):
@@ -1499,13 +1510,13 @@ list_dic = {
 # GJ to therm and MBTUs would be nice too.
 		_(u"therm"):
 			[(m,1.055e-3*10000),"",'10^5 BTUs'],
-		
-		
+
+
 		_(u"Mega British thermal unit"):
 			[(m,1.055e-3),"MBtu",'Million British thermal units'],
 
- 		_(u"pound of carbon (upper heating value)"):
- 			[(m,1.055e3*14550),"",'1 pound of carbon is 14,550 btu (upper heating value).'],
+		_(u"pound of carbon (upper heating value)"):
+			[(m,1.055e3*14550),"",'1 pound of carbon is 14,550 btu (upper heating value).'],
 
 	},
 	_(u"Flow (dry)"):{".base_unit":"litres per second",
@@ -2220,7 +2231,7 @@ list_dic = {
 			[(m,98.0640483),"cmH20",''],
 		_(u"millimeter of water (39.2F,4C)"):
 			[(m,9.80640483),"mmH20",''],
-		
+
 		_(u"inches of mercury (60F,15.5C)"):
 			[(m,3337.0),"inHg",''],
 		_(u"millimeter of mercury (0C)"):
@@ -2502,7 +2513,7 @@ list_dic = {
 		_(u"rankine"):
 			[(m,1/1.8),u"\xb0R",_(u"Named after the British physicist and engineer William Rankine (1820-1872). An absolute temperature scale in Fahrenheit degrees.")],
 	},
-	
+
 	_(u"Temperature Difference"):{".base_unit":"temp. diff. in kelvin",
 		_(u"temp. diff. in kelvin"):
 			[(m,1.0),"K",''],
@@ -2918,7 +2929,7 @@ list_dic = {
 		_(u"percent"):
 			[(gof,(((32000.0-6400.0)/100.0),6400.0)),u"%",_(u"This is a percentage of the 4 to 20mA signal.")],
 	},
-	
+
 	_(u"Currency (UK)"):{".base_unit":"pound",
 		_(u"pound | quid | soverign"):
 			[(m,1.0),"","""The base monetary unit in UK."""],
@@ -2943,7 +2954,7 @@ list_dic = {
 		_(u"tuppence(old)"):
 			[(m,2*1.0/240),"","""Equal to two old pennies. February 15, 1971 the English coinage system was changed to a decimal system."""],
 		_(u"threepence (old)"):
-			[(m,3*1.0/240),"","""Equal to three old pence.  The threepence was demonitized August 31, 1971."""],	
+			[(m,3*1.0/240),"","""Equal to three old pence.  The threepence was demonitized August 31, 1971."""],
 		_(u"halfpenny | hapenny (old)"):
 			[(m,1.0/240/2),"","""The old halfpenny was demonetized on August 31, 1969."""],
 		_(u"guinea"):
@@ -2963,16 +2974,16 @@ list_dic = {
 		_(u"groat"):
 			[(m,4*1.0/240),"","""Equal to four old pence"""],
 		_(u"pony"):
-			[(m,25.0),"","""Equal to twenty five pounds sterling"""],	
+			[(m,25.0),"","""Equal to twenty five pounds sterling"""],
 
 	},
 
 	}
 
 future_dic = {
-	
-	
-	
+
+
+
 	_(u"Wire Gauge"):{".base_unit":"circular mils",
 		_(u"circular mil"):
 			[(m,1.0),u"CM",''],
@@ -3032,7 +3043,7 @@ future_dic = {
 			[(m,1.0),"TPI",_(u"Turns per inch of bare wire, useful for winding coils. This value is approximate and will be reduced with insulated wire")],
 	},}
 
-	
+
 list_items = []
 
 keys=list_dic.keys()
@@ -3109,7 +3120,7 @@ if os.path.exists(home+'/.gonvert/selections.dat'):
         cat_clist.set_cursor(counter, col, False )
         cat_clist.grab_focus()
 	historical_catergory_found=True
-  
+
 if not historical_catergory_found:
   print "Couldn't find saved category, using default."
   #If historical records were not kept then default to 
