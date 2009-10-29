@@ -1,0 +1,81 @@
+gonvert
+=======
+Any problems, suggestions, features or comments please contact me: 
+	anthony@unihedron.com
+
+
+Requirements
+============
+	RH7.0 has everything you need.
+
+	Otherwise make sure that you have:
+		Python >= 1.5.2		http://python.org
+		PyGTK >= 0.6.6		ftp://ftp.daa.com.au/pub/james/python/
+		pygnome			ftp://ftp.daa.com.au/pub/james/python/
+		Libglade >= 0.13	http://freshmeat.net/redir/libglade/5651/url_homepage/
+		gnome-libs >= 1.2.4	http://www.helixcode.com/desktop/packages.php3
+		
+	If you want to do GUI development then you will need:
+		glade			http://www.helixcode.com/desktop/packages.php3
+
+
+Installation Notes
+==================
+gonvert has been tested on RedHat 7.0 (python 1.5.2, libglade 0.14, pygtk 0.6.6)
+
+1) Extract the tar archive.
+
+
+2) cd into the gonvert-x.y.z directory
+
+
+3a)If you just want to test the program as a user then:
+
+	./gonvert
+
+
+3b) If you want to install the program then:
+
+	su -c "make install"
+	
+
+
+Uninstall the program:
+======================	
+
+	su -c "make uninstall"
+
+================================================
+Translation:
+To make translations to other languages, follow these steps:
+
+1. Use the following to extract the raw message catalog
+     pygettext gonvert
+     edit messages.txt to CHARSET=utf-8
+
+2, Give the messages.pot file to the translater person
+    See http://www.unicode.org/charts/ for unicode translations
+    To get a defined character, use  \N{Character_name}, for example:
+         \N{SKULL AND CROSSBONES}
+            or 
+         u'\u2620'
+
+3. Get the files back from the translator person:
+     pl_messages.po   the translated message file
+     pl_messages.gmo  the compiled translation, which was compiled with something like:
+                         msgfmt gonvert.po
+
+4. Install the .gmo file in /usr/share/locale/xx/LC_MESSAGES using:
+   # make install_pl
+
+5. To update a translation use the following:
+     msgmerge -U i18n/pl_messages.po messages.pot
+   Merged results go into the source file.
+   Compile the new translation
+     msgfmt i18n/pl_messages.po -oi18n/pl_messages.gmo
+
+7. Test by setting the LANGUAGE variable appropriately, then run gonvert.
+   LANGUAGE=pl
+      or
+   LANGUAGE=en
+================================================

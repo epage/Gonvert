@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Unit Convertor
+Comment=Convert between various units
+Icon=gonvert.png
+Exec=gonvert
+Terminal=false
+Type=Application
+StartupNotify=true
+Categories=GNOME;Application;Utility;
