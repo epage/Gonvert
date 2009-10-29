@@ -16,7 +16,6 @@ import gtk.gdk
 import constants
 import evil_globals
 import unit_data
-import converters
 
 
 _moduleLogger = logging.getLogger("gonvert_glade")
@@ -44,7 +43,7 @@ def edit_shortlist(a):
 
 def app_size_changed(a,b):
 	''"get current size of window as it changes.''"
-	evil_globals.window_size=app1.get_size()
+	evil_globals.window_size=mainWindow.get_size()
 
 
 def clear_selections(a):
@@ -322,11 +321,11 @@ def click_category(row):
 		iter = unit_model.append()
 		unit_model.set(iter,0,key,1,'',2,unit_dic[key][1])
 
-	entry1.set_text('')
-	entry2.set_text('')
+	unitName.set_text('')
+	unitValue.set_text('')
 	entry3.set_text('')
 	entry4.set_text('')
-	label1.set_text('')
+	unitSymbol.set_text('')
 	label2.set_text('')
 
 	restore_units()
@@ -362,8 +361,8 @@ def restore_units():
 				unit_no=unit_no+1
 
 	# select the text so user can start typing right away
-	entry2.grab_focus()
-	entry2.select_region(0,-1)
+	unitValue.grab_focus()
+	unitValue.select_region(0,-1)
 
 
 def button_released(row,a):
@@ -387,23 +386,23 @@ def click_unit(row):
 	enditer = text_model.get_end_iter()
 	text_model.insert(enditer,unit_spec[2])
 
-	if entry1.get_text() <> selected_unit:
-		entry3.set_text(entry1.get_text())
-		entry4.set_text(entry2.get_text())
-		if label1.get() == None:
+	if unitName.get_text() != selected_unit:
+		entry3.set_text(unitName.get_text())
+		entry4.set_text(unitValue.get_text())
+		if unitSymbol.get() == None:
 			label2.set_text('')
 		else:
-			label2.set_text(label1.get())
-	entry1.set_text(selected_unit)
+			label2.set_text(unitSymbol.get())
+	unitName.set_text(selected_unit)
 
-	entry2.set_text(selected.get_value(iter,1))
+	unitValue.set_text(selected.get_value(iter,1))
 
-	label1.set_text(unit_spec[1]) # put units into label text
-	if entry2.get_text() =='':
+	unitSymbol.set_text(unit_spec[1]) # put units into label text
+	if unitValue.get_text() =='':
 		if evil_globals.selected_category == "Computer Numbers":
-			entry2.set_text("0")
+			unitValue.set_text("0")
 		else:
-			entry2.set_text("0.0")
+			unitValue.set_text("0.0")
 
 	#For historical purposes, record this unit as the most recent one in this category.
 	# Also, if a previous unit exists, then shift that previous unit to oldest unit.
@@ -414,8 +413,8 @@ def click_unit(row):
 		evil_globals.selected_units[evil_globals.selected_category]=[selected_unit,'']
 
 	# select the text so user can start typing right away
-	entry2.grab_focus()
-	entry2.select_region(0,-1)
+	unitValue.grab_focus()
+	unitValue.select_region(0,-1)
 
 	evil_globals.calcsuppress = 0 #enable calculations
 
@@ -464,18 +463,18 @@ class Ccalculate(object):
 			return
 		# determine if value to be calculated is empty
 		if evil_globals.selected_category == "Computer Numbers":
-			if entry2.get_text() =='':
+			if unitValue.get_text() =='':
 				value = '0'
 			else:
-				 value = entry2.get_text()
+				 value = unitValue.get_text()
 		else:
-			if entry2.get_text() =='':
+			if unitValue.get_text() =='':
 				value = 0.0
 			else:
-				value = float(entry2.get_text())
+				value = float(unitValue.get_text())
 
-		if entry1.get_text() <> '':
-			func,arg = unit_dic[entry1.get_text()][0] #retrieve the conversion function and value from the selected unit
+		if unitName.get_text() != '':
+			func,arg = unit_dic[unitName.get_text()][0] #retrieve the conversion function and value from the selected unit
 			base = apply(func.to_base,(value,arg,)) #determine the base unit value
 
 			keys = unit_dic.keys()
@@ -497,7 +496,7 @@ class Ccalculate(object):
 				iter=unit_model.iter_next(iter)
 
 			# if the second row has a unit then update its value
-			if entry3.get_text() <> '':
+			if entry3.get_text() != '':
 				evil_globals.calcsuppress=1
 				func,arg = unit_dic[entry3.get_text()][0]
 				entry4.set_text(str(apply(func.from_base,(base,arg,))))
@@ -519,7 +518,7 @@ class Ccalculate(object):
 			else:
 				value = float(entry4.get_text())
 
-		if entry3.get_text() <> '':
+		if entry3.get_text() != '':
 			func,arg = unit_dic[entry3.get_text()][0] #retrieve the conversion function and value from the selected unit
 			base = apply(func.to_base,(value,arg,)) #determine the base unit value
 
@@ -542,31 +541,49 @@ class Ccalculate(object):
 				iter=unit_model.iter_next(iter)
 
 			# if the second row has a unit then update its value
-			if entry1.get_text() <> '':
+			if unitName.get_text() != '':
 				evil_globals.calcsuppress=1
-				func,arg = unit_dic[entry1.get_text()][0]
-				entry2.set_text(str(apply(func.from_base,(base,arg,))))
+				func,arg = unit_dic[unitName.get_text()][0]
+				unitValue.set_text(str(apply(func.from_base,(base,arg,))))
 				evil_globals.calcsuppress=0
 
 
+# vbox2 is mainLayout
+# scrolledwindow4 is categoryScrolledWindow
+# cat_clist is categoryView
+# vbox1 is unitConversionLayout
+# 	hbox1 is selectedUnitLayouta
+# 		unitName is the unit name
+# 		unitValue is the value
+# 		unitSymbol is the unit
+# 	hbox2 is previousSelectedUnitLayouta
+# 		entry3 is the unit name
+# 		entry4 is the value
+# 		label2 is the unit
+# 	vpand1 is unitsAndDescriptionPane
+# 		scrolledWindow1 is unitListScrolledWindow
+# 			clist1 is unitsView
+# 		scrolledWindow2 is unitDescriptionScrolledWindow
+# 			text1 is unitDescription
+# 	hbox3 is the search box
 def main():
-	global clist1
-	global entry2
-	global text1
-	global app1
+	global mainWindow
 	global cat_clist
 	global cat_model
-	global column1
-	global column2
-	global column3
-	global entry1
-	global entry3
-	global entry4
-	global label1
-	global label2
+	global unitValue
+	global unitName
+	global unitSymbol
+	global clist1
 	global calculate
 	global shortlistcheck
 	global about_box
+	global text1
+	global column1
+	global column2
+	global column3
+	global entry3
+	global entry4
+	global label2
 
 	logging.basicConfig(level=logging.DEBUG)
 
@@ -593,7 +610,7 @@ def main():
 		return
 
 	calculate = Ccalculate()
-	app1 = widgets.get_widget('app1')
+	mainWindow = widgets.get_widget('mainWindow')
 
 	#Restore window size from previously saved settings if it exists and is valid.
 	windowDatPath = "/".join((constants._data_path_, "window.dat"))
@@ -603,30 +620,30 @@ def main():
 		#If the 'size' has been stored, then extract size from saved_window.
 		if saved_window.has_key('size'):
 			a, b = saved_window['size']
-			app1.resize(a, b)
+			mainWindow.resize(a, b)
 		else:
 			#Maximize if no previous size was found
-			#app1.maximize()
+			#mainWindow.maximize()
 			pass
 	else:
 		#Maximize if no previous window.dat file was found
-		#app1.maximize()
+		#mainWindow.maximize()
 		pass
 
-	app1.set_title('gonvert- %s - Unit Conversion Utility' % constants.__version__);
+	mainWindow.set_title('gonvert- %s - Unit Conversion Utility' % constants.__version__);
 	iconPath = pixmapspath + '/gonvert.png'
 	if os.path.exists(iconPath):
-		app1.set_icon(gtk.gdk.pixbuf_new_from_file(iconPath))
+		mainWindow.set_icon(gtk.gdk.pixbuf_new_from_file(iconPath))
 	else:
 		_moduleLogger.warn("Error: Could not find gonvert icon: %s" % iconPath)
 
 	#--------- connections to GUI ----------------
 	dic = {
-		"on_exit1_activate": exitprogram,
-		"on_app1_destroy": exitprogram,
+		"on_exitMenuItem_activate": exitprogram,
+		"on_mainWindow_destroy": exitprogram,
 		"on_cat_clist_select_row": click_category,
 		"on_clist1_click_column": click_column,
-		"on_entry2_changed": calculate.top,
+		"on_unitValue_changed": calculate.top,
 		"on_entry4_changed": calculate.bottom,
 		"on_write_units1_activate": write_units,
 		"on_find_button_clicked": find_units,
@@ -638,12 +655,13 @@ def main():
 		"on_clear_selections1_activate": clear_selections,
 		"on_clist1_cursor_changed": click_unit,
 		"on_clist1_button_released": button_released,
-		"on_app1_size_allocate": app_size_changed,
+		"on_mainWindow_size_allocate": app_size_changed,
 		"on_shortlistcheck_toggled": shortlist_changed,
 		"on_edit_shortlist1_activate": edit_shortlist,
 	 }
 
 	widgets.signal_autoconnect (dic);
+	mainWindow.connect("destroy", exitprogram)
 
 	def change_menu_label(labelname,newtext):
 		item_label = widgets.get_widget(labelname).get_children()[0]
@@ -652,13 +670,13 @@ def main():
 		item_label = widgets.get_widget(labelname)
 		item_label.set_text(newtext)
 
-	change_menu_label('file1',_('File'))
-	change_menu_label('exit1',_('Exit'))
-	change_menu_label('tools1',_('Tools'))
+	change_menu_label('fileMenuItem',_('File'))
+	change_menu_label('exitMenuItem',_('Exit'))
+	change_menu_label('toolsMenuItem',_('Tools'))
 	change_menu_label('clear_selections1',_('Clear selections'))
 	change_menu_label('write_units1',_('Write Units'))
-	change_menu_label('help1',_('Help'))
-	change_menu_label('about1',_('About'))
+	change_menu_label('helpMenuItem',_('Help'))
+	change_menu_label('aboutMenuItem',_('About'))
 
 	change_menu_label('find_button',_('Find'))
 
@@ -670,8 +688,8 @@ def main():
 	clist1 = widgets.get_widget('clist1')
 	clist1_selection=clist1.get_selection()
 
-	entry1 = widgets.get_widget('entry1')
-	entry2 = widgets.get_widget('entry2')
+	unitName = widgets.get_widget('unitName')
+	unitValue = widgets.get_widget('unitValue')
 	entry3 = widgets.get_widget('entry3')
 	entry4 = widgets.get_widget('entry4')
 	about_box = widgets.get_widget('about_box')
@@ -683,7 +701,7 @@ def main():
 	versionlabel = widgets.get_widget('versionlabel')
 	versionlabel.set_text(constants.__version__)
 
-	label1 =widgets.get_widget('label1')
+	unitSymbol =widgets.get_widget('unitSymbol')
 	label2 =widgets.get_widget('label2')
 
 	text1 = widgets.get_widget('text1' )

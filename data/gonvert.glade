@@ -3,9 +3,9 @@
 
 <glade-interface>
 
-<widget class="GtkWindow" id="app1">
+<widget class="GtkWindow" id="mainWindow">
   <property name="visible">True</property>
-  <property name="title" translatable="yes">window1</property>
+  <property name="title" translatable="yes">Gonvert</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_NONE</property>
   <property name="modal">False</property>
@@ -28,26 +28,26 @@
       <property name="spacing">0</property>
 
       <child>
-	<widget class="GtkMenuBar" id="menubar1">
+	<widget class="GtkMenuBar" id="mainMenuBar">
 	  <property name="visible">True</property>
 	  <property name="pack_direction">GTK_PACK_DIRECTION_LTR</property>
 	  <property name="child_pack_direction">GTK_PACK_DIRECTION_LTR</property>
 
 	  <child>
-	    <widget class="GtkMenuItem" id="file1">
+	    <widget class="GtkMenuItem" id="fileMenuItem">
 	      <property name="visible">True</property>
 	      <property name="label" translatable="yes">_File</property>
 	      <property name="use_underline">True</property>
 
 	      <child>
-		<widget class="GtkMenu" id="file1_menu">
+		<widget class="GtkMenu" id="fileMenu">
 
 		  <child>
-		    <widget class="GtkMenuItem" id="exit1">
+		    <widget class="GtkMenuItem" id="exitMenuItem">
 		      <property name="visible">True</property>
 		      <property name="label" translatable="yes">_Exit</property>
 		      <property name="use_underline">True</property>
-		      <signal name="activate" handler="on_exit1_activate"/>
+		      <signal name="activate" handler="on_exitMenuItem_activate"/>
 		      <accelerator key="q" modifiers="GDK_CONTROL_MASK" signal="activate"/>
 		    </widget>
 		  </child>
@@ -57,13 +57,13 @@
 	  </child>
 
 	  <child>
-	    <widget class="GtkMenuItem" id="tools1">
+	    <widget class="GtkMenuItem" id="toolsMenuItem">
 	      <property name="visible">True</property>
 	      <property name="label" translatable="yes">_Tools</property>
 	      <property name="use_underline">True</property>
 
 	      <child>
-		<widget class="GtkMenu" id="tools1_menu">
+		<widget class="GtkMenu" id="toolsMenu">
 
 		  <child>
 		    <widget class="GtkCheckMenuItem" id="edit_shortlist1">
@@ -101,20 +101,20 @@
 	  </child>
 
 	  <child>
-	    <widget class="GtkMenuItem" id="help1">
+	    <widget class="GtkMenuItem" id="helpMenuItem">
 	      <property name="visible">True</property>
 	      <property name="label" translatable="yes">_Help</property>
 	      <property name="use_underline">True</property>
 
 	      <child>
-		<widget class="GtkMenu" id="help1_menu">
+		<widget class="GtkMenu" id="helpMenu">
 
 		  <child>
-		    <widget class="GtkMenuItem" id="about1">
+		    <widget class="GtkMenuItem" id="aboutMenuItem">
 		      <property name="visible">True</property>
 		      <property name="label" translatable="yes">_About</property>
 		      <property name="use_underline">True</property>
-		      <signal name="activate" handler="on_about1_activate"/>
+		      <signal name="activate" handler="on_aboutMenuItem_activate"/>
 		    </widget>
 		  </child>
 		</widget>
@@ -179,7 +179,7 @@
 		  <property name="spacing">0</property>
 
 		  <child>
-		    <widget class="GtkEntry" id="entry1">
+		    <widget class="GtkEntry" id="unitName">
 		      <property name="visible">True</property>
 		      <property name="editable">False</property>
 		      <property name="visibility">True</property>
@@ -197,7 +197,7 @@
 		  </child>
 
 		  <child>
-		    <widget class="GtkEntry" id="entry2">
+		    <widget class="GtkEntry" id="unitValue">
 		      <property name="visible">True</property>
 		      <property name="can_focus">True</property>
 		      <property name="editable">True</property>
@@ -207,7 +207,7 @@
 		      <property name="has_frame">True</property>
 		      <property name="invisible_char">*</property>
 		      <property name="activates_default">False</property>
-		      <signal name="changed" handler="on_entry2_changed"/>
+		      <signal name="changed" handler="on_unitValue_changed"/>
 		    </widget>
 		    <packing>
 		      <property name="padding">0</property>
@@ -217,7 +217,7 @@
 		  </child>
 
 		  <child>
-		    <widget class="GtkLabel" id="label1">
+		    <widget class="GtkLabel" id="unitSymbol">
 		      <property name="width_request">60</property>
 		      <property name="visible">True</property>
 		      <property name="label" translatable="yes"></property>
