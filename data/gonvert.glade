@@ -22,7 +22,7 @@
   <signal name="size_allocate" handler="on_app1_size_allocate" last_modification_time="Sat, 03 Jul 2004 00:43:38 GMT"/>
 
   <child>
-    <widget class="GtkVBox" id="vbox2">
+    <widget class="GtkVBox" id="mainLayout">
       <property name="visible">True</property>
       <property name="homogeneous">False</property>
       <property name="spacing">0</property>
@@ -136,7 +136,7 @@
 	  <property name="position">0</property>
 
 	  <child>
-	    <widget class="GtkScrolledWindow" id="scrolledwindow4">
+	    <widget class="GtkScrolledWindow" id="categoryScrolledWindow">
 	      <property name="width_request">260</property>
 	      <property name="visible">True</property>
 	      <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
@@ -167,13 +167,13 @@
 	  </child>
 
 	  <child>
-	    <widget class="GtkVBox" id="vbox1">
+	    <widget class="GtkVBox" id="unitConversionLayout">
 	      <property name="visible">True</property>
 	      <property name="homogeneous">False</property>
 	      <property name="spacing">0</property>
 
 	      <child>
-		<widget class="GtkHBox" id="hbox1">
+		<widget class="GtkHBox" id="selectedUnitLayout">
 		  <property name="visible">True</property>
 		  <property name="homogeneous">False</property>
 		  <property name="spacing">0</property>
@@ -250,13 +250,13 @@
 	      </child>
 
 	      <child>
-		<widget class="GtkHBox" id="hbox2">
+		<widget class="GtkHBox" id="previousSelectedUnitLayout">
 		  <property name="visible">True</property>
 		  <property name="homogeneous">False</property>
 		  <property name="spacing">0</property>
 
 		  <child>
-		    <widget class="GtkEntry" id="entry3">
+		    <widget class="GtkEntry" id="previousUnitName">
 		      <property name="visible">True</property>
 		      <property name="editable">False</property>
 		      <property name="visibility">True</property>
@@ -274,7 +274,7 @@
 		  </child>
 
 		  <child>
-		    <widget class="GtkEntry" id="entry4">
+		    <widget class="GtkEntry" id="previousUnitValue">
 		      <property name="visible">True</property>
 		      <property name="can_focus">True</property>
 		      <property name="editable">True</property>
@@ -284,7 +284,7 @@
 		      <property name="has_frame">True</property>
 		      <property name="invisible_char">*</property>
 		      <property name="activates_default">False</property>
-		      <signal name="changed" handler="on_entry4_changed"/>
+		      <signal name="changed" handler="on_previousUnitValue_changed"/>
 		    </widget>
 		    <packing>
 		      <property name="padding">0</property>
@@ -294,7 +294,7 @@
 		  </child>
 
 		  <child>
-		    <widget class="GtkLabel" id="label2">
+		    <widget class="GtkLabel" id="previousUnitSymbol">
 		      <property name="width_request">60</property>
 		      <property name="visible">True</property>
 		      <property name="label" translatable="yes"></property>
@@ -340,7 +340,7 @@
 		      <property name="window_placement">GTK_CORNER_TOP_LEFT</property>
 
 		      <child>
-			<widget class="GtkTreeView" id="clist1">
+			<widget class="GtkTreeView" id="unitsView">
 			  <property name="visible">True</property>
 			  <property name="can_focus">True</property>
 			  <property name="headers_visible">True</property>
@@ -350,8 +350,8 @@
 			  <property name="fixed_height_mode">False</property>
 			  <property name="hover_selection">False</property>
 			  <property name="hover_expand">False</property>
-			  <signal name="button_release_event" handler="on_clist1_button_released" last_modification_time="Thu, 24 Jun 2004 01:11:55 GMT"/>
-			  <signal name="cursor_changed" handler="on_clist1_cursor_changed" last_modification_time="Thu, 24 Jun 2004 01:11:42 GMT"/>
+			  <signal name="button_release_event" handler="on_unitsView_button_released" last_modification_time="Thu, 24 Jun 2004 01:11:55 GMT"/>
+			  <signal name="cursor_changed" handler="on_unitsView_cursor_changed" last_modification_time="Thu, 24 Jun 2004 01:11:42 GMT"/>
 			</widget>
 		      </child>
 		    </widget>
@@ -370,7 +370,7 @@
 		      <property name="window_placement">GTK_CORNER_TOP_LEFT</property>
 
 		      <child>
-			<widget class="GtkTextView" id="text1">
+			<widget class="GtkTextView" id="unitDescription">
 			  <property name="visible">True</property>
 			  <property name="can_focus">True</property>
 			  <property name="editable">False</property>
@@ -403,7 +403,7 @@
 	      </child>
 
 	      <child>
-		<widget class="GtkHBox" id="hbox3">
+		<widget class="GtkHBox" id="searchLayout">
 		  <property name="visible">True</property>
 		  <property name="homogeneous">False</property>
 		  <property name="spacing">0</property>

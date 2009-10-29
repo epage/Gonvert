@@ -150,7 +150,7 @@ def find_units(a):
 				#check if next find is in a new category (prevent category changes when unnecessary
 				if evil_globals.selected_category!=evil_globals.find_result[evil_globals.find_count][0]:
 					cat_clist.set_cursor(evil_globals.find_result[0][2],col,False)
-					clist1.set_cursor(evil_globals.find_result[0][3],column1,True)
+					unitsView.set_cursor(evil_globals.find_result[0][3],column1,True)
 					if len(evil_globals.find_result)>1:
 						find_label.set_text(('Press Find for next unit. '+ str(len(evil_globals.find_result))+' result(s).'))
 					else:
@@ -161,13 +161,13 @@ def find_units(a):
 			#select first result
 			evil_globals.find_count=0
 			cat_clist.set_cursor(evil_globals.find_result[evil_globals.find_count][2],col,False)
-			clist1.set_cursor(evil_globals.find_result[evil_globals.find_count][3],column1,True)
+			unitsView.set_cursor(evil_globals.find_result[evil_globals.find_count][3],column1,True)
 		else: #must be next-find
 			evil_globals.find_count=evil_globals.find_count+1
 			#check if next find is in a new category (prevent category changes when unnecessary
 			if evil_globals.selected_category!=evil_globals.find_result[evil_globals.find_count][0]:
 				cat_clist.set_cursor(evil_globals.find_result[evil_globals.find_count][2],col,False)
-			clist1.set_cursor(evil_globals.find_result[evil_globals.find_count][3],column1,True)
+			unitsView.set_cursor(evil_globals.find_result[evil_globals.find_count][3],column1,True)
 
 
 def click_column(col):
@@ -260,14 +260,14 @@ def click_column(col):
 
 		#Clear out the previous list of units
 		unit_model = gtk.ListStore(gobject.TYPE_STRING,gobject.TYPE_STRING,gobject.TYPE_STRING)
-		clist1.set_model(unit_model)
+		unitsView.set_model(unit_model)
 
 		#colourize each row differently for easier reading
-		clist1.set_property( 'rules_hint',1)
+		unitsView.set_property( 'rules_hint',1)
 
 		#Clear out the description
 		text_model = gtk.TextBuffer(None)
-		text1.set_buffer(text_model)
+		unitDescription.set_buffer(text_model)
 
 		if selected_column==0:
 			for unit,value,units in sorted_list:
@@ -290,14 +290,14 @@ def click_category(row):
 
 	#Clear out the previous list of units
 	unit_model = gtk.ListStore(gobject.TYPE_STRING,gobject.TYPE_STRING,gobject.TYPE_STRING)
-	clist1.set_model(unit_model)
+	unitsView.set_model(unit_model)
 
 	#Colourize each row alternately for easier reading
-	clist1.set_property( 'rules_hint',1)
+	unitsView.set_property( 'rules_hint',1)
 
 	#Clear out the description
 	text_model = gtk.TextBuffer(None)
-	text1.set_buffer(text_model)
+	unitDescription.set_buffer(text_model)
 
 	#Determine the contents of the selected category row
 	selected,iter= row.get_selection().get_selected()
@@ -323,10 +323,10 @@ def click_category(row):
 
 	unitName.set_text('')
 	unitValue.set_text('')
-	entry3.set_text('')
-	entry4.set_text('')
+	previousUnitName.set_text('')
+	previousUnitValue.set_text('')
 	unitSymbol.set_text('')
-	label2.set_text('')
+	previousUnitSymbol.set_text('')
 
 	restore_units()
 
@@ -350,14 +350,14 @@ def restore_units():
 				unit_no=0
 				for unit in units:
 					if unit==evil_globals.selected_units[evil_globals.selected_category][1]:
-						clist1.set_cursor(unit_no,column1,True)
+						unitsView.set_cursor(unit_no,column1,True)
 					unit_no=unit_no+1
 
 			#Restore newest selection second.
 			unit_no=0
 			for unit in units:
 				if unit==evil_globals.selected_units[evil_globals.selected_category][0]:
-					clist1.set_cursor(unit_no,column1,True)
+					unitsView.set_cursor(unit_no,column1,True)
 				unit_no=unit_no+1
 
 	# select the text so user can start typing right away
@@ -373,7 +373,7 @@ def click_unit(row):
 	evil_globals.calcsuppress = 1 #suppress calculations
 
 	#Determine the contents of the selected row.
-	selected,iter= clist1.get_selection().get_selected()
+	selected,iter= unitsView.get_selection().get_selected()
 
 	selected_unit=selected.get_value(iter,0)
 
@@ -381,18 +381,18 @@ def click_unit(row):
 
 	#Clear out the description
 	text_model = gtk.TextBuffer(None)
-	text1.set_buffer(text_model)
+	unitDescription.set_buffer(text_model)
 
 	enditer = text_model.get_end_iter()
 	text_model.insert(enditer,unit_spec[2])
 
 	if unitName.get_text() != selected_unit:
-		entry3.set_text(unitName.get_text())
-		entry4.set_text(unitValue.get_text())
+		previousUnitName.set_text(unitName.get_text())
+		previousUnitValue.set_text(unitValue.get_text())
 		if unitSymbol.get() == None:
-			label2.set_text('')
+			previousUnitSymbol.set_text('')
 		else:
-			label2.set_text(unitSymbol.get())
+			previousUnitSymbol.set_text(unitSymbol.get())
 	unitName.set_text(selected_unit)
 
 	unitValue.set_text(selected.get_value(iter,1))
@@ -496,10 +496,10 @@ class Ccalculate(object):
 				iter=unit_model.iter_next(iter)
 
 			# if the second row has a unit then update its value
-			if entry3.get_text() != '':
+			if previousUnitName.get_text() != '':
 				evil_globals.calcsuppress=1
-				func,arg = unit_dic[entry3.get_text()][0]
-				entry4.set_text(str(apply(func.from_base,(base,arg,))))
+				func,arg = unit_dic[previousUnitName.get_text()][0]
+				previousUnitValue.set_text(str(apply(func.from_base,(base,arg,))))
 				evil_globals.calcsuppress=0
 
 	def bottom(self,a):
@@ -508,18 +508,18 @@ class Ccalculate(object):
 			return
 		# determine if value to be calculated is empty
 		if evil_globals.selected_category == "Computer Numbers":
-			if entry4.get_text() =='':
+			if previousUnitValue.get_text() =='':
 				value = '0'
 			else:
-				value = entry4.get_text()
+				value = previousUnitValue.get_text()
 		else:
-			if entry4.get_text() =='':
+			if previousUnitValue.get_text() =='':
 				value = 0.0
 			else:
-				value = float(entry4.get_text())
+				value = float(previousUnitValue.get_text())
 
-		if entry3.get_text() != '':
-			func,arg = unit_dic[entry3.get_text()][0] #retrieve the conversion function and value from the selected unit
+		if previousUnitName.get_text() != '':
+			func,arg = unit_dic[previousUnitName.get_text()][0] #retrieve the conversion function and value from the selected unit
 			base = apply(func.to_base,(value,arg,)) #determine the base unit value
 
 			keys = unit_dic.keys()
@@ -548,24 +548,22 @@ class Ccalculate(object):
 				evil_globals.calcsuppress=0
 
 
-# vbox2 is mainLayout
-# scrolledwindow4 is categoryScrolledWindow
 # cat_clist is categoryView
-# vbox1 is unitConversionLayout
-# 	hbox1 is selectedUnitLayouta
-# 		unitName is the unit name
-# 		unitValue is the value
-# 		unitSymbol is the unit
-# 	hbox2 is previousSelectedUnitLayouta
-# 		entry3 is the unit name
-# 		entry4 is the value
-# 		label2 is the unit
-# 	vpand1 is unitsAndDescriptionPane
-# 		scrolledWindow1 is unitListScrolledWindow
-# 			clist1 is unitsView
-# 		scrolledWindow2 is unitDescriptionScrolledWindow
-# 			text1 is unitDescription
-# 	hbox3 is the search box
+# unitConversionLayout
+# 	selectedUnitLayouta
+# 		unitName
+# 		unitValue
+# 		unitSymbol
+# 	previousSelectedUnitLayout
+# 		previousUnitName
+# 		previousUnitValue
+# 		previousUnitSymbol
+# 	unitsAndDescriptionPane
+# 		unitListScrolledWindow
+# 			unitsView
+# 		unitDescriptionScrolledWindow
+# 			unitDescription
+# 	searchLayout is the search box
 def main():
 	global mainWindow
 	global cat_clist
@@ -573,17 +571,17 @@ def main():
 	global unitValue
 	global unitName
 	global unitSymbol
-	global clist1
+	global unitsView
 	global calculate
 	global shortlistcheck
 	global about_box
-	global text1
+	global unitDescription
 	global column1
 	global column2
 	global column3
-	global entry3
-	global entry4
-	global label2
+	global previousUnitName
+	global previousUnitValue
+	global previousUnitSymbol
 	global find_label
 	global find_entry
 	global col
@@ -646,9 +644,9 @@ def main():
 		"on_exitMenuItem_activate": exitprogram,
 		"on_mainWindow_destroy": exitprogram,
 		"on_cat_clist_select_row": click_category,
-		"on_clist1_click_column": click_column,
+		"on_unitsView_click_column": click_column,
 		"on_unitValue_changed": calculate.top,
-		"on_entry4_changed": calculate.bottom,
+		"on_previousUnitValue_changed": calculate.bottom,
 		"on_write_units1_activate": write_units,
 		"on_find_button_clicked": find_units,
 		"on_find_entry_key_press_event": find_key_press,
@@ -657,8 +655,8 @@ def main():
 		"on_about_close_clicked": about_hide,
 		"on_messagebox_ok_clicked": messagebox_ok_clicked,
 		"on_clear_selections1_activate": clear_selections,
-		"on_clist1_cursor_changed": click_unit,
-		"on_clist1_button_released": button_released,
+		"on_unitsView_cursor_changed": click_unit,
+		"on_unitsView_button_released": button_released,
 		"on_mainWindow_size_allocate": app_size_changed,
 		"on_shortlistcheck_toggled": shortlist_changed,
 		"on_edit_shortlist1_activate": edit_shortlist,
@@ -689,13 +687,13 @@ def main():
 
 	cat_clist = widgets.get_widget('cat_clist' )
 
-	clist1 = widgets.get_widget('clist1')
-	clist1_selection=clist1.get_selection()
+	unitsView = widgets.get_widget('unitsView')
+	unitsView_selection=unitsView.get_selection()
 
 	unitName = widgets.get_widget('unitName')
 	unitValue = widgets.get_widget('unitValue')
-	entry3 = widgets.get_widget('entry3')
-	entry4 = widgets.get_widget('entry4')
+	previousUnitName = widgets.get_widget('previousUnitName')
+	previousUnitValue = widgets.get_widget('previousUnitValue')
 	about_box = widgets.get_widget('about_box')
 	messagebox = widgets.get_widget('msgbox')
 	messageboxtext = widgets.get_widget('msgboxtext')
@@ -706,9 +704,9 @@ def main():
 	versionlabel.set_text(constants.__version__)
 
 	unitSymbol =widgets.get_widget('unitSymbol')
-	label2 =widgets.get_widget('label2')
+	previousUnitSymbol =widgets.get_widget('previousUnitSymbol')
 
-	text1 = widgets.get_widget('text1' )
+	unitDescription = widgets.get_widget('unitDescription' )
 
 	find_entry = widgets.get_widget('find_entry')
 	find_label = widgets.get_widget('find_label')
@@ -720,21 +718,21 @@ def main():
 	column1.add_attribute( renderer, 'text', 0 )
 	column1.set_clickable(True)
 	column1.connect("clicked",click_column)
-	clist1.append_column( column1 )
+	unitsView.append_column( column1 )
 
 	column2 = gtk.TreeViewColumn( _('Value'), renderer )
 	column2.set_property( 'resizable', 1 )
 	column2.add_attribute( renderer, 'text', 1 )
 	column2.set_clickable(True)
 	column2.connect("clicked",click_column)
-	clist1.append_column( column2 )
+	unitsView.append_column( column2 )
 
 	column3 = gtk.TreeViewColumn( _('Units'), renderer )
 	column3.set_property( 'resizable', 1 )
 	column3.add_attribute( renderer, 'text', 2 )
 	column3.set_clickable(True)
 	column3.connect("clicked",click_column)
-	clist1.append_column( column3 )
+	unitsView.append_column( column3 )
 
 	#Insert a column into the category list even though the heading will not be seen
 	renderer = gtk.CellRendererText()
