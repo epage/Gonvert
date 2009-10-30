@@ -122,6 +122,13 @@ class Gonvert(object):
 		self._unitSymbolColumn.connect("clicked", self._on_click_unit_column)
 		self._unitsView.append_column(self._unitSymbolColumn)
 
+		self._unitModel = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING)
+		self._sortedUnitModel = gtk.TreeModelSort(self._unitModel)
+		columns = self._get_column_sort_stuff()
+		for columnIndex, (column, sortDirection, col_cmp) in enumerate(columns):
+			self._sortedUnitModel.set_sort_func(columnIndex, col_cmp)
+		self._unitsView.set_model(self._sortedUnitModel)
+
 		#Insert a column into the category list even though the heading will not be seen
 		renderer = gtk.CellRendererText()
 		self._categoryColumn = gtk.TreeViewColumn('Title', renderer)
@@ -359,120 +366,64 @@ class Gonvert(object):
 		except Exception:
 			_moduleLogger.exception()
 
+	def _unit_model_cmp(self, sortedModel, leftItr, rightItr):
+		leftUnitText = self._unitModel.get_value(leftItr, 0)
+		rightUnitText = self._unitModel.get_value(rightItr, 0)
+		return cmp(leftUnitText, rightUnitText)
+
+	def _symbol_model_cmp(self, sortedModel, leftItr, rightItr):
+		leftSymbolText = self._unitModel.get_value(leftItr, 2)
+		rightSymbolText = self._unitModel.get_value(rightItr, 2)
+		return cmp(leftSymbolText, rightSymbolText)
+
+	def _value_model_cmp(self, sortedModel, leftItr, rightItr):
+		#special sorting exceptions for ascii values (instead of float values)
+		if self._selected_category == "Computer Numbers":
+			leftValue = self._unitModel.get_value(leftItr, 1)
+			rightValue = self._unitModel.get_value(rightItr, 1)
+		else:
+			leftValueText = self._unitModel.get_value(leftItr, 1)
+			leftValue = float(leftValueText) if leftValueText else 0.0
+
+			rightValueText = self._unitModel.get_value(rightItr, 1)
+			rightValue = float(rightValueText) if rightValueText else 0.0
+		return cmp(leftValue, rightValue)
+
+	def _get_column_sort_stuff(self):
+		columns = (
+			(self._unitNameColumn, "_unit_sort_direction", self._unit_model_cmp),
+			(self._unitValueColumn, "_value_sort_direction", self._value_model_cmp),
+			(self._unitSymbolColumn, "_units_sort_direction", self._symbol_model_cmp),
+		)
+		return columns
+
 	def _on_click_unit_column(self, col):
 		"""
 		Sort the contents of the col when the user clicks on the title.
 		"""
-		#Determine which column requires sorting
-		self._unitNameColumn.set_sort_indicator(False)
-		self._unitValueColumn.set_sort_indicator(False)
-		self._unitSymbolColumn.set_sort_indicator(False)
-		for selectedUnitColumn, (maybeCol, sortDirection) in enumerate((
-			(self._unitNameColumn, self._unit_sort_direction),
-			(self._unitValueColumn, self._value_sort_direction),
-			(self._unitSymbolColumn, self._units_sort_direction),
-		)):
-			if col is maybeCol:
-				col.set_sort_indicator(True)
-				col.set_sort_order(not sortDirection)
-				break
-		else:
-			assert False, "Unknown column: %s" % (col.get_title(), )
+		try:
+			#Determine which column requires sorting
+			columns = self._get_column_sort_stuff()
+			for column, directionName, col_cmp in columns:
+				column.set_sort_indicator(False)
+			for columnIndex, (maybeCol, directionName, col_cmp) in enumerate(columns):
+				if col is maybeCol:
+					direction = getattr(self, directionName)
+					gtkDirection = gtk.SORT_ASCENDING if direction else gtk.SORT_DESCENDING
+					# cause a sort
+					self._sortedUnitModel.set_sort_column_id(columnIndex, gtkDirection)
+					# set the visual for sorting
+					col.set_sort_indicator(True)
+					col.set_sort_order(not direction)
 
-		#declare a spot to hold the sorted list
-		sorted_list = []
-
-		#point to the first row
-		iter = self._unitModel.get_iter_first()
-		row = 0
-
-		while iter:
-			#grab all text from columns for sorting
-
-			#get the text from each column
-			unit_text = self._unitModel.get_value(iter, 0)
-			units_text = self._unitModel.get_value(iter, 2)
-
-			#do not bother sorting if the value column is empty
-			if self._unitModel.get_value(iter, 1) == '' and selectedUnitColumn == 1:
-				return
-
-			#special sorting exceptions for ascii values (instead of float values)
-			if self._selected_category == "Computer Numbers":
-				value_text = self._unitModel.get_value(iter, 1)
+					setattr(self, directionName, not direction)
+					break
 			else:
-				if self._unitModel.get_value(iter, 1) == None or self._unitModel.get_value(iter, 1) == '':
-					value_text = ''
-				else:
-					value_text = float(self._unitModel.get_value(iter, 1))
-
-			if selectedUnitColumn == 0:
-				sorted_list.append((unit_text, value_text, units_text))
-			elif selectedUnitColumn == 1:
-				sorted_list.append((value_text, unit_text, units_text))
-			else:
-				sorted_list.append((units_text, value_text, unit_text))
-
-			#point to the next row in the self._unitModel
-			iter = self._unitModel.iter_next(iter)
-			row = row+1
-
-		#check if no calculations have been made yet (don't bother sorting)
-		if row == 0:
-			return
-		else:
-			if selectedUnitColumn == 0:
-				if not self._unit_sort_direction:
-					sorted_list.sort(lambda (x, xx, xxx), (y, yy, yyy): cmp(string.lower(x), string.lower(y)))
-					self._unit_sort_direction = True
-				else:
-					sorted_list.sort(lambda (x, xx, xxx), (y, yy, yyy): cmp(string.lower(y), string.lower(x)))
-					self._unit_sort_direction = False
-			elif selectedUnitColumn == 1:
-				sorted_list.sort()
-				if not self._value_sort_direction:
-					self._value_sort_direction = True
-				else:
-					sorted_list.reverse()
-					self._value_sort_direction = False
-			else:
-				if not self._units_sort_direction:
-					sorted_list.sort(lambda (x, xx, xxx), (y, yy, yyy): cmp(string.lower(x), string.lower(y)))
-					self._units_sort_direction = True
-				else:
-					sorted_list.sort(lambda (x, xx, xxx), (y, yy, yyy): cmp(string.lower(y), string.lower(x)))
-					self._units_sort_direction = False
-
-			#Clear out the previous list of units
-			self._unitModel = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING)
-			self._unitsView.set_model(self._unitModel)
-
-			#colourize each row differently for easier reading
-			self._unitsView.set_property('rules_hint', 1)
-
-			#Clear out the description
-			text_model = gtk.TextBuffer(None)
-			self._unitDescription.set_buffer(text_model)
-
-			if selectedUnitColumn == 0:
-				for unit, value, units in sorted_list:
-					iter = self._unitModel.append()
-					self._unitModel.set(iter, 0, unit, 1, str(value), 2, units)
-			elif selectedUnitColumn == 1:
-				for value, unit, units in sorted_list:
-					iter = self._unitModel.append()
-					self._unitModel.set(iter, 0, unit, 1, str(value), 2, units)
-			else:
-				for units, value, unit in sorted_list:
-					iter = self._unitModel.append()
-					self._unitModel.set(iter, 0, unit, 1, str(value), 2, units)
-		return
+				assert False, "Unknown column: %s" % (col.get_title(), )
+		except Exception:
+			_moduleLogger.exception()
 
 	def _on_click_category(self, row):
-		#Clear out the previous list of units
-		self._unitModel = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING)
-		self._unitsView.set_model(self._unitModel)
-
 		#Colourize each row alternately for easier reading
 		self._unitsView.set_property('rules_hint', 1)
 
@@ -498,9 +449,11 @@ class Gonvert(object):
 		del keys[0] # do not display .base_unit description key
 
 		#Fill up the units descriptions and clear the value cells
+		self._unitModel.clear()
 		for key in keys:
 			iter = self._unitModel.append()
 			self._unitModel.set(iter, 0, key, 1, '', 2, self._unitDataInCategory[key][1])
+		self._sortedUnitModel.sort_column_changed()
 
 		self._unitName.set_text('')
 		self._unitValue.set_text('')
