@@ -67,11 +67,11 @@ def toroman(n):
 	'xv'
 	"""
 	if n < 0:
-		raise NotImplemented("Value out of roman comprehension")
+		raise NotImplementedError("Value out of roman comprehension")
 	elif n == 0:
 		''
 	elif n >= 4000:
-		raise NotImplemented("Value Out of Range")
+		raise NotImplementedError("Value Out of Range")
 
 	base = 1
 	s = ''
