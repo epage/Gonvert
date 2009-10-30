@@ -277,22 +277,22 @@ class Gonvert(object):
 		if not self._find_result:
 			return
 
-		self._select_found_unit()
+		self._update_find_selection()
 
 	def _find_wrap_around(self):
 		assert 0 < len(self._find_result)
 		assert self._findIndex + 1 == len(self._find_result)
 		#select first result
 		self._findIndex = 0
-		self._select_found_unit()
+		self._update_find_selection()
 
 	def _find_next(self):
 		assert 0 < len(self._find_result)
 		assert self._findIndex + 1 < len(self._find_result)
 		self._findIndex += 1
-		self._select_found_unit()
+		self._update_find_selection()
 
-	def _select_found_unit(self):
+	def _update_find_selection(self):
 		assert 0 < len(self._find_result)
 
 		#check if next find is in a new category (prevent category changes when unnecessary
