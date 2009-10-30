@@ -14,7 +14,6 @@ import gtk.glade
 import gtk.gdk
 
 import constants
-import evil_globals
 import unit_data
 
 
@@ -41,6 +40,16 @@ class Gonvert(object):
 
 	def __init__(self):
 		self._unitDataInCategory = None
+		self._calcsuppress = False
+		self._unit_sort_direction = False
+		self._value_sort_direction = False
+		self._units_sort_direction = False
+
+		self._find_result = [] # empty find result list
+		self._find_count = 0 # default to find result number zero
+
+		self._selected_category = '' # preset to no selected category
+		self._selected_units = {} # empty dictionary for later use
 
 		#check to see if glade file is in current directory (user must be
 		# running from download untar directory)
@@ -199,10 +208,10 @@ class Gonvert(object):
 			categories = unit_data.list_dic.keys()
 			categories.sort()
 			#
-			#If the 'selected_unts' has been stored, then extract evil_globals.selected_units from selections.
+			#If the 'selected_unts' has been stored, then extract self._selected_units from selections.
 			if 'selected_units' in selections:
-				evil_globals.selected_units = selections['selected_units']
-			#Make sure that the 'evil_globals.selected_category' has been stored.
+				self._selected_units = selections['selected_units']
+			#Make sure that the 'self._selected_category' has been stored.
 			if 'selected_category' in selections:
 				#Match an available category to the previously selected category.
 				for counter in range(len(categories)):
@@ -238,7 +247,7 @@ class Gonvert(object):
 	def _on_user_clear_selections(self, a):
 		selectionsDatPath = "/".join((constants._data_path_, "selections.dat"))
 		os.remove(selectionsDatPath)
-		evil_globals.selected_units = {}
+		self._selected_units = {}
 
 	def _on_user_exit(self, a):
 		"""
@@ -246,17 +255,17 @@ class Gonvert(object):
 		should therefore only be called when exiting the program.
 
 		Update selections dictionary which consists of the following keys:
-		'evil_globals.selected_category': full name of selected category
-		'evil_globals.selected_units': evil_globals.selected_units dictionary which contains:
+		'self._selected_category': full name of selected category
+		'self._selected_units': self._selected_units dictionary which contains:
 		[categoryname: #1 displayed unit, #2 displayed unit]
 		"""
 		#Determine the contents of the selected category row
 		selected, iter = self._categoryView.get_selection().get_selected()
-		evil_globals.selected_category = self._categoryModel.get_value(iter, 0)
+		self._selected_category = self._categoryModel.get_value(iter, 0)
 
 		selections = {
-			'selected_category': evil_globals.selected_category,
-			'selected_units': evil_globals.selected_units
+			'selected_category': self._selected_category,
+			'selected_units': self._selected_units
 		}
 		selectionsDatPath = "/".join((constants._data_path_, "selections.dat"))
 		pickle.dump(selections, open(selectionsDatPath, 'w'))
@@ -273,8 +282,8 @@ class Gonvert(object):
 
 	def _findEntry_changed(self, a):
 		#Clear out find results since the user wants to look for something new
-		evil_globals.find_result = [] #empty find result list
-		evil_globals.find_count = 0 #default to find result number zero
+		self._find_result = [] #empty find result list
+		self._find_count = 0 #default to find result number zero
 		self._findLabel.set_text('') #clear result
 
 	def _on_find_key_press(self, a, b):
@@ -299,16 +308,16 @@ class Gonvert(object):
 		#check if 'new find' or 'last find' or 'next-find'
 
 		#new-find = run the find algorithm which also selects the first found unit
-		#         = evil_globals.find_count = 0 and evil_globals.find_result = []
+		#         = self._find_count = 0 and self._find_result = []
 
 		#last-find = restart from top again
-		#          = evil_globals.find_count = len(evil_globals.find_result)
+		#          = self._find_count = len(self._find_result)
 
 		#next-find = continue to next found location
-		#           = evil_globals.find_count = 0 and len(evil_globals.find_result)>0
+		#           = self._find_count = 0 and len(self._find_result)>0
 
 		#check for new-find
-		if len(evil_globals.find_result) == 0:
+		if len(self._find_result) == 0:
 			find_string = string.lower(string.strip(self._findEntry.get_text()))
 			#Make sure that a valid find string has been requested
 			if len(find_string)>0:
@@ -325,34 +334,34 @@ class Gonvert(object):
 						if string.find(string.lower(unit), find_string) >= 0:
 							found_a_unit = 1 #indicate that a unit was found
 							#print "'", find_string, "'", " found at category = ", category, " unit = ", unit
-							evil_globals.find_result.append((category, unit, cat_no, unit_no))
+							self._find_result.append((category, unit, cat_no, unit_no))
 						unit_no = unit_no+1
 					cat_no = cat_no+1
 
 				if found_a_unit == 1:
 					#select the first found unit
-					evil_globals.find_count = 0
+					self._find_count = 0
 					#check if next find is in a new category (prevent category changes when unnecessary
-					if evil_globals.selected_category != evil_globals.find_result[evil_globals.find_count][0]:
-						self._categoryView.set_cursor(evil_globals.find_result[0][2], self._categoryColumn, False)
-						self._unitsView.set_cursor(evil_globals.find_result[0][3], self._unitNameColumn, True)
-						if len(evil_globals.find_result)>1:
-							self._findLabel.set_text(('Press Find for next unit. '+ str(len(evil_globals.find_result))+' result(s).'))
+					if self._selected_category != self._find_result[self._find_count][0]:
+						self._categoryView.set_cursor(self._find_result[0][2], self._categoryColumn, False)
+						self._unitsView.set_cursor(self._find_result[0][3], self._unitNameColumn, True)
+						if len(self._find_result)>1:
+							self._findLabel.set_text(('Press Find for next unit. '+ str(len(self._find_result))+' result(s).'))
 						else:
 							self._findLabel.set_text('Text not found') #Display error
 		else: #must be next-find or last-find
 			#check for last-find
-			if evil_globals.find_count == len(evil_globals.find_result)-1:
+			if self._find_count == len(self._find_result)-1:
 				#select first result
-				evil_globals.find_count = 0
-				self._categoryView.set_cursor(evil_globals.find_result[evil_globals.find_count][2], self._categoryColumn, False)
-				self._unitsView.set_cursor(evil_globals.find_result[evil_globals.find_count][3], self._unitNameColumn, True)
+				self._find_count = 0
+				self._categoryView.set_cursor(self._find_result[self._find_count][2], self._categoryColumn, False)
+				self._unitsView.set_cursor(self._find_result[self._find_count][3], self._unitNameColumn, True)
 			else: #must be next-find
-				evil_globals.find_count = evil_globals.find_count+1
+				self._find_count = self._find_count+1
 				#check if next find is in a new category (prevent category changes when unnecessary
-				if evil_globals.selected_category != evil_globals.find_result[evil_globals.find_count][0]:
-					self._categoryView.set_cursor(evil_globals.find_result[evil_globals.find_count][2], self._categoryColumn, False)
-				self._unitsView.set_cursor(evil_globals.find_result[evil_globals.find_count][3], self._unitNameColumn, True)
+				if self._selected_category != self._find_result[self._find_count][0]:
+					self._categoryView.set_cursor(self._find_result[self._find_count][2], self._categoryColumn, False)
+				self._unitsView.set_cursor(self._find_result[self._find_count][3], self._unitNameColumn, True)
 
 	def _on_click_unit_column(self, col):
 		"""
@@ -364,19 +373,19 @@ class Gonvert(object):
 			self._unitNameColumn.set_sort_indicator(True)
 			self._unitValueColumn.set_sort_indicator(False)
 			self._unitSymbolColumn.set_sort_indicator(False)
-			self._unitNameColumn.set_sort_order(not evil_globals.unit_sort_direction)
+			self._unitNameColumn.set_sort_order(not self._unit_sort_direction)
 		elif col is self._unitValueColumn:
 			selectedUnitColumn = 1
 			self._unitNameColumn.set_sort_indicator(False)
 			self._unitValueColumn.set_sort_indicator(True)
 			self._unitSymbolColumn.set_sort_indicator(False)
-			self._unitValueColumn.set_sort_order(not evil_globals.value_sort_direction)
+			self._unitValueColumn.set_sort_order(not self._value_sort_direction)
 		elif col is self._unitSymbolColumn:
 			selectedUnitColumn = 2
 			self._unitNameColumn.set_sort_indicator(False)
 			self._unitValueColumn.set_sort_indicator(False)
 			self._unitSymbolColumn.set_sort_indicator(True)
-			self._unitSymbolColumn.set_sort_order(not evil_globals.units_sort_direction)
+			self._unitSymbolColumn.set_sort_order(not self._units_sort_direction)
 		else:
 			assert False, "Unknown column: %s" % (col.get_title(), )
 
@@ -399,7 +408,7 @@ class Gonvert(object):
 				return
 
 			#special sorting exceptions for ascii values (instead of float values)
-			if evil_globals.selected_category == "Computer Numbers":
+			if self._selected_category == "Computer Numbers":
 				value_text = self._unitModel.get_value(iter, 1)
 			else:
 				if self._unitModel.get_value(iter, 1) == None or unit_model.get_value(iter, 1) == '':
@@ -423,26 +432,26 @@ class Gonvert(object):
 			return
 		else:
 			if selectedUnitColumn == 0:
-				if not evil_globals.unit_sort_direction:
+				if not self._unit_sort_direction:
 					sorted_list.sort(lambda (x, xx, xxx), (y, yy, yyy): cmp(string.lower(x), string.lower(y)))
-					evil_globals.unit_sort_direction = True
+					self._unit_sort_direction = True
 				else:
 					sorted_list.sort(lambda (x, xx, xxx), (y, yy, yyy): cmp(string.lower(y), string.lower(x)))
-					evil_globals.unit_sort_direction = False
+					self._unit_sort_direction = False
 			elif selectedUnitColumn == 1:
 				sorted_list.sort()
-				if not evil_globals.value_sort_direction:
-					evil_globals.value_sort_direction = True
+				if not self._value_sort_direction:
+					self._value_sort_direction = True
 				else:
 					sorted_list.reverse()
-					evil_globals.value_sort_direction = False
+					self._value_sort_direction = False
 			else:
-				if not evil_globals.units_sort_direction:
+				if not self._units_sort_direction:
 					sorted_list.sort(lambda (x, xx, xxx), (y, yy, yyy): cmp(string.lower(x), string.lower(y)))
-					evil_globals.units_sort_direction = True
+					self._units_sort_direction = True
 				else:
 					sorted_list.sort(lambda (x, xx, xxx), (y, yy, yyy): cmp(string.lower(y), string.lower(x)))
-					evil_globals.units_sort_direction = False
+					self._units_sort_direction = False
 
 			#Clear out the previous list of units
 			self._unitModel = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING)
@@ -484,11 +493,11 @@ class Gonvert(object):
 		#Determine the contents of the selected category row
 		selected, iter = row.get_selection().get_selected()
 
-		evil_globals.selected_category = self._categoryModel.get_value(iter, 0)
+		self._selected_category = self._categoryModel.get_value(iter, 0)
 
-		evil_globals.unit_sort_direction = False
-		evil_globals.value_sort_direction = False
-		evil_globals.units_sort_direction = False
+		self._unit_sort_direction = False
+		self._value_sort_direction = False
+		self._units_sort_direction = False
 		self._unitNameColumn.set_sort_indicator(False)
 		self._unitValueColumn.set_sort_indicator(False)
 		self._unitSymbolColumn.set_sort_indicator(False)
@@ -515,27 +524,27 @@ class Gonvert(object):
 	def restore_units(self):
 		# Restore the previous historical settings of previously selected units in this newly selected category
 		#Since category has just been clicked, the list will be sorted already.
-		if evil_globals.selected_category in evil_globals.selected_units:
-			if evil_globals.selected_units[evil_globals.selected_category][0]:
+		if self._selected_category in self._selected_units:
+			if self._selected_units[self._selected_category][0]:
 				''"debug ''"
-				#evil_globals.selected_units[evil_globals.selected_category] = [selected_unit, evil_globals.selected_units[evil_globals.selected_category][0]]
+				#self._selected_units[self._selected_category] = [selected_unit, self._selected_units[self._selected_category][0]]
 
-				units = unit_data.list_dic[evil_globals.selected_category].keys()
+				units = unit_data.list_dic[self._selected_category].keys()
 				units.sort()
 				del units[0] # do not display .base_unit description key
 
 				#Restore oldest selection first.
-				if evil_globals.selected_units[evil_globals.selected_category][1]:
+				if self._selected_units[self._selected_category][1]:
 					unit_no = 0
 					for unit in units:
-						if unit == evil_globals.selected_units[evil_globals.selected_category][1]:
+						if unit == self._selected_units[self._selected_category][1]:
 							self._unitsView.set_cursor(unit_no, self._unitNameColumn, True)
 						unit_no = unit_no+1
 
 				#Restore newest selection second.
 				unit_no = 0
 				for unit in units:
-					if unit == evil_globals.selected_units[evil_globals.selected_category][0]:
+					if unit == self._selected_units[self._selected_category][0]:
 						self._unitsView.set_cursor(unit_no, self._unitNameColumn, True)
 					unit_no = unit_no+1
 
@@ -547,7 +556,7 @@ class Gonvert(object):
 		self._on_click_unit(row)
 
 	def _on_click_unit(self, row):
-		evil_globals.calcsuppress = 1 #suppress calculations
+		self._calcsuppress = True #suppress calculations
 
 		#Determine the contents of the selected row.
 		selected, iter = self._unitsView.get_selection().get_selected()
@@ -576,24 +585,24 @@ class Gonvert(object):
 
 		self._unitSymbol.set_text(unit_spec[1]) # put units into label text
 		if self._unitValue.get_text() == '':
-			if evil_globals.selected_category == "Computer Numbers":
+			if self._selected_category == "Computer Numbers":
 				self._unitValue.set_text("0")
 			else:
 				self._unitValue.set_text("0.0")
 
 		#For historical purposes, record this unit as the most recent one in this category.
 		# Also, if a previous unit exists, then shift that previous unit to oldest unit.
-		if evil_globals.selected_category in evil_globals.selected_units:
-			if evil_globals.selected_units[evil_globals.selected_category][0]:
-				evil_globals.selected_units[evil_globals.selected_category] = [selected_unit, evil_globals.selected_units[evil_globals.selected_category][0]]
+		if self._selected_category in self._selected_units:
+			if self._selected_units[self._selected_category][0]:
+				self._selected_units[self._selected_category] = [selected_unit, self._selected_units[self._selected_category][0]]
 		else:
-			evil_globals.selected_units[evil_globals.selected_category] = [selected_unit, '']
+			self._selected_units[self._selected_category] = [selected_unit, '']
 
 		# select the text so user can start typing right away
 		self._unitValue.grab_focus()
 		self._unitValue.select_region(0, -1)
 
-		evil_globals.calcsuppress = 0 #enable calculations
+		self._calcsuppress = False #enable calculations
 
 	def _on_user_write_units(self, a):
 		''"Write the list of categories and units to stdout for documentation purposes.''"
@@ -628,11 +637,11 @@ class Gonvert(object):
 		messagebox_model.insert_at_cursor(_(u'The units list has been written to stdout. You can capture this printout by starting gonvert from the command line as follows: \n$ gonvert > file.txt'), -1)
 
 	def top(self, a):
-		if evil_globals.calcsuppress == 1:
-			#evil_globals.calcsuppress = 0
+		if self._calcsuppress:
+			#self._calcsuppress = False
 			return
 		# determine if value to be calculated is empty
-		if evil_globals.selected_category == "Computer Numbers":
+		if self._selected_category == "Computer Numbers":
 			if self._unitValue.get_text() == '':
 				value = '0'
 			else:
@@ -667,17 +676,17 @@ class Gonvert(object):
 
 			# if the second row has a unit then update its value
 			if self._previousUnitName.get_text() != '':
-				evil_globals.calcsuppress = 1
+				self._calcsuppress = True
 				func, arg = self._unitDataInCategory[self._previousUnitName.get_text()][0]
 				self._previousUnitValue.set_text(str(apply(func.from_base, (base, arg, ))))
-				evil_globals.calcsuppress = 0
+				self._calcsuppress = False
 
 	def bottom(self, a):
-		if evil_globals.calcsuppress == 1:
-			#evil_globals.calcsuppress = 0
+		if self._calcsuppress == True:
+			#self._calcsuppress = False
 			return
 		# determine if value to be calculated is empty
-		if evil_globals.selected_category == "Computer Numbers":
+		if self._selected_category == "Computer Numbers":
 			if self._previousUnitValue.get_text() == '':
 				value = '0'
 			else:
@@ -712,10 +721,10 @@ class Gonvert(object):
 
 			# if the second row has a unit then update its value
 			if self._unitName.get_text() != '':
-				evil_globals.calcsuppress = 1
+				self._calcsuppress = True
 				func, arg = self._unitDataInCategory[self._unitName.get_text()][0]
 				self._unitValue.set_text(str(apply(func.from_base, (base, arg, ))))
-				evil_globals.calcsuppress = 0
+				self._calcsuppress = False
 
 
 def main():
