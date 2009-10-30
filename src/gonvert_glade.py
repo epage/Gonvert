@@ -293,7 +293,7 @@ def click_unit_column(col):
 
 def click_category(row):
 	global unitModel, categoryModel
-	global unit_dic, list_dic
+	global unitDataInCategory, list_dic
 
 	#Clear out the previous list of units
 	unitModel = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING)
@@ -318,15 +318,15 @@ def click_category(row):
 	unitValueColumn.set_sort_indicator(False)
 	unitSymbolColumn.set_sort_indicator(False)
 
-	unit_dic = unit_data.list_dic[selected.get_value(iter, 0)]
-	keys = unit_dic.keys()
+	unitDataInCategory = unit_data.list_dic[selected.get_value(iter, 0)]
+	keys = unitDataInCategory.keys()
 	keys.sort()
 	del keys[0] # do not display .base_unit description key
 
 	#Fill up the units descriptions and clear the value cells
 	for key in keys:
 		iter = unitModel.append()
-		unitModel.set(iter, 0, key, 1, '', 2, unit_dic[key][1])
+		unitModel.set(iter, 0, key, 1, '', 2, unitDataInCategory[key][1])
 
 	unitName.set_text('')
 	unitValue.set_text('')
@@ -339,7 +339,7 @@ def click_category(row):
 
 
 def restore_units():
-	global unit_dic, list_dic
+	global unitDataInCategory, list_dic
 
 	# Restore the previous historical settings of previously selected units in this newly selected category
 	#Since category has just been clicked, the list will be sorted already.
@@ -384,7 +384,7 @@ def click_unit(row):
 
 	selected_unit = selected.get_value(iter, 0)
 
-	unit_spec = unit_dic[selected_unit]
+	unit_spec = unitDataInCategory[selected_unit]
 
 	#Clear out the description
 	text_model = gtk.TextBuffer(None)
@@ -445,8 +445,8 @@ def write_units(a):
 	for category_key in category_keys:
 		total_categories = total_categories + 1
 		print category_key, ": "
-		unit_dic = unit_data.list_dic[category_key]
-		unit_keys = unit_dic.keys()
+		unitDataInCategory = unit_data.list_dic[category_key]
+		unit_keys = unitDataInCategory.keys()
 		unit_keys.sort()
 		del unit_keys[0] # do not display .base_unit description key
 		for unit_key in unit_keys:
@@ -481,10 +481,10 @@ class Ccalculate(object):
 				value = float(unitValue.get_text())
 
 		if unitName.get_text() != '':
-			func, arg = unit_dic[unitName.get_text()][0] #retrieve the conversion function and value from the selected unit
+			func, arg = unitDataInCategory[unitName.get_text()][0] #retrieve the conversion function and value from the selected unit
 			base = apply(func.to_base, (value, arg, )) #determine the base unit value
 
-			keys = unit_dic.keys()
+			keys = unitDataInCategory.keys()
 			keys.sort()
 			del keys[0]
 			row = 0
@@ -494,7 +494,7 @@ class Ccalculate(object):
 
 			while iter:
 				#get the formula from the name at the row
-				func, arg = unit_dic[unitModel.get_value(iter, 0)][0]
+				func, arg = unitDataInCategory[unitModel.get_value(iter, 0)][0]
 
 				#set the result in the value column
 				unitModel.set(iter, 1, str(apply(func.from_base, (base, arg, ))))
@@ -505,7 +505,7 @@ class Ccalculate(object):
 			# if the second row has a unit then update its value
 			if previousUnitName.get_text() != '':
 				evil_globals.calcsuppress = 1
-				func, arg = unit_dic[previousUnitName.get_text()][0]
+				func, arg = unitDataInCategory[previousUnitName.get_text()][0]
 				previousUnitValue.set_text(str(apply(func.from_base, (base, arg, ))))
 				evil_globals.calcsuppress = 0
 
@@ -526,10 +526,10 @@ class Ccalculate(object):
 				value = float(previousUnitValue.get_text())
 
 		if previousUnitName.get_text() != '':
-			func, arg = unit_dic[previousUnitName.get_text()][0] #retrieve the conversion function and value from the selected unit
+			func, arg = unitDataInCategory[previousUnitName.get_text()][0] #retrieve the conversion function and value from the selected unit
 			base = apply(func.to_base, (value, arg, )) #determine the base unit value
 
-			keys = unit_dic.keys()
+			keys = unitDataInCategory.keys()
 			keys.sort()
 			del keys[0]
 			row = 0
@@ -539,7 +539,7 @@ class Ccalculate(object):
 
 			while iter:
 				#get the formula from the name at the row
-				func, arg = unit_dic[unitModel.get_value(iter, 0)][0]
+				func, arg = unitDataInCategory[unitModel.get_value(iter, 0)][0]
 
 				#set the result in the value column
 				unitModel.set(iter, 1, str(apply(func.from_base, (base, arg, ))))
@@ -550,7 +550,7 @@ class Ccalculate(object):
 			# if the second row has a unit then update its value
 			if unitName.get_text() != '':
 				evil_globals.calcsuppress = 1
-				func, arg = unit_dic[unitName.get_text()][0]
+				func, arg = unitDataInCategory[unitName.get_text()][0]
 				unitValue.set_text(str(apply(func.from_base, (base, arg, ))))
 				evil_globals.calcsuppress = 0
 
