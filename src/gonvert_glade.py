@@ -246,47 +246,13 @@ class Gonvert(object):
 		windowDatPath = "/".join((constants._data_path_, "window.dat"))
 		pickle.dump(window_settings, open(windowDatPath, 'w'))
 
-	def _on_shortlist_changed(self, a):
-		try:
-			raise NotImplementedError("%s" % self._shortlistcheck.get_active())
-		except Exception:
-			_moduleLogger.exception()
+	def _clear_find(self):
+		# switch to "new find" state
+		self._find_result = []
+		self._find_count = 0
 
-	def _on_edit_shortlist(self, a):
-		try:
-			raise NotImplementedError("%s" % self._toggleShortList.get_active())
-		except Exception:
-			_moduleLogger.exception()
-
-	def _on_user_clear_selections(self, a):
-		try:
-			selectionsDatPath = "/".join((constants._data_path_, "selections.dat"))
-			os.remove(selectionsDatPath)
-			self._selected_units = {}
-		except Exception:
-			_moduleLogger.exception()
-
-	def _on_user_exit(self, a):
-		try:
-			self._save_settings()
-		except Exception:
-			_moduleLogger.exception()
-		finally:
-			gtk.main_quit()
-
-	def _on_findEntry_changed(self, a):
-		"""
-		Clear out find results since the user wants to look for something new
-		"""
-		try:
-			# switch to "new find" state
-			self._find_result = []
-			self._find_count = 0
-
-			# Clear our user message
-			self._findLabel.set_text('')
-		except Exception:
-			_moduleLogger.exception()
+		# Clear our user message
+		self._findLabel.set_text('')
 
 	def _find_first(self):
 		assert len(self._find_result) == 0
@@ -323,10 +289,45 @@ class Gonvert(object):
 
 	def _select_found_unit(self):
 		assert 0 < len(self._find_result)
+
 		#check if next find is in a new category (prevent category changes when unnecessary
 		if self._selected_category != self._find_result[self._find_count][0]:
-			self._categoryView.set_cursor(self._find_result[self._find_count][2], self._categoryColumn, False)
-		self._unitsView.set_cursor(self._find_result[self._find_count][3], self._unitNameColumn, True)
+			self._categoryView.set_cursor(
+				self._find_result[self._find_count][2], self._categoryColumn, False
+			)
+
+		self._unitsView.set_cursor(
+			self._find_result[self._find_count][3], self._unitNameColumn, True
+		)
+
+	def _on_findEntry_changed(self, *args):
+		"""
+		Clear out find results since the user wants to look for something new
+		"""
+		try:
+			self._clear_find()
+		except Exception:
+			_moduleLogger.exception()
+
+	def _on_shortlist_changed(self, *args):
+		try:
+			raise NotImplementedError("%s" % self._shortlistcheck.get_active())
+		except Exception:
+			_moduleLogger.exception()
+
+	def _on_edit_shortlist(self, *args):
+		try:
+			raise NotImplementedError("%s" % self._toggleShortList.get_active())
+		except Exception:
+			_moduleLogger.exception()
+
+	def _on_user_clear_selections(self, *args):
+		try:
+			selectionsDatPath = "/".join((constants._data_path_, "selections.dat"))
+			os.remove(selectionsDatPath)
+			self._selected_units = {}
+		except Exception:
+			_moduleLogger.exception()
 
 	def _on_find_activate(self, a):
 		"""
@@ -731,6 +732,14 @@ class Gonvert(object):
 		dlg.set_authors(["Anthony Tekatch <anthony@unihedron.com>", "Ed Page <edpage@byu.net>"])
 		dlg.run()
 		dlg.destroy()
+
+	def _on_user_exit(self, *args):
+		try:
+			self._save_settings()
+		except Exception:
+			_moduleLogger.exception()
+		finally:
+			gtk.main_quit()
 
 
 def main():
