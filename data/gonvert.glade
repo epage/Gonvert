@@ -350,7 +350,6 @@
 			  <property name="fixed_height_mode">False</property>
 			  <property name="hover_selection">False</property>
 			  <property name="hover_expand">False</property>
-			  <signal name="button_release_event" handler="on_unitsView_button_released" last_modification_time="Thu, 24 Jun 2004 01:11:55 GMT"/>
 			  <signal name="cursor_changed" handler="on_unitsView_cursor_changed" last_modification_time="Thu, 24 Jun 2004 01:11:42 GMT"/>
 			</widget>
 		      </child>

@@ -144,7 +144,6 @@ class Gonvert(object):
 			"on_exit_menu_activate": self._on_user_exit,
 			"on_main_window_destroy": self._on_user_exit,
 			"on_categoryView_select_row": self._on_click_category,
-			"on_unitsView__on_click_unit_column": self._on_click_unit_column,
 			"on_unitValue_changed": self._on_unit_value_changed,
 			"on_previousUnitValue_changed": self._on_previous_unit_value_changed,
 			"on_writeUnitsMenuItem_activate": self._on_user_write_units,
@@ -155,7 +154,6 @@ class Gonvert(object):
 			"on_messagebox_ok_clicked": self.messagebox_ok_clicked,
 			"on_clearSelectionMenuItem_activate": self._on_user_clear_selections,
 			"on_unitsView_cursor_changed": self._on_click_unit,
-			"on_unitsView_button_released": self._on_button_released,
 			"on_shortlistcheck_toggled": self._on_shortlist_changed,
 			"on_toggleShortList_activate": self._on_edit_shortlist,
 		}
@@ -366,24 +364,18 @@ class Gonvert(object):
 		Sort the contents of the col when the user clicks on the title.
 		"""
 		#Determine which column requires sorting
-		if col is self._unitNameColumn:
-			selectedUnitColumn = 0
-			self._unitNameColumn.set_sort_indicator(True)
-			self._unitValueColumn.set_sort_indicator(False)
-			self._unitSymbolColumn.set_sort_indicator(False)
-			self._unitNameColumn.set_sort_order(not self._unit_sort_direction)
-		elif col is self._unitValueColumn:
-			selectedUnitColumn = 1
-			self._unitNameColumn.set_sort_indicator(False)
-			self._unitValueColumn.set_sort_indicator(True)
-			self._unitSymbolColumn.set_sort_indicator(False)
-			self._unitValueColumn.set_sort_order(not self._value_sort_direction)
-		elif col is self._unitSymbolColumn:
-			selectedUnitColumn = 2
-			self._unitNameColumn.set_sort_indicator(False)
-			self._unitValueColumn.set_sort_indicator(False)
-			self._unitSymbolColumn.set_sort_indicator(True)
-			self._unitSymbolColumn.set_sort_order(not self._units_sort_direction)
+		self._unitNameColumn.set_sort_indicator(False)
+		self._unitValueColumn.set_sort_indicator(False)
+		self._unitSymbolColumn.set_sort_indicator(False)
+		for selectedUnitColumn, (maybeCol, sortDirection) in enumerate((
+			(self._unitNameColumn, self._unit_sort_direction),
+			(self._unitValueColumn, self._value_sort_direction),
+			(self._unitSymbolColumn, self._units_sort_direction),
+		)):
+			if col is maybeCol:
+				col.set_sort_indicator(True)
+				col.set_sort_order(not sortDirection)
+				break
 		else:
 			assert False, "Unknown column: %s" % (col.get_title(), )
 
@@ -548,9 +540,6 @@ class Gonvert(object):
 		# select the text so user can start typing right away
 		self._unitValue.grab_focus()
 		self._unitValue.select_region(0, -1)
-
-	def _on_button_released(self, row, a):
-		self._on_click_unit(row)
 
 	def _on_click_unit(self, row):
 		self._calcsuppress = True #suppress calculations
