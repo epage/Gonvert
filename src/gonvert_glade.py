@@ -274,7 +274,7 @@ class Gonvert(object):
 		# Clear our user message
 		self._findLabel.set_text('')
 
-	def _first_find(self):
+	def _find_first(self):
 		assert len(self._find_result) == 0
 		assert self._find_count == 0
 		findString = string.lower(string.strip(self._findEntry.get_text()))
@@ -328,7 +328,7 @@ class Gonvert(object):
 		           = self._find_count = 0 and len(self._find_result)>0
 		"""
 		if len(self._find_result) == 0:
-			self._first_find()
+			self._find_first()
 		else:
 			if self._find_count == len(self._find_result)-1:
 				self._find_wrap_around()
@@ -506,7 +506,6 @@ class Gonvert(object):
 		#Since category has just been clicked, the list will be sorted already.
 		if self._selected_category in self._selected_units:
 			if self._selected_units[self._selected_category][0]:
-				''"debug ''"
 				#self._selected_units[self._selected_category] = [selected_unit, self._selected_units[self._selected_category][0]]
 
 				units = unit_data.UNIT_DESCRIPTIONS[self._selected_category].keys()
