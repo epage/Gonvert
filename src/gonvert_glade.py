@@ -410,8 +410,10 @@ class Gonvert(object):
 				if col is maybeCol:
 					direction = getattr(self, directionName)
 					gtkDirection = gtk.SORT_ASCENDING if direction else gtk.SORT_DESCENDING
+
 					# cause a sort
 					self._sortedUnitModel.set_sort_column_id(columnIndex, gtkDirection)
+
 					# set the visual for sorting
 					col.set_sort_indicator(True)
 					col.set_sort_order(not direction)
