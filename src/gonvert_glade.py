@@ -135,9 +135,7 @@ class Gonvert(object):
 		self._categoryView.set_property('rules_hint', 1)
 
 		#Populate the catagories list
-		keys = unit_data.UNIT_DESCRIPTIONS.keys()
-		keys.sort()
-		for key in keys:
+		for key in unit_data.UNIT_CATEGORIES:
 			iter = self._categoryModel.append()
 			self._categoryModel.set(iter, 0, key)
 
@@ -195,19 +193,14 @@ class Gonvert(object):
 			#Retrieving previous selections from ~/.gonvert/selections.dat
 			selections = pickle.load(open(selectionsDatPath, 'r'))
 			#Restoring previous selections.
-			#
-			#Make a list of categories to determine which one to select
-			categories = unit_data.UNIT_DESCRIPTIONS.keys()
-			categories.sort()
-			#
 			#If the 'selected_unts' has been stored, then extract self._selected_units from selections.
 			if 'selected_units' in selections:
 				self._selected_units = selections['selected_units']
 			#Make sure that the 'self._selected_category' has been stored.
 			if 'selected_category' in selections:
 				#Match an available category to the previously selected category.
-				for counter in range(len(categories)):
-					if selections['selected_category'] == categories[counter]:
+				for counter in range(len(unit_data.UNIT_CATEGORIES)):
+					if selections['selected_category'] == unit_data.UNIT_CATEGORIES[counter]:
 						# Restore the previously selected category.
 						self._categoryView.set_cursor(counter, self._categoryColumn, False)
 						self._categoryView.grab_focus()
@@ -309,11 +302,9 @@ class Gonvert(object):
 			find_string = string.lower(string.strip(self._findEntry.get_text()))
 			#Make sure that a valid find string has been requested
 			if len(find_string)>0:
-				categories = unit_data.UNIT_DESCRIPTIONS.keys()
-				categories.sort()
 				found_a_unit = 0 #reset the 'found-a-unit' flag
 				cat_no = 0
-				for category in categories:
+				for category in unit_data.UNIT_CATEGORIES:
 					units = unit_data.UNIT_DESCRIPTIONS[category].keys()
 					units.sort()
 					del units[0] # do not display .base_unit description key
@@ -399,7 +390,7 @@ class Gonvert(object):
 			if self._selected_category == "Computer Numbers":
 				value_text = self._unitModel.get_value(iter, 1)
 			else:
-				if self._unitModel.get_value(iter, 1) == None or unit_model.get_value(iter, 1) == '':
+				if self._unitModel.get_value(iter, 1) == None or self._unitModel.get_value(iter, 1) == '':
 					value_text = ''
 				else:
 					value_text = float(self._unitModel.get_value(iter, 1))
@@ -600,15 +591,14 @@ class Gonvert(object):
 		messagebox.show()
 		while gtk.events_pending():
 			gtk.mainiteration(False)
-		category_keys = unit_data.UNIT_DESCRIPTIONS.keys()
-		category_keys.sort()
+
 		total_categories = 0
 		total_units = 0
 		print 'gonvert-%s%s' % (
 			constants.__version__,
 			_(u' - Unit Conversion Utility  - Convertible units listing: ')
 		)
-		for category_key in category_keys:
+		for category_key in unit_data.UNIT_CATEGORIES:
 			total_categories = total_categories + 1
 			print category_key, ": "
 			self._unitDataInCategory = unit_data.UNIT_DESCRIPTIONS[category_key]
