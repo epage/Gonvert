@@ -224,18 +224,10 @@ class Gonvert(object):
 		self.restore_units()
 
 	def _on_shortlist_changed(self, a):
-		print "shortlist"
-		if self._shortlistcheck.get_active():
-			print "1"
-		else:
-			print "0"
+		raise NotImplementedError("%s" % self._shortlistcheck.get_active())
 
 	def _on_edit_shortlist(self, a):
-		print "edit shortlist"
-		if self._toggleShortList.get_active():
-			print "1"
-		else:
-			print "0"
+		raise NotImplementedError("%s" % self._toggleShortList.get_active())
 
 	def _on_user_clear_selections(self, a):
 		selectionsDatPath = "/".join((constants._data_path_, "selections.dat"))
