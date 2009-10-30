@@ -148,8 +148,8 @@ class Gonvert(object):
 			"on_unitValue_changed": self._on_unit_value_changed,
 			"on_previousUnitValue_changed": self._on_previous_unit_value_changed,
 			"on_writeUnitsMenuItem_activate": self._on_user_write_units,
-			"on_findButton_clicked": self._on_user_find_units,
-			"on_findEntry_activated": self._on_user_find_units,
+			"on_findButton_clicked": self._on_find_activate,
+			"on_findEntry_activated": self._on_find_activate,
 			"on_findEntry_changed": self._on_findEntry_changed,
 			"on_aboutMenuItem_activate": self._on_about_clicked,
 			"on_messagebox_ok_clicked": self.messagebox_ok_clicked,
@@ -314,7 +314,7 @@ class Gonvert(object):
 			self._categoryView.set_cursor(self._find_result[self._find_count][2], self._categoryColumn, False)
 		self._unitsView.set_cursor(self._find_result[self._find_count][3], self._unitNameColumn, True)
 
-	def _on_user_find_units(self, a):
+	def _on_find_activate(self, a):
 		"""
 		check if 'new find' or 'last find' or 'next-find'
 
