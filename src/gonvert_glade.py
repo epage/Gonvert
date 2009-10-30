@@ -85,14 +85,8 @@ class Gonvert(object):
 		self._unitValue = widgets.get_widget('unitValue')
 		self._previousUnitName = widgets.get_widget('previousUnitName')
 		self._previousUnitValue = widgets.get_widget('previousUnitValue')
-		self._about_box = widgets.get_widget('about_box')
 		messagebox = widgets.get_widget('msgbox')
 		messageboxtext = widgets.get_widget('msgboxtext')
-
-		about_image = widgets.get_widget('about_image')
-		about_image.set_from_file(pixmapspath +'gonvert.png')
-		versionlabel = widgets.get_widget('versionlabel')
-		versionlabel.set_text(constants.__version__)
 
 		self._unitSymbol = widgets.get_widget('unitSymbol')
 		self._previousUnitSymbol = widgets.get_widget('previousUnitSymbol')
@@ -161,7 +155,6 @@ class Gonvert(object):
 			"on_findEntry_key_press_event": self._on_find_key_press,
 			"on_findEntry_changed": self._findEntry_changed,
 			"on_aboutMenuItem_activate": self._on_about_clicked,
-			"on_about_close_clicked": self._on_about_hide,
 			"on_messagebox_ok_clicked": self.messagebox_ok_clicked,
 			"on_clearSelectionMenuItem_activate": self._on_user_clear_selections,
 			"on_unitsView_cursor_changed": self._on_click_unit,
@@ -292,14 +285,18 @@ class Gonvert(object):
 			#Check if the key pressed was the 'Enter' key
 			if ord(b.string[0]) == 13:
 				#Execute the find units function
-				_on_user_find_units(1)
+				self._on_user_find_units(1)
 
 	def _on_about_clicked(self, a):
-		self._about_box.show()
-
-	def _on_about_hide(self, *args):
-		self._about_box.hide()
-		return gtk.TRUE
+		dlg = gtk.AboutDialog()
+		dlg.set_name(constants.__pretty_app_name__)
+		dlg.set_version("%s-%d" % (constants.__version__, constants.__build__))
+		dlg.set_copyright("Copyright 2009 - GPL")
+		dlg.set_comments("")
+		dlg.set_website("http://unihedron.com/projects/gonvert/gonvert.php")
+		dlg.set_authors(["Anthony Tekatch <anthony@unihedron.com>", "Ed Page <edpage@byu.net>"])
+		dlg.run()
+		dlg.destroy()
 
 	def messagebox_ok_clicked(self, a):
 		messagebox.hide()
