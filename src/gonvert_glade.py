@@ -304,15 +304,6 @@ class Gonvert(object):
 			self._find_result[self._find_count][3], self._unitNameColumn, True
 		)
 
-	def _on_findEntry_changed(self, *args):
-		"""
-		Clear out find results since the user wants to look for something new
-		"""
-		try:
-			self._clear_find()
-		except Exception:
-			_moduleLogger.exception()
-
 	def _on_shortlist_changed(self, *args):
 		try:
 			raise NotImplementedError("%s" % self._shortlistcheck.get_active())
@@ -330,6 +321,15 @@ class Gonvert(object):
 			selectionsDatPath = "/".join((constants._data_path_, "selections.dat"))
 			os.remove(selectionsDatPath)
 			self._selected_units = {}
+		except Exception:
+			_moduleLogger.exception()
+
+	def _on_findEntry_changed(self, *args):
+		"""
+		Clear out find results since the user wants to look for something new
+		"""
+		try:
+			self._clear_find()
 		except Exception:
 			_moduleLogger.exception()
 
