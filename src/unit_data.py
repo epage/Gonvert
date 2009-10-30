@@ -12,7 +12,7 @@ _ = gettext.gettext
 # remaining entries define unit specifications [(function, argument), units, description]
 # 	where function can be m and argument is the multiplying factor to_base
 # 	or function can be any other arbitrary function and argument can be a single argument
-list_dic = {
+UNIT_DESCRIPTIONS = {
 		_(u"Acceleration"): {
 			".base_unit": _(u"meter per second squared"),
 			_(u"free fall"):

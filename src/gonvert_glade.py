@@ -96,6 +96,8 @@ class Gonvert(object):
 		self._findEntry = widgets.get_widget('findEntry')
 		self._findLabel = widgets.get_widget('findLabel')
 		findButton = widgets.get_widget('findButton')
+		ToolTips = gtk.Tooltips()
+		ToolTips.set_tip(findButton, _(u'Find unit (F6)'))
 
 		#insert a self._categoryColumnumn into the units list even though the heading will not be seen
 		renderer = gtk.CellRendererText()
@@ -133,14 +135,11 @@ class Gonvert(object):
 		self._categoryView.set_property('rules_hint', 1)
 
 		#Populate the catagories list
-		keys = unit_data.list_dic.keys()
+		keys = unit_data.UNIT_DESCRIPTIONS.keys()
 		keys.sort()
 		for key in keys:
 			iter = self._categoryModel.append()
 			self._categoryModel.set(iter, 0, key)
-
-		ToolTips = gtk.Tooltips()
-		ToolTips.set_tip(findButton, _(u'Find unit (F6)'))
 
 		#--------- connections to GUI ----------------
 		dic = {
@@ -148,12 +147,12 @@ class Gonvert(object):
 			"on_main_window_destroy": self._on_user_exit,
 			"on_categoryView_select_row": self._on_click_category,
 			"on_unitsView__on_click_unit_column": self._on_click_unit_column,
-			"on_unitValue_changed": self.top,
-			"on_previousUnitValue_changed": self.bottom,
+			"on_unitValue_changed": self._on_unit_value_changed,
+			"on_previousUnitValue_changed": self._on_previous_unit_value_changed,
 			"on_writeUnitsMenuItem_activate": self._on_user_write_units,
 			"on_findButton_clicked": self._on_user_find_units,
 			"on_findEntry_key_press_event": self._on_find_key_press,
-			"on_findEntry_changed": self._findEntry_changed,
+			"on_findEntry_changed": self._on_findEntry_changed,
 			"on_aboutMenuItem_activate": self._on_about_clicked,
 			"on_messagebox_ok_clicked": self.messagebox_ok_clicked,
 			"on_clearSelectionMenuItem_activate": self._on_user_clear_selections,
@@ -198,7 +197,7 @@ class Gonvert(object):
 			#Restoring previous selections.
 			#
 			#Make a list of categories to determine which one to select
-			categories = unit_data.list_dic.keys()
+			categories = unit_data.UNIT_DESCRIPTIONS.keys()
 			categories.sort()
 			#
 			#If the 'selected_unts' has been stored, then extract self._selected_units from selections.
@@ -265,7 +264,7 @@ class Gonvert(object):
 		gtk.mainquit
 		sys.exit()
 
-	def _findEntry_changed(self, a):
+	def _on_findEntry_changed(self, a):
 		#Clear out find results since the user wants to look for something new
 		self._find_result = [] #empty find result list
 		self._find_count = 0 #default to find result number zero
@@ -310,12 +309,12 @@ class Gonvert(object):
 			find_string = string.lower(string.strip(self._findEntry.get_text()))
 			#Make sure that a valid find string has been requested
 			if len(find_string)>0:
-				categories = unit_data.list_dic.keys()
+				categories = unit_data.UNIT_DESCRIPTIONS.keys()
 				categories.sort()
 				found_a_unit = 0 #reset the 'found-a-unit' flag
 				cat_no = 0
 				for category in categories:
-					units = unit_data.list_dic[category].keys()
+					units = unit_data.UNIT_DESCRIPTIONS[category].keys()
 					units.sort()
 					del units[0] # do not display .base_unit description key
 					unit_no = 0
@@ -491,7 +490,7 @@ class Gonvert(object):
 		self._unitValueColumn.set_sort_indicator(False)
 		self._unitSymbolColumn.set_sort_indicator(False)
 
-		self._unitDataInCategory = unit_data.list_dic[selected.get_value(iter, 0)]
+		self._unitDataInCategory = unit_data.UNIT_DESCRIPTIONS[selected.get_value(iter, 0)]
 		keys = self._unitDataInCategory.keys()
 		keys.sort()
 		del keys[0] # do not display .base_unit description key
@@ -518,7 +517,7 @@ class Gonvert(object):
 				''"debug ''"
 				#self._selected_units[self._selected_category] = [selected_unit, self._selected_units[self._selected_category][0]]
 
-				units = unit_data.list_dic[self._selected_category].keys()
+				units = unit_data.UNIT_DESCRIPTIONS[self._selected_category].keys()
 				units.sort()
 				del units[0] # do not display .base_unit description key
 
@@ -601,7 +600,7 @@ class Gonvert(object):
 		messagebox.show()
 		while gtk.events_pending():
 			gtk.mainiteration(False)
-		category_keys = unit_data.list_dic.keys()
+		category_keys = unit_data.UNIT_DESCRIPTIONS.keys()
 		category_keys.sort()
 		total_categories = 0
 		total_units = 0
@@ -612,7 +611,7 @@ class Gonvert(object):
 		for category_key in category_keys:
 			total_categories = total_categories + 1
 			print category_key, ": "
-			self._unitDataInCategory = unit_data.list_dic[category_key]
+			self._unitDataInCategory = unit_data.UNIT_DESCRIPTIONS[category_key]
 			unit_keys = self._unitDataInCategory.keys()
 			unit_keys.sort()
 			del unit_keys[0] # do not display .base_unit description key
@@ -621,11 +620,8 @@ class Gonvert(object):
 				print "\t", unit_key
 		print total_categories, ' categories'
 		print total_units, ' units'
-		messagebox_model = gtk.TextBuffer(None)
-		messageboxtext.set_buffer(messagebox_model)
-		messagebox_model.insert_at_cursor(_(u'The units list has been written to stdout. You can capture this printout by starting gonvert from the command line as follows: \n$ gonvert > file.txt'), -1)
 
-	def top(self, a):
+	def _on_unit_value_changed(self, a):
 		if self._calcsuppress:
 			#self._calcsuppress = False
 			return
@@ -670,7 +666,7 @@ class Gonvert(object):
 				self._previousUnitValue.set_text(str(apply(func.from_base, (base, arg, ))))
 				self._calcsuppress = False
 
-	def bottom(self, a):
+	def _on_previous_unit_value_changed(self, a):
 		if self._calcsuppress == True:
 			#self._calcsuppress = False
 			return
