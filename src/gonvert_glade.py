@@ -149,7 +149,7 @@ class Gonvert(object):
 			"on_previousUnitValue_changed": self._on_previous_unit_value_changed,
 			"on_writeUnitsMenuItem_activate": self._on_user_write_units,
 			"on_findButton_clicked": self._on_user_find_units,
-			"on_findEntry_key_press_event": self._on_find_key_press,
+			"on_findEntry_activated": self._on_user_find_units,
 			"on_findEntry_changed": self._on_findEntry_changed,
 			"on_aboutMenuItem_activate": self._on_about_clicked,
 			"on_messagebox_ok_clicked": self.messagebox_ok_clicked,
@@ -262,14 +262,6 @@ class Gonvert(object):
 		self._find_result = [] #empty find result list
 		self._find_count = 0 #default to find result number zero
 		self._findLabel.set_text('') #clear result
-
-	def _on_find_key_press(self, a, b):
-		#Check if the key pressed was an ASCII key
-		if len(b.string)>0:
-			#Check if the key pressed was the 'Enter' key
-			if ord(b.string[0]) == 13:
-				#Execute the find units function
-				self._on_user_find_units(1)
 
 	def _on_about_clicked(self, a):
 		dlg = gtk.AboutDialog()
