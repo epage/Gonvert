@@ -40,6 +40,8 @@ class Gonvert(object):
 	]
 
 	def __init__(self):
+		self._unitDataInCategory = None
+
 		#check to see if glade file is in current directory (user must be
 		# running from download untar directory)
 		for gladePath in self._glade_files:
@@ -468,8 +470,6 @@ class Gonvert(object):
 		return
 
 	def _on_click_category(self, row):
-		global unitDataInCategory, list_dic
-
 		#Clear out the previous list of units
 		self._unitModel = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING)
 		self._unitsView.set_model(self._unitModel)
@@ -493,15 +493,15 @@ class Gonvert(object):
 		self._unitValueColumn.set_sort_indicator(False)
 		self._unitSymbolColumn.set_sort_indicator(False)
 
-		unitDataInCategory = unit_data.list_dic[selected.get_value(iter, 0)]
-		keys = unitDataInCategory.keys()
+		self._unitDataInCategory = unit_data.list_dic[selected.get_value(iter, 0)]
+		keys = self._unitDataInCategory.keys()
 		keys.sort()
 		del keys[0] # do not display .base_unit description key
 
 		#Fill up the units descriptions and clear the value cells
 		for key in keys:
 			iter = self._unitModel.append()
-			self._unitModel.set(iter, 0, key, 1, '', 2, unitDataInCategory[key][1])
+			self._unitModel.set(iter, 0, key, 1, '', 2, self._unitDataInCategory[key][1])
 
 		self._unitName.set_text('')
 		self._unitValue.set_text('')
@@ -513,8 +513,6 @@ class Gonvert(object):
 		self.restore_units()
 
 	def restore_units(self):
-		global unitDataInCategory, list_dic
-
 		# Restore the previous historical settings of previously selected units in this newly selected category
 		#Since category has just been clicked, the list will be sorted already.
 		if evil_globals.selected_category in evil_globals.selected_units:
@@ -556,7 +554,7 @@ class Gonvert(object):
 
 		selected_unit = selected.get_value(iter, 0)
 
-		unit_spec = unitDataInCategory[selected_unit]
+		unit_spec = self._unitDataInCategory[selected_unit]
 
 		#Clear out the description
 		text_model = gtk.TextBuffer(None)
@@ -616,8 +614,8 @@ class Gonvert(object):
 		for category_key in category_keys:
 			total_categories = total_categories + 1
 			print category_key, ": "
-			unitDataInCategory = unit_data.list_dic[category_key]
-			unit_keys = unitDataInCategory.keys()
+			self._unitDataInCategory = unit_data.list_dic[category_key]
+			unit_keys = self._unitDataInCategory.keys()
 			unit_keys.sort()
 			del unit_keys[0] # do not display .base_unit description key
 			for unit_key in unit_keys:
@@ -630,8 +628,6 @@ class Gonvert(object):
 		messagebox_model.insert_at_cursor(_(u'The units list has been written to stdout. You can capture this printout by starting gonvert from the command line as follows: \n$ gonvert > file.txt'), -1)
 
 	def top(self, a):
-		global testvalue
-
 		if evil_globals.calcsuppress == 1:
 			#evil_globals.calcsuppress = 0
 			return
@@ -648,10 +644,10 @@ class Gonvert(object):
 				value = float(self._unitValue.get_text())
 
 		if self._unitName.get_text() != '':
-			func, arg = unitDataInCategory[self._unitName.get_text()][0] #retrieve the conversion function and value from the selected unit
+			func, arg = self._unitDataInCategory[self._unitName.get_text()][0] #retrieve the conversion function and value from the selected unit
 			base = apply(func.to_base, (value, arg, )) #determine the base unit value
 
-			keys = unitDataInCategory.keys()
+			keys = self._unitDataInCategory.keys()
 			keys.sort()
 			del keys[0]
 			row = 0
@@ -661,7 +657,7 @@ class Gonvert(object):
 
 			while iter:
 				#get the formula from the name at the row
-				func, arg = unitDataInCategory[self._unitModel.get_value(iter, 0)][0]
+				func, arg = self._unitDataInCategory[self._unitModel.get_value(iter, 0)][0]
 
 				#set the result in the value column
 				self._unitModel.set(iter, 1, str(apply(func.from_base, (base, arg, ))))
@@ -672,7 +668,7 @@ class Gonvert(object):
 			# if the second row has a unit then update its value
 			if self._previousUnitName.get_text() != '':
 				evil_globals.calcsuppress = 1
-				func, arg = unitDataInCategory[self._previousUnitName.get_text()][0]
+				func, arg = self._unitDataInCategory[self._previousUnitName.get_text()][0]
 				self._previousUnitValue.set_text(str(apply(func.from_base, (base, arg, ))))
 				evil_globals.calcsuppress = 0
 
@@ -693,10 +689,10 @@ class Gonvert(object):
 				value = float(self._previousUnitValue.get_text())
 
 		if self._previousUnitName.get_text() != '':
-			func, arg = unitDataInCategory[self._previousUnitName.get_text()][0] #retrieve the conversion function and value from the selected unit
+			func, arg = self._unitDataInCategory[self._previousUnitName.get_text()][0] #retrieve the conversion function and value from the selected unit
 			base = apply(func.to_base, (value, arg, )) #determine the base unit value
 
-			keys = unitDataInCategory.keys()
+			keys = self._unitDataInCategory.keys()
 			keys.sort()
 			del keys[0]
 			row = 0
@@ -706,7 +702,7 @@ class Gonvert(object):
 
 			while iter:
 				#get the formula from the name at the row
-				func, arg = unitDataInCategory[self._unitModel.get_value(iter, 0)][0]
+				func, arg = self._unitDataInCategory[self._unitModel.get_value(iter, 0)][0]
 
 				#set the result in the value column
 				self._unitModel.set(iter, 1, str(apply(func.from_base, (base, arg, ))))
@@ -717,7 +713,7 @@ class Gonvert(object):
 			# if the second row has a unit then update its value
 			if self._unitName.get_text() != '':
 				evil_globals.calcsuppress = 1
-				func, arg = unitDataInCategory[self._unitName.get_text()][0]
+				func, arg = self._unitDataInCategory[self._unitName.get_text()][0]
 				self._unitValue.set_text(str(apply(func.from_base, (base, arg, ))))
 				evil_globals.calcsuppress = 0
 
