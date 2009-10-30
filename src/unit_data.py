@@ -2190,6 +2190,15 @@ _(u"Electrical Voltage"): {".base_unit": _(u"volt"),
 UNIT_CATEGORIES = sorted(UNIT_DESCRIPTIONS.iterkeys())
 
 
+def get_units(category):
+	units = sorted(UNIT_DESCRIPTIONS[category].iterkeys())
+
+	# do not display .base_unit description key
+	del units[0]
+
+	return units
+
+
 future_dic = {
 	_(u"Wire Gauge"): {
 		".base_unit": "circular mils",

@@ -168,6 +168,9 @@ class Gonvert(object):
 		else:
 			_moduleLogger.warn("Error: Could not find gonvert icon: %s" % iconPath)
 
+		self._load_settings()
+
+	def _load_settings(self):
 		#Restore window size from previously saved settings if it exists and is valid.
 		windowDatPath = "/".join((constants._data_path_, "window.dat"))
 		if os.path.exists(windowDatPath):
@@ -215,18 +218,7 @@ class Gonvert(object):
 
 		self.restore_units()
 
-	def _on_shortlist_changed(self, a):
-		raise NotImplementedError("%s" % self._shortlistcheck.get_active())
-
-	def _on_edit_shortlist(self, a):
-		raise NotImplementedError("%s" % self._toggleShortList.get_active())
-
-	def _on_user_clear_selections(self, a):
-		selectionsDatPath = "/".join((constants._data_path_, "selections.dat"))
-		os.remove(selectionsDatPath)
-		self._selected_units = {}
-
-	def _on_user_exit(self, a):
+	def _save_settings(self):
 		"""
 		This routine saves the selections to a file, and
 		should therefore only be called when exiting the program.
@@ -254,85 +246,102 @@ class Gonvert(object):
 		windowDatPath = "/".join((constants._data_path_, "window.dat"))
 		pickle.dump(window_settings, open(windowDatPath, 'w'))
 
-		gtk.mainquit
-		sys.exit()
+	def _on_shortlist_changed(self, a):
+		raise NotImplementedError("%s" % self._shortlistcheck.get_active())
+
+	def _on_edit_shortlist(self, a):
+		raise NotImplementedError("%s" % self._toggleShortList.get_active())
+
+	def _on_user_clear_selections(self, a):
+		selectionsDatPath = "/".join((constants._data_path_, "selections.dat"))
+		os.remove(selectionsDatPath)
+		self._selected_units = {}
+
+	def _on_user_exit(self, a):
+		try:
+			self._save_settings()
+		finally:
+			gtk.main_quit()
 
 	def _on_findEntry_changed(self, a):
-		#Clear out find results since the user wants to look for something new
-		self._find_result = [] #empty find result list
-		self._find_count = 0 #default to find result number zero
-		self._findLabel.set_text('') #clear result
+		"""
+		Clear out find results since the user wants to look for something new
+		"""
+		# switch to "new find" state
+		self._find_result = []
+		self._find_count = 0
 
-	def _on_about_clicked(self, a):
-		dlg = gtk.AboutDialog()
-		dlg.set_name(constants.__pretty_app_name__)
-		dlg.set_version("%s-%d" % (constants.__version__, constants.__build__))
-		dlg.set_copyright("Copyright 2009 - GPL")
-		dlg.set_comments("")
-		dlg.set_website("http://unihedron.com/projects/gonvert/gonvert.php")
-		dlg.set_authors(["Anthony Tekatch <anthony@unihedron.com>", "Ed Page <edpage@byu.net>"])
-		dlg.run()
-		dlg.destroy()
+		# Clear our user message
+		self._findLabel.set_text('')
 
-	def messagebox_ok_clicked(self, a):
-		messagebox.hide()
+	def _first_find(self):
+		assert len(self._find_result) == 0
+		assert self._find_count == 0
+		findString = string.lower(string.strip(self._findEntry.get_text()))
+		if not findString:
+			return
+
+		# Gather info on all the matching units from all categories
+		for catIndex, category in enumerate(unit_data.UNIT_CATEGORIES):
+			units = unit_data.get_units(category)
+			for unitIndex, unit in enumerate(units):
+				loweredUnit = unit.lower()
+				if loweredUnit in findString or findString in loweredUnit:
+					self._find_result.append((category, unit, catIndex, unitIndex))
+
+		if not self._find_result:
+			return
+
+		self._select_found_unit()
+
+	def _find_wrap_around(self):
+		assert 0 < len(self._find_result)
+		assert self._find_count + 1 == len(self._find_result)
+		#select first result
+		self._find_count = 0
+		self._select_found_unit()
+
+	def _find_next(self):
+		assert 0 < len(self._find_result)
+		assert self._find_count + 1 < len(self._find_result)
+		self._find_count += 1
+		self._select_found_unit()
+
+	def _select_found_unit(self):
+		assert 0 < len(self._find_result)
+		#check if next find is in a new category (prevent category changes when unnecessary
+		if self._selected_category != self._find_result[self._find_count][0]:
+			self._categoryView.set_cursor(self._find_result[self._find_count][2], self._categoryColumn, False)
+		self._unitsView.set_cursor(self._find_result[self._find_count][3], self._unitNameColumn, True)
 
 	def _on_user_find_units(self, a):
-		#check if 'new find' or 'last find' or 'next-find'
+		"""
+		check if 'new find' or 'last find' or 'next-find'
 
-		#new-find = run the find algorithm which also selects the first found unit
-		#         = self._find_count = 0 and self._find_result = []
+		new-find = run the find algorithm which also selects the first found unit
+		         = self._find_count = 0 and self._find_result = []
 
-		#last-find = restart from top again
-		#          = self._find_count = len(self._find_result)
+		last-find = restart from top again
+		          = self._find_count = len(self._find_result)
 
-		#next-find = continue to next found location
-		#           = self._find_count = 0 and len(self._find_result)>0
-
-		#check for new-find
+		next-find = continue to next found location
+		           = self._find_count = 0 and len(self._find_result)>0
+		"""
 		if len(self._find_result) == 0:
-			find_string = string.lower(string.strip(self._findEntry.get_text()))
-			#Make sure that a valid find string has been requested
-			if len(find_string)>0:
-				found_a_unit = 0 #reset the 'found-a-unit' flag
-				cat_no = 0
-				for category in unit_data.UNIT_CATEGORIES:
-					units = unit_data.UNIT_DESCRIPTIONS[category].keys()
-					units.sort()
-					del units[0] # do not display .base_unit description key
-					unit_no = 0
-					for unit in units:
-						if string.find(string.lower(unit), find_string) >= 0:
-							found_a_unit = 1 #indicate that a unit was found
-							#print "'", find_string, "'", " found at category = ", category, " unit = ", unit
-							self._find_result.append((category, unit, cat_no, unit_no))
-						unit_no = unit_no+1
-					cat_no = cat_no+1
-
-				if found_a_unit == 1:
-					#select the first found unit
-					self._find_count = 0
-					#check if next find is in a new category (prevent category changes when unnecessary
-					if self._selected_category != self._find_result[self._find_count][0]:
-						self._categoryView.set_cursor(self._find_result[0][2], self._categoryColumn, False)
-						self._unitsView.set_cursor(self._find_result[0][3], self._unitNameColumn, True)
-						if len(self._find_result)>1:
-							self._findLabel.set_text(('Press Find for next unit. '+ str(len(self._find_result))+' result(s).'))
-						else:
-							self._findLabel.set_text('Text not found') #Display error
-		else: #must be next-find or last-find
-			#check for last-find
+			self._first_find()
+		else:
 			if self._find_count == len(self._find_result)-1:
-				#select first result
-				self._find_count = 0
-				self._categoryView.set_cursor(self._find_result[self._find_count][2], self._categoryColumn, False)
-				self._unitsView.set_cursor(self._find_result[self._find_count][3], self._unitNameColumn, True)
-			else: #must be next-find
-				self._find_count = self._find_count+1
-				#check if next find is in a new category (prevent category changes when unnecessary
-				if self._selected_category != self._find_result[self._find_count][0]:
-					self._categoryView.set_cursor(self._find_result[self._find_count][2], self._categoryColumn, False)
-				self._unitsView.set_cursor(self._find_result[self._find_count][3], self._unitNameColumn, True)
+				self._find_wrap_around()
+			else:
+				self._find_next()
+
+		if not self._find_result:
+			self._findLabel.set_text('Text not found')
+		else:
+			resultsLeft = len(self._find_result) - self._find_count - 1
+			self._findLabel.set_text(
+				'%s result(s) left' % (resultsLeft, )
+			)
 
 	def _on_click_unit_column(self, col):
 		"""
@@ -575,6 +584,9 @@ class Gonvert(object):
 
 		self._calcsuppress = False #enable calculations
 
+	def messagebox_ok_clicked(self, a):
+		messagebox.hide()
+
 	def _on_user_write_units(self, a):
 		''"Write the list of categories and units to stdout for documentation purposes.''"
 		messagebox_model = gtk.TextBuffer(None)
@@ -692,6 +704,17 @@ class Gonvert(object):
 				func, arg = self._unitDataInCategory[self._unitName.get_text()][0]
 				self._unitValue.set_text(str(apply(func.from_base, (base, arg, ))))
 				self._calcsuppress = False
+
+	def _on_about_clicked(self, a):
+		dlg = gtk.AboutDialog()
+		dlg.set_name(constants.__pretty_app_name__)
+		dlg.set_version("%s-%d" % (constants.__version__, constants.__build__))
+		dlg.set_copyright("Copyright 2009 - GPL")
+		dlg.set_comments("")
+		dlg.set_website("http://unihedron.com/projects/gonvert/gonvert.php")
+		dlg.set_authors(["Anthony Tekatch <anthony@unihedron.com>", "Ed Page <edpage@byu.net>"])
+		dlg.run()
+		dlg.destroy()
 
 
 def main():
