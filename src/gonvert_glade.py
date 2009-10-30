@@ -247,19 +247,30 @@ class Gonvert(object):
 		pickle.dump(window_settings, open(windowDatPath, 'w'))
 
 	def _on_shortlist_changed(self, a):
-		raise NotImplementedError("%s" % self._shortlistcheck.get_active())
+		try:
+			raise NotImplementedError("%s" % self._shortlistcheck.get_active())
+		except Exception:
+			_moduleLogger.exception()
 
 	def _on_edit_shortlist(self, a):
-		raise NotImplementedError("%s" % self._toggleShortList.get_active())
+		try:
+			raise NotImplementedError("%s" % self._toggleShortList.get_active())
+		except Exception:
+			_moduleLogger.exception()
 
 	def _on_user_clear_selections(self, a):
-		selectionsDatPath = "/".join((constants._data_path_, "selections.dat"))
-		os.remove(selectionsDatPath)
-		self._selected_units = {}
+		try:
+			selectionsDatPath = "/".join((constants._data_path_, "selections.dat"))
+			os.remove(selectionsDatPath)
+			self._selected_units = {}
+		except Exception:
+			_moduleLogger.exception()
 
 	def _on_user_exit(self, a):
 		try:
 			self._save_settings()
+		except Exception:
+			_moduleLogger.exception()
 		finally:
 			gtk.main_quit()
 
@@ -267,12 +278,15 @@ class Gonvert(object):
 		"""
 		Clear out find results since the user wants to look for something new
 		"""
-		# switch to "new find" state
-		self._find_result = []
-		self._find_count = 0
+		try:
+			# switch to "new find" state
+			self._find_result = []
+			self._find_count = 0
 
-		# Clear our user message
-		self._findLabel.set_text('')
+			# Clear our user message
+			self._findLabel.set_text('')
+		except Exception:
+			_moduleLogger.exception()
 
 	def _find_first(self):
 		assert len(self._find_result) == 0
@@ -327,21 +341,24 @@ class Gonvert(object):
 		next-find = continue to next found location
 		           = self._find_count = 0 and len(self._find_result)>0
 		"""
-		if len(self._find_result) == 0:
-			self._find_first()
-		else:
-			if self._find_count == len(self._find_result)-1:
-				self._find_wrap_around()
+		try:
+			if len(self._find_result) == 0:
+				self._find_first()
 			else:
-				self._find_next()
+				if self._find_count == len(self._find_result)-1:
+					self._find_wrap_around()
+				else:
+					self._find_next()
 
-		if not self._find_result:
-			self._findLabel.set_text('Text not found')
-		else:
-			resultsLeft = len(self._find_result) - self._find_count - 1
-			self._findLabel.set_text(
-				'%s result(s) left' % (resultsLeft, )
-			)
+			if not self._find_result:
+				self._findLabel.set_text('Text not found')
+			else:
+				resultsLeft = len(self._find_result) - self._find_count - 1
+				self._findLabel.set_text(
+					'%s result(s) left' % (resultsLeft, )
+				)
+		except Exception:
+			_moduleLogger.exception()
 
 	def _on_click_unit_column(self, col):
 		"""
