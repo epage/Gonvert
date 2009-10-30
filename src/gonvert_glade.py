@@ -43,6 +43,7 @@ class Gonvert(object):
 		self._unit_sort_direction = False
 		self._value_sort_direction = False
 		self._units_sort_direction = False
+		self._isFullScreen = False
 
 		self._find_result = [] # empty find result list
 		self._findIndex = 0 # default to find result number zero
@@ -93,6 +94,8 @@ class Gonvert(object):
 
 		self._unitDescription = widgets.get_widget('unitDescription')
 
+		self._searchLayout = widgets.get_widget('searchLayout')
+		self._searchLayout.hide()
 		self._findEntry = widgets.get_widget('findEntry')
 		self._findLabel = widgets.get_widget('findLabel')
 		findButton = widgets.get_widget('findButton')
@@ -165,6 +168,8 @@ class Gonvert(object):
 			"on_toggleShortList_activate": self._on_edit_shortlist,
 		}
 		widgets.signal_autoconnect(dic)
+		self._mainWindow.connect("key-press-event", self._on_key_press)
+		self._mainWindow.connect("window-state-event", self._on_window_state_change)
 
 		self._mainWindow.set_title('gonvert- %s - Unit Conversion Utility' % constants.__version__)
 		iconPath = pixmapspath + '/gonvert.png'
@@ -274,24 +279,6 @@ class Gonvert(object):
 				if loweredUnit in findString or findString in loweredUnit:
 					self._find_result.append((category, unit, catIndex, unitIndex))
 
-		if not self._find_result:
-			return
-
-		self._update_find_selection()
-
-	def _find_wrap_around(self):
-		assert 0 < len(self._find_result)
-		assert self._findIndex + 1 == len(self._find_result)
-		#select first result
-		self._findIndex = 0
-		self._update_find_selection()
-
-	def _find_next(self):
-		assert 0 < len(self._find_result)
-		assert self._findIndex + 1 < len(self._find_result)
-		self._findIndex += 1
-		self._update_find_selection()
-
 	def _update_find_selection(self):
 		assert 0 < len(self._find_result)
 
@@ -305,36 +292,7 @@ class Gonvert(object):
 			self._find_result[self._findIndex][3], self._unitNameColumn, True
 		)
 
-	def _on_shortlist_changed(self, *args):
-		try:
-			raise NotImplementedError("%s" % self._shortlistcheck.get_active())
-		except Exception:
-			_moduleLogger.exception()
-
-	def _on_edit_shortlist(self, *args):
-		try:
-			raise NotImplementedError("%s" % self._toggleShortList.get_active())
-		except Exception:
-			_moduleLogger.exception()
-
-	def _on_user_clear_selections(self, *args):
-		try:
-			selectionsDatPath = "/".join((constants._data_path_, "selections.dat"))
-			os.remove(selectionsDatPath)
-			self._selected_units = {}
-		except Exception:
-			_moduleLogger.exception()
-
-	def _on_findEntry_changed(self, *args):
-		"""
-		Clear out find results since the user wants to look for something new
-		"""
-		try:
-			self._clear_find()
-		except Exception:
-			_moduleLogger.exception()
-
-	def _on_find_activate(self, a):
+	def _find_next(self):
 		"""
 		check if 'new find' or 'last find' or 'next-find'
 
@@ -347,24 +305,128 @@ class Gonvert(object):
 		next-find = continue to next found location
 		           = self._findIndex = 0 and len(self._find_result)>0
 		"""
-		try:
-			if len(self._find_result) == 0:
-				self._find_first()
+		if len(self._find_result) == 0:
+			self._find_first()
+		else:
+			if self._findIndex == len(self._find_result)-1:
+				self._findIndex = 0
 			else:
-				if self._findIndex == len(self._find_result)-1:
-					self._find_wrap_around()
-				else:
-					self._find_next()
+				self._findIndex += 1
 
-			if not self._find_result:
-				self._findLabel.set_text('Text not found')
+		if not self._find_result:
+			self._findLabel.set_text('Text not found')
+		else:
+			self._update_find_selection()
+			resultsLeft = len(self._find_result) - self._findIndex - 1
+			self._findLabel.set_text(
+				'%s result(s) left' % (resultsLeft, )
+			)
+
+	def _find_previous(self):
+		"""
+		check if 'new find' or 'last find' or 'next-find'
+
+		new-find = run the find algorithm which also selects the first found unit
+		         = self._findIndex = 0 and self._find_result = []
+
+		last-find = restart from top again
+		          = self._findIndex = len(self._find_result)
+
+		next-find = continue to next found location
+		           = self._findIndex = 0 and len(self._find_result)>0
+		"""
+		if len(self._find_result) == 0:
+			self._find_first()
+		else:
+			if self._findIndex == 0:
+				self._findIndex = len(self._find_result)-1
 			else:
-				resultsLeft = len(self._find_result) - self._findIndex - 1
-				self._findLabel.set_text(
-					'%s result(s) left' % (resultsLeft, )
-				)
+				self._findIndex -= 1
+
+		if not self._find_result:
+			self._findLabel.set_text('Text not found')
+		else:
+			self._update_find_selection()
+			resultsLeft = len(self._find_result) - self._findIndex - 1
+			self._findLabel.set_text(
+				'%s result(s) left' % (resultsLeft, )
+			)
+
+	def _toggle_find(self):
+		if self._searchLayout.get_property("visible"):
+			self._searchLayout.hide()
+		else:
+			self._searchLayout.show()
+
+	def _on_shortlist_changed(self, *args):
+		try:
+			raise NotImplementedError("%s" % self._shortlistcheck.get_active())
 		except Exception:
-			_moduleLogger.exception()
+			_moduleLogger.exception("")
+
+	def _on_edit_shortlist(self, *args):
+		try:
+			raise NotImplementedError("%s" % self._toggleShortList.get_active())
+		except Exception:
+			_moduleLogger.exception("")
+
+	def _on_user_clear_selections(self, *args):
+		try:
+			selectionsDatPath = "/".join((constants._data_path_, "selections.dat"))
+			os.remove(selectionsDatPath)
+			self._selected_units = {}
+		except Exception:
+			_moduleLogger.exception("")
+
+	def _on_key_press(self, widget, event, *args):
+		"""
+		@note Hildon specific
+		"""
+		RETURN_TYPES = (gtk.keysyms.Return, gtk.keysyms.ISO_Enter, gtk.keysyms.KP_Enter)
+		try:
+			if (
+				event.keyval == gtk.keysyms.F6 or
+				event.keyval in RETURN_TYPES and event.get_state() & gtk.gdk.CONTROL_MASK
+			):
+				if self._isFullScreen:
+					self._mainWindow.unfullscreen()
+				else:
+					self._mainWindow.fullscreen()
+			elif event.keyval == gtk.keysyms.f and event.get_state() & gtk.gdk.CONTROL_MASK:
+				self._toggle_find()
+			elif event.keyval == gtk.keysyms.p and event.get_state() & gtk.gdk.CONTROL_MASK:
+				self._find_previous()
+			elif event.keyval == gtk.keysyms.n and event.get_state() & gtk.gdk.CONTROL_MASK:
+				self._find_next()
+		except Exception, e:
+			_moduleLogger.exception("")
+
+	def _on_window_state_change(self, widget, event, *args):
+		"""
+		@note Hildon specific
+		"""
+		try:
+			if event.new_window_state & gtk.gdk.WINDOW_STATE_FULLSCREEN:
+				self._isFullScreen = True
+			else:
+				self._isFullScreen = False
+		except Exception, e:
+			_moduleLogger.exception("")
+
+	def _on_findEntry_changed(self, *args):
+		"""
+		Clear out find results since the user wants to look for something new
+		"""
+		try:
+			self._clear_find()
+		except Exception:
+			_moduleLogger.exception("")
+
+	def _on_find_activate(self, a):
+		try:
+			self._find_next()
+		except Exception:
+			_moduleLogger.exception("")
 
 	def _unit_model_cmp(self, sortedModel, leftItr, rightItr):
 		leftUnitText = self._unitModel.get_value(leftItr, 0)
@@ -423,33 +485,21 @@ class Gonvert(object):
 			else:
 				assert False, "Unknown column: %s" % (col.get_title(), )
 		except Exception:
-			_moduleLogger.exception()
+			_moduleLogger.exception("")
 
-	def _on_click_category(self, row):
+	def _on_click_category(self, *args):
 		#Clear out the description
-		text_model = gtk.TextBuffer(None)
-		self._unitDescription.set_buffer(text_model)
+		self._unitDescription.get_buffer().set_text("")
 
 		#Determine the contents of the selected category row
-		selected, iter = row.get_selection().get_selected()
-
+		selected, iter = self._categoryView.get_selection().get_selected()
 		self._selected_category = self._categoryModel.get_value(iter, 0)
 
-		self._unit_sort_direction = False
-		self._value_sort_direction = False
-		self._units_sort_direction = False
-		self._unitNameColumn.set_sort_indicator(False)
-		self._unitValueColumn.set_sort_indicator(False)
-		self._unitSymbolColumn.set_sort_indicator(False)
-
-		self._unitDataInCategory = unit_data.UNIT_DESCRIPTIONS[selected.get_value(iter, 0)]
-		keys = self._unitDataInCategory.keys()
-		keys.sort()
-		del keys[0] # do not display .base_unit description key
+		self._unitDataInCategory = unit_data.UNIT_DESCRIPTIONS[self._selected_category]
 
 		#Fill up the units descriptions and clear the value cells
 		self._unitModel.clear()
-		for key in keys:
+		for key in unit_data.get_units(self._selected_category):
 			iter = self._unitModel.append()
 			self._unitModel.set(iter, 0, key, 1, '', 2, self._unitDataInCategory[key][1])
 		self._sortedUnitModel.sort_column_changed()
@@ -678,7 +728,7 @@ class Gonvert(object):
 		try:
 			self._save_settings()
 		except Exception:
-			_moduleLogger.exception()
+			_moduleLogger.exception("")
 		finally:
 			gtk.main_quit()
 
