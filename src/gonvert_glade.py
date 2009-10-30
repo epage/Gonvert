@@ -4,7 +4,6 @@
 import os
 import pickle
 import string
-import sys
 import gettext
 import logging
 
