@@ -25,7 +25,7 @@ gettext.textdomain('gonvert')
 _ = gettext.gettext
 
 
-def shortlist_changed(a):
+def _on_shortlist_changed(a):
 	print "shortlist"
 	if shortlistcheck.get_active():
 		print "1"
@@ -33,7 +33,7 @@ def shortlist_changed(a):
 		print "0"
 
 
-def edit_shortlist(a):
+def _on_edit_shortlist(a):
 	print "edit shortlist"
 	if toggleShortList.get_active():
 		print "1"
@@ -41,18 +41,13 @@ def edit_shortlist(a):
 		print "0"
 
 
-def app_size_changed(a, b):
-	''"get current size of window as it changes.''"
-	evil_globals.window_size = mainWindow.get_size()
-
-
-def clear_selections(a):
+def _on_user_clear_selections(a):
 	selectionsDatPath = "/".join((constants._data_path_, "selections.dat"))
 	os.remove(selectionsDatPath)
 	evil_globals.selected_units = {}
 
 
-def exitprogram(a):
+def _on_user_exit(a):
 	"""
 	This routine saves the selections to a file, and
 	should therefore only be called when exiting the program.
@@ -66,12 +61,17 @@ def exitprogram(a):
 	selected, iter = categoryView.get_selection().get_selected()
 	evil_globals.selected_category = categoryModel.get_value(iter, 0)
 
-	selections = {'evil_globals.selected_category': evil_globals.selected_category, 'evil_globals.selected_units': evil_globals.selected_units}
+	selections = {
+		'selected_category': evil_globals.selected_category,
+		'selected_units': evil_globals.selected_units
+	}
 	selectionsDatPath = "/".join((constants._data_path_, "selections.dat"))
 	pickle.dump(selections, open(selectionsDatPath, 'w'))
 
 	#Get last size of app and save it
-	window_settings = {'size': evil_globals.window_size}
+	window_settings = {
+		'size': mainWindow.get_size()
+	}
 	windowDatPath = "/".join((constants._data_path_, "window.dat"))
 	pickle.dump(window_settings, open(windowDatPath, 'w'))
 
@@ -86,20 +86,20 @@ def findEntry_changed(a):
 	findLabel.set_text('') #clear result
 
 
-def find_key_press(a, b):
+def _on_find_key_press(a, b):
 	#Check if the key pressed was an ASCII key
 	if len(b.string)>0:
 		#Check if the key pressed was the 'Enter' key
 		if ord(b.string[0]) == 13:
 			#Execute the find units function
-			find_units(1)
+			_on_user_find_units(1)
 
 
-def about_clicked(a):
+def _on_about_clicked(a):
 	about_box.show()
 
 
-def about_hide(*args):
+def _on_about_hide(*args):
 	about_box.hide()
 	return gtk.TRUE
 
@@ -108,7 +108,7 @@ def messagebox_ok_clicked(a):
 	messagebox.hide()
 
 
-def find_units(a):
+def _on_user_find_units(a):
 	global unitNameColumn
 	global categoryColumn
 	#check if 'new find' or 'last find' or 'next-find'
@@ -170,7 +170,7 @@ def find_units(a):
 			unitsView.set_cursor(evil_globals.find_result[evil_globals.find_count][3], unitNameColumn, True)
 
 
-def click_unit_column(col):
+def _on_click_unit_column(col):
 	"""
 	Sort the contents of the col when the user clicks on the title.
 	"""
@@ -291,7 +291,7 @@ def click_unit_column(col):
 	return
 
 
-def click_category(row):
+def _on_click_category(row):
 	global unitModel, categoryModel
 	global unitDataInCategory, list_dic
 
@@ -372,11 +372,11 @@ def restore_units():
 	unitValue.select_region(0, -1)
 
 
-def button_released(row, a):
+def _on_button_released(row, a):
 	click_unit(row)
 
 
-def click_unit(row):
+def _on_click_unit(row):
 	evil_globals.calcsuppress = 1 #suppress calculations
 
 	#Determine the contents of the selected row.
@@ -426,7 +426,7 @@ def click_unit(row):
 	evil_globals.calcsuppress = 0 #enable calculations
 
 
-def write_units(a):
+def _on_user_write_units(a):
 	''"Write the list of categories and units to stdout for documentation purposes.''"
 	messagebox_model = gtk.TextBuffer(None)
 	messageboxtext.set_buffer(messagebox_model)
@@ -632,29 +632,28 @@ def main():
 
 	#--------- connections to GUI ----------------
 	dic = {
-		"on_exitMenuItem_activate": exitprogram,
-		"on_mainWindow_destroy": exitprogram,
-		"on_categoryView_select_row": click_category,
-		"on_unitsView_click_unit_column": click_unit_column,
+		"on_exitMenuItem_activate": _on_user_exit,
+		"on_mainWindow_destroy": _on_user_exit,
+		"on_categoryView_select_row": _on_click_category,
+		"on_unitsView__on_click_unit_column": _on_click_unit_column,
 		"on_unitValue_changed": calculate.top,
 		"on_previousUnitValue_changed": calculate.bottom,
-		"on_writeUnitsMenuItem_activate": write_units,
-		"on_findButton_clicked": find_units,
-		"on_findEntry_key_press_event": find_key_press,
+		"on_writeUnitsMenuItem_activate": _on_user_write_units,
+		"on_findButton_clicked": _on_user_find_units,
+		"on_findEntry_key_press_event": _on_find_key_press,
 		"on_findEntry_changed": findEntry_changed,
-		"on_about1_activate": about_clicked,
-		"on_about_close_clicked": about_hide,
+		"on_aboutMenuItem_activate": _on_about_clicked,
+		"on_about_close_clicked": _on_about_hide,
 		"on_messagebox_ok_clicked": messagebox_ok_clicked,
-		"on_clearSelectionMenuItem_activate": clear_selections,
-		"on_unitsView_cursor_changed": click_unit,
-		"on_unitsView_button_released": button_released,
-		"on_mainWindow_size_allocate": app_size_changed,
-		"on_shortlistcheck_toggled": shortlist_changed,
-		"on_toggleShortList_activate": edit_shortlist,
+		"on_clearSelectionMenuItem_activate": _on_user_clear_selections,
+		"on_unitsView_cursor_changed": _on_click_unit,
+		"on_unitsView_button_released": _on_button_released,
+		"on_shortlistcheck_toggled": _on_shortlist_changed,
+		"on_toggleShortList_activate": _on_edit_shortlist,
 	}
 
 	widgets.signal_autoconnect(dic)
-	mainWindow.connect("destroy", exitprogram)
+	mainWindow.connect("destroy", _on_user_exit)
 
 	def change_menu_label(labelname, newtext):
 		item_label = widgets.get_widget(labelname).get_children()[0]
@@ -709,21 +708,21 @@ def main():
 	unitNameColumn.set_property('resizable', 1)
 	unitNameColumn.add_attribute(renderer, 'text', 0)
 	unitNameColumn.set_clickable(True)
-	unitNameColumn.connect("clicked", click_unit_column)
+	unitNameColumn.connect("clicked", _on_click_unit_column)
 	unitsView.append_column(unitNameColumn)
 
 	unitValueColumn = gtk.TreeViewColumn(_('Value'), renderer)
 	unitValueColumn.set_property('resizable', 1)
 	unitValueColumn.add_attribute(renderer, 'text', 1)
 	unitValueColumn.set_clickable(True)
-	unitValueColumn.connect("clicked", click_unit_column)
+	unitValueColumn.connect("clicked", _on_click_unit_column)
 	unitsView.append_column(unitValueColumn)
 
 	unitSymbolColumn = gtk.TreeViewColumn(_('Units'), renderer)
 	unitSymbolColumn.set_property('resizable', 1)
 	unitSymbolColumn.add_attribute(renderer, 'text', 2)
 	unitSymbolColumn.set_clickable(True)
-	unitSymbolColumn.connect("clicked", click_unit_column)
+	unitSymbolColumn.connect("clicked", _on_click_unit_column)
 	unitsView.append_column(unitSymbolColumn)
 
 	#Insert a column into the category list even though the heading will not be seen
@@ -762,13 +761,13 @@ def main():
 		categories.sort()
 		#
 		#If the 'selected_unts' has been stored, then extract evil_globals.selected_units from selections.
-		if 'evil_globals.selected_units' in selections:
-			evil_globals.selected_units = selections['evil_globals.selected_units']
+		if 'selected_units' in selections:
+			evil_globals.selected_units = selections['selected_units']
 		#Make sure that the 'evil_globals.selected_category' has been stored.
-		if 'evil_globals.selected_category' in selections:
+		if 'selected_category' in selections:
 			#Match an available category to the previously selected category.
 			for counter in range(len(categories)):
-				if selections['evil_globals.selected_category'] == categories[counter]:
+				if selections['selected_category'] == categories[counter]:
 					# Restore the previously selected category.
 					categoryView.set_cursor(counter, categoryColumn, False)
 					categoryView.grab_focus()
