@@ -13,142 +13,142 @@ _ = gettext.gettext
 # 	where function can be m and argument is the multiplying factor to_base
 # 	or function can be any other arbitrary function and argument can be a single argument
 UNIT_DESCRIPTIONS = {
-		_(u"Acceleration"): {
-			".base_unit": _(u"meter per second squared"),
-			_(u"free fall"):
-			[(converters.m, 9.80665), _(u"gn"), _(u"The ideal falling motion of a body that is subject only to the earth's gravitational field.")],
-			_(u"meter per second squared"):
-			[(converters.m, 1.0), u"m/s\xb2", u''],
-			_(u"foot per second squared"):
-			[(converters.m, 30.48/100), u"ft/s\xb2", u''],
-			_(u"centimeter per second squared"):
-			[(converters.m, 1/100.0), u"cm/s\xb2", ''],
-			_(u"gal"):
-			[(converters.m, 1/100.0), _(u"Gal"), _(u"A unit of gravitational acceleration equal to one centimeter per second per second (named after Galileo)")],
-			_(u"millimeter per second squared"):
-			[(converters.m, 1/1000.0), u"mm/s\xb2", '']
-		},
+	_(u"Acceleration"): {
+		".base_unit": _(u"meter per second squared"),
+		_(u"free fall"):
+		[(converters.m, 9.80665), _(u"gn"), _(u"The ideal falling motion of a body that is subject only to the earth's gravitational field.")],
+		_(u"meter per second squared"):
+		[(converters.m, 1.0), u"m/s\xb2", u''],
+		_(u"foot per second squared"):
+		[(converters.m, 30.48/100), u"ft/s\xb2", u''],
+		_(u"centimeter per second squared"):
+		[(converters.m, 1/100.0), u"cm/s\xb2", ''],
+		_(u"gal"):
+		[(converters.m, 1/100.0), _(u"Gal"), _(u"A unit of gravitational acceleration equal to one centimeter per second per second (named after Galileo)")],
+		_(u"millimeter per second squared"):
+		[(converters.m, 1/1000.0), u"mm/s\xb2", '']
+	},
 
-		_(u"Angle"): {
-			".base_unit": _(u"radian"),
-			_(u"revolution / circle / perigon / turn"):
-			[(converters.m, 2.0*math.pi), "r", _(u"The act of revolving, or turning round on an axis or a center; the motion of a body round a fixed point or line; rotation; as, the revolution of a wheel, of a top, of the earth on its axis, etc.")],
-			_(u"right angle"):
-			[(converters.m, math.pi/2.0), "L", _(u"The angle formed by one line meeting another perpendicularly")],
-			_(u"radian"):
-			[(converters.m, 1.0), _(u"rad"), _(u"An arc of a circle which is equal in length to the radius, or the angle measured by such an arc.")],
-			_(u"degree"):
-			[(converters.m, math.pi/180.0), u"\xb0", _(u"1/360 of a complete revolution.")],
-			_(u"grad | grade | gon"):
-			[(converters.m, math.pi/200), _(u"g"), _(u"One-hundredth of a right angle.")],
-			_(u"milliradian"):
-			[(converters.m, 1/1000.0), _(u"mrad"), _(u"A unit of angular distance equal to one thousandth of a radian.")],
-			_(u"minute"):
-			[(converters.m, math.pi/(180.0*60)), "'", _(u"The sixtieth part of a degree; sixty seconds (Marked thus ('); as, 10deg 20').")],
-			_(u"second"):
-			[(converters.m, math.pi/(180.0*60*60)), '"', _(u"""One sixtieth of a minute.(Marked thus ("); as, 10deg 20' 30"). ''""")],
-			_(u"mil"):
-			[(converters.m, (2*math.pi)/6400), '', _(u"Used in artillery; 1/6400 of a complete revolution.")],
-			_(u"centesimal minute"):
-			[(converters.m, math.pi/20000), '', _(u"One hundredth of a grade, 0.01 grade")],
-			_(u"centesimal second"):
-			[(converters.m, math.pi/2000000), '', _(u"One ten-thousandth of a grade, 0.0001 grade")],
-			_(u"octant"):
-			[(converters.m, math.pi/4.0), '', _(u"The eighth part of a circle (an arc of 45 degrees).")],
-			_(u"quadrant"):
-			[(converters.m, math.pi/2.0), '', _(u"The fourth part of a circle (an arc of 90 degrees).")],
-			_(u"sextant"):
-			[(converters.m, math.pi/3.0), '', _(u"The sixth part of a circle (an arc of 60 degrees).")],
-			_(u"point"):
-			[(converters.m, math.pi/16.0), '', _(u"1/32 of a circle. Points are used on the face of a compass (32 points). Each point is labelled clockwise starting from North as follows: North, North by East, North Northeast, Northeast by North, and Northeast, etc.")],
-			_(u"sign"):
-			[(converters.m, math.pi/6.0), '', _(u"The twelfth part of a circle as in twelve signs of the zodiac (an arc of 30 degrees).")],
-		},
+	_(u"Angle"): {
+		".base_unit": _(u"radian"),
+		_(u"revolution / circle / perigon / turn"):
+		[(converters.m, 2.0*math.pi), "r", _(u"The act of revolving, or turning round on an axis or a center; the motion of a body round a fixed point or line; rotation; as, the revolution of a wheel, of a top, of the earth on its axis, etc.")],
+		_(u"right angle"):
+		[(converters.m, math.pi/2.0), "L", _(u"The angle formed by one line meeting another perpendicularly")],
+		_(u"radian"):
+		[(converters.m, 1.0), _(u"rad"), _(u"An arc of a circle which is equal in length to the radius, or the angle measured by such an arc.")],
+		_(u"degree"):
+		[(converters.m, math.pi/180.0), u"\xb0", _(u"1/360 of a complete revolution.")],
+		_(u"grad | grade | gon"):
+		[(converters.m, math.pi/200), _(u"g"), _(u"One-hundredth of a right angle.")],
+		_(u"milliradian"):
+		[(converters.m, 1/1000.0), _(u"mrad"), _(u"A unit of angular distance equal to one thousandth of a radian.")],
+		_(u"minute"):
+		[(converters.m, math.pi/(180.0*60)), "'", _(u"The sixtieth part of a degree; sixty seconds (Marked thus ('); as, 10deg 20').")],
+		_(u"second"):
+		[(converters.m, math.pi/(180.0*60*60)), '"', _(u"""One sixtieth of a minute.(Marked thus ("); as, 10deg 20' 30"). ''""")],
+		_(u"mil"):
+		[(converters.m, (2*math.pi)/6400), '', _(u"Used in artillery; 1/6400 of a complete revolution.")],
+		_(u"centesimal minute"):
+		[(converters.m, math.pi/20000), '', _(u"One hundredth of a grade, 0.01 grade")],
+		_(u"centesimal second"):
+		[(converters.m, math.pi/2000000), '', _(u"One ten-thousandth of a grade, 0.0001 grade")],
+		_(u"octant"):
+		[(converters.m, math.pi/4.0), '', _(u"The eighth part of a circle (an arc of 45 degrees).")],
+		_(u"quadrant"):
+		[(converters.m, math.pi/2.0), '', _(u"The fourth part of a circle (an arc of 90 degrees).")],
+		_(u"sextant"):
+		[(converters.m, math.pi/3.0), '', _(u"The sixth part of a circle (an arc of 60 degrees).")],
+		_(u"point"):
+		[(converters.m, math.pi/16.0), '', _(u"1/32 of a circle. Points are used on the face of a compass (32 points). Each point is labelled clockwise starting from North as follows: North, North by East, North Northeast, Northeast by North, and Northeast, etc.")],
+		_(u"sign"):
+		[(converters.m, math.pi/6.0), '', _(u"The twelfth part of a circle as in twelve signs of the zodiac (an arc of 30 degrees).")],
+	},
 
-		_(u"Angular Velocity / Frequency"): {
-			".base_unit": _(u"radian per second"),
-			_(u"kiloradian per second"):
-			[(converters.m, 1000.0), "krad/s", ''],
-			_(u"revolution per second"):
-			[(converters.m, 2*math.pi), "rev/s", ''],
-			_(u"hertz"):
-			[(converters.m, 2*math.pi), "Hz", _(u"Named after the German physicist Heinrich Hertz (1857-1894) who was the first to produce electromagnetic waves artificially. Having a periodic interval of one second.")],
-			_(u"radian per second"):
-			[(converters.m, 1.0), "rad/s", ''],
-			_(u"milliradian per second"):
-			[(converters.m, 1/1000.0), "mrad/s", ''],
-			_(u"revolution per minute"):
-			[(converters.m, (2*math.pi)/60.0), "rpm", ''],
-			_(u"revolution per hour"):
-			[(converters.m, (2*math.pi)/3600.0), "rph", ''],
-			_(u"revolution per day"):
-			[(converters.m, (2*math.pi)/(3600.0*24)), "rpd", ''],
-			_(u"gigahertz"):
-			[(converters.m, 1e9*2*math.pi), "GHz", _(u"One billion hertz.")],
-			_(u"terahertz"):
-			[(converters.m, 1e12*2*math.pi), "THz", ''],
-			_(u"petahertz"):
-			[(converters.m, 1e15*2*math.pi), "PHz", ''],
-			_(u"exahertz"):
-			[(converters.m, 1e18*2*math.pi), "EHz", ''],
-			_(u"megahertz"):
-			[(converters.m, 1e6*2*math.pi), "MHz", _(u"One million hertz.")],
-			_(u"kilohertz"):
-			[(converters.m, 1e3*2*math.pi), "kHz", _(u"One thousand hertz.")],
-		},
+	_(u"Angular Velocity / Frequency"): {
+		".base_unit": _(u"radian per second"),
+		_(u"kiloradian per second"):
+		[(converters.m, 1000.0), "krad/s", ''],
+		_(u"revolution per second"):
+		[(converters.m, 2*math.pi), "rev/s", ''],
+		_(u"hertz"):
+		[(converters.m, 2*math.pi), "Hz", _(u"Named after the German physicist Heinrich Hertz (1857-1894) who was the first to produce electromagnetic waves artificially. Having a periodic interval of one second.")],
+		_(u"radian per second"):
+		[(converters.m, 1.0), "rad/s", ''],
+		_(u"milliradian per second"):
+		[(converters.m, 1/1000.0), "mrad/s", ''],
+		_(u"revolution per minute"):
+		[(converters.m, (2*math.pi)/60.0), "rpm", ''],
+		_(u"revolution per hour"):
+		[(converters.m, (2*math.pi)/3600.0), "rph", ''],
+		_(u"revolution per day"):
+		[(converters.m, (2*math.pi)/(3600.0*24)), "rpd", ''],
+		_(u"gigahertz"):
+		[(converters.m, 1e9*2*math.pi), "GHz", _(u"One billion hertz.")],
+		_(u"terahertz"):
+		[(converters.m, 1e12*2*math.pi), "THz", ''],
+		_(u"petahertz"):
+		[(converters.m, 1e15*2*math.pi), "PHz", ''],
+		_(u"exahertz"):
+		[(converters.m, 1e18*2*math.pi), "EHz", ''],
+		_(u"megahertz"):
+		[(converters.m, 1e6*2*math.pi), "MHz", _(u"One million hertz.")],
+		_(u"kilohertz"):
+		[(converters.m, 1e3*2*math.pi), "kHz", _(u"One thousand hertz.")],
+	},
 
-		_(u"Area"): {
-			".base_unit": _(u"square meter"),
-			_(u"meter diameter circle"):
-			[(converters.f, ('pi*(x/2.0)**2', '2.0*(x/pi)**(0.5)')), "m dia.", _(u"Type the diameter of the circle in meters to find its area displayed in other fields.")],
-			_(u"centimeter diameter circle"):
-			[(converters.f, ('pi*(x/200.0)**2', '200.0*(x/pi)**(0.5)')), "cm dia.", _(u"Type the diameter of the circle in centimeters to find its area displayed in other fields.")],
-			_(u"inch diameter circle"):
-			[(converters.f, ('pi*(((x*(25.4/1000))/2.0) )**2', '1000/25.4 * 2.0*(x/pi)**(0.5)')), "in dia.", _(u"Type the diameter of the circle in inches to find its area displayed in other fields.")],
-			_(u"foot diameter circle"):
-			[(converters.f, ('pi*(((x*((12*25.4)/1000))/2.0) )**2', '1000/(12*25.4) * 2.0*(x/pi)**(0.5)')), "ft dia.", _(u"Type the diameter of the circle in feet to find its area displayed in other fields.")],
-			_(u"are"):
-			[(converters.m, 100.0), '', _(u"The unit of superficial measure, being a square of which each side is ten meters in length; 100 square meters, or about 119.6 square yards.")],
-			_(u"acre"):
-			[(converters.m, 4046.8564224), '', _(u"A piece of land, containing 160 square rods, or 4, 840 square yards, or 43, 560 square feet. This is the English statute acre. That of the United States is the same. The Scotch acre was about 1.26 of the English, and the Irish 1.62 of the English. Note: The acre was limited to its present definite quantity by statutes of Edward I., Edward III., and Henry VIII.")],
-			_(u"acre (Cheshire)"):
-			[(converters.m, 8561.97632), '', ''],
-			_(u"acre (Irish)"):
-			[(converters.m, 6555.26312), '', ''],
-			_(u"acre (Scottish)"):
-			[(converters.m, 5142.20257), '', ''],
-			_(u"arpent (French)"):
-			[(converters.m, 4088/1.196), '', _(u" 4, 088 sq. yards, or nearly five sixths of an English acre.")],
-			_(u"arpent (woodland)"):
-			[(converters.m, 16*25.29285264*10+16*25.29285264*2.5+(16*25.29285264*10)/160), '', _(u"1 acre, 1 rood, 1 perch")],
-			_(u"barn"):
-			[(converters.m, 1.0/1e28), '', _('Used in Nuclear physics to describe the apparent cross-sectional size of atomic sized objects that are bombarded with smaller objects (like electrons). 10^-28 square meters. 100 square femtometers. Originated from the semi-humorous idiom big as a barn and used by physicists to describe the size of the scattering object (Ex: That was as big as 5 barns!).')],
-			_(u"cho"):
-			[(converters.m, 16*25.29285264*10*2.45), '', _(u"Japanese. 2.45 acre")],
-			_(u"circular inch"):
-			[(converters.m, 1000000.0/(1e6*1550*1.273)), '', ''],
-			_(u"circular mil"):
-			[(converters.m, 1.0/(1e6*1550*1.273)), "cmil", ''],
-			_(u"desyatina | dessiatina"):
-			[(converters.m, 16*25.29285264*10*2.6996), '', _(u"Russian. 2.6996 acre. 2400 square sadzhens")],
-			_(u"flag"):
-			[(converters.m, 25/10.7639104167097), '', _(u"square pace (a pace is 5 feet).")],
-			_(u"hide | carucate"):
-			[(converters.m, 40468.71618), '', _(u"An ancient English measure of the amount of land required to support family")],
-			_(u"hectare"):
-			[(converters.m, 10000.0), "ha", _(u"A measure of area, or superficies, containing a hundred ares, or 10, 000 square meters, and equivalent to 2.471 acres.")],
-			_(u"homestead | quarter section"):
-			[(converters.m, 16*25.29285264*10*160), '', _(u"160 acres, 1/4 square mile, or 1/4 section. Use by the governments of North America early settlers in the western states and provinces were allowed to take title to a homestead of 160 acres of land by registering a claim, settling on the land, and cultivating it.")],
-			_(u"perch"):
-			[(converters.m, (16*25.29285264*10)/160), '', _(u"Used to measure land. A square rod; the 160th part of an acre.")],
-			_(u"sabin"):
-			[(converters.m, 1/10.7639104167097), '', _(u"A unit of acoustic absorption equivalent to the absorption by a square foot of a surface that absorbs all incident sound. 1ft\xb2.")],
-			_(u"square"):
-			[(converters.m, 100/10.7639104167097), '', _(u"Used in the construction for measuring roofing material, finished lumber, and other building materials. One square is equals 100 square feet.")],
-			_(u"section"):
-			[(converters.m, 2.59*1E6), '', _(u"Used in land measuring. One square mile. An area of about 640 acres")],
-			_(u"square league (land)"):
-			[(converters.m, 23309892.99), '', ''],
+	_(u"Area"): {
+		".base_unit": _(u"square meter"),
+		_(u"meter diameter circle"):
+		[(converters.f, ('pi*(x/2.0)**2', '2.0*(x/pi)**(0.5)')), "m dia.", _(u"Type the diameter of the circle in meters to find its area displayed in other fields.")],
+		_(u"centimeter diameter circle"):
+		[(converters.f, ('pi*(x/200.0)**2', '200.0*(x/pi)**(0.5)')), "cm dia.", _(u"Type the diameter of the circle in centimeters to find its area displayed in other fields.")],
+		_(u"inch diameter circle"):
+		[(converters.f, ('pi*(((x*(25.4/1000))/2.0) )**2', '1000/25.4 * 2.0*(x/pi)**(0.5)')), "in dia.", _(u"Type the diameter of the circle in inches to find its area displayed in other fields.")],
+		_(u"foot diameter circle"):
+		[(converters.f, ('pi*(((x*((12*25.4)/1000))/2.0) )**2', '1000/(12*25.4) * 2.0*(x/pi)**(0.5)')), "ft dia.", _(u"Type the diameter of the circle in feet to find its area displayed in other fields.")],
+		_(u"are"):
+		[(converters.m, 100.0), '', _(u"The unit of superficial measure, being a square of which each side is ten meters in length; 100 square meters, or about 119.6 square yards.")],
+		_(u"acre"):
+		[(converters.m, 4046.8564224), '', _(u"A piece of land, containing 160 square rods, or 4, 840 square yards, or 43, 560 square feet. This is the English statute acre. That of the United States is the same. The Scotch acre was about 1.26 of the English, and the Irish 1.62 of the English. Note: The acre was limited to its present definite quantity by statutes of Edward I., Edward III., and Henry VIII.")],
+		_(u"acre (Cheshire)"):
+		[(converters.m, 8561.97632), '', ''],
+		_(u"acre (Irish)"):
+		[(converters.m, 6555.26312), '', ''],
+		_(u"acre (Scottish)"):
+		[(converters.m, 5142.20257), '', ''],
+		_(u"arpent (French)"):
+		[(converters.m, 4088/1.196), '', _(u" 4, 088 sq. yards, or nearly five sixths of an English acre.")],
+		_(u"arpent (woodland)"):
+		[(converters.m, 16*25.29285264*10+16*25.29285264*2.5+(16*25.29285264*10)/160), '', _(u"1 acre, 1 rood, 1 perch")],
+		_(u"barn"):
+		[(converters.m, 1.0/1e28), '', _('Used in Nuclear physics to describe the apparent cross-sectional size of atomic sized objects that are bombarded with smaller objects (like electrons). 10^-28 square meters. 100 square femtometers. Originated from the semi-humorous idiom big as a barn and used by physicists to describe the size of the scattering object (Ex: That was as big as 5 barns!).')],
+		_(u"cho"):
+		[(converters.m, 16*25.29285264*10*2.45), '', _(u"Japanese. 2.45 acre")],
+		_(u"circular inch"):
+		[(converters.m, 1000000.0/(1e6*1550*1.273)), '', ''],
+		_(u"circular mil"):
+		[(converters.m, 1.0/(1e6*1550*1.273)), "cmil", ''],
+		_(u"desyatina | dessiatina"):
+		[(converters.m, 16*25.29285264*10*2.6996), '', _(u"Russian. 2.6996 acre. 2400 square sadzhens")],
+		_(u"flag"):
+		[(converters.m, 25/10.7639104167097), '', _(u"square pace (a pace is 5 feet).")],
+		_(u"hide | carucate"):
+		[(converters.m, 40468.71618), '', _(u"An ancient English measure of the amount of land required to support family")],
+		_(u"hectare"):
+		[(converters.m, 10000.0), "ha", _(u"A measure of area, or superficies, containing a hundred ares, or 10, 000 square meters, and equivalent to 2.471 acres.")],
+		_(u"homestead | quarter section"):
+		[(converters.m, 16*25.29285264*10*160), '', _(u"160 acres, 1/4 square mile, or 1/4 section. Use by the governments of North America early settlers in the western states and provinces were allowed to take title to a homestead of 160 acres of land by registering a claim, settling on the land, and cultivating it.")],
+		_(u"perch"):
+		[(converters.m, (16*25.29285264*10)/160), '', _(u"Used to measure land. A square rod; the 160th part of an acre.")],
+		_(u"sabin"):
+		[(converters.m, 1/10.7639104167097), '', _(u"A unit of acoustic absorption equivalent to the absorption by a square foot of a surface that absorbs all incident sound. 1ft\xb2.")],
+		_(u"square"):
+		[(converters.m, 100/10.7639104167097), '', _(u"Used in the construction for measuring roofing material, finished lumber, and other building materials. One square is equals 100 square feet.")],
+		_(u"section"):
+		[(converters.m, 2.59*1E6), '', _(u"Used in land measuring. One square mile. An area of about 640 acres")],
+		_(u"square league (land)"):
+		[(converters.m, 23309892.99), '', ''],
 		_(u"square mile"):
 			[(converters.m, 2.59*1e6), u"mi\xb2", ''],
 		_(u"square kilometer"):
