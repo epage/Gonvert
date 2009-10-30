@@ -45,7 +45,7 @@ class Gonvert(object):
 		self._units_sort_direction = False
 
 		self._find_result = [] # empty find result list
-		self._find_count = 0 # default to find result number zero
+		self._findIndex = 0 # default to find result number zero
 
 		self._selected_category = '' # preset to no selected category
 		self._selected_units = {} # empty dictionary for later use
@@ -78,6 +78,7 @@ class Gonvert(object):
 		self._categoryView = widgets.get_widget('categoryView')
 
 		self._unitsView = widgets.get_widget('unitsView')
+		self._unitsView.set_property('rules_hint', 1)
 		self._unitsView_selection = self._unitsView.get_selection()
 
 		self._unitName = widgets.get_widget('unitName')
@@ -253,14 +254,14 @@ class Gonvert(object):
 	def _clear_find(self):
 		# switch to "new find" state
 		self._find_result = []
-		self._find_count = 0
+		self._findIndex = 0
 
 		# Clear our user message
 		self._findLabel.set_text('')
 
 	def _find_first(self):
 		assert len(self._find_result) == 0
-		assert self._find_count == 0
+		assert self._findIndex == 0
 		findString = string.lower(string.strip(self._findEntry.get_text()))
 		if not findString:
 			return
@@ -280,28 +281,28 @@ class Gonvert(object):
 
 	def _find_wrap_around(self):
 		assert 0 < len(self._find_result)
-		assert self._find_count + 1 == len(self._find_result)
+		assert self._findIndex + 1 == len(self._find_result)
 		#select first result
-		self._find_count = 0
+		self._findIndex = 0
 		self._select_found_unit()
 
 	def _find_next(self):
 		assert 0 < len(self._find_result)
-		assert self._find_count + 1 < len(self._find_result)
-		self._find_count += 1
+		assert self._findIndex + 1 < len(self._find_result)
+		self._findIndex += 1
 		self._select_found_unit()
 
 	def _select_found_unit(self):
 		assert 0 < len(self._find_result)
 
 		#check if next find is in a new category (prevent category changes when unnecessary
-		if self._selected_category != self._find_result[self._find_count][0]:
+		if self._selected_category != self._find_result[self._findIndex][0]:
 			self._categoryView.set_cursor(
-				self._find_result[self._find_count][2], self._categoryColumn, False
+				self._find_result[self._findIndex][2], self._categoryColumn, False
 			)
 
 		self._unitsView.set_cursor(
-			self._find_result[self._find_count][3], self._unitNameColumn, True
+			self._find_result[self._findIndex][3], self._unitNameColumn, True
 		)
 
 	def _on_shortlist_changed(self, *args):
@@ -338,19 +339,19 @@ class Gonvert(object):
 		check if 'new find' or 'last find' or 'next-find'
 
 		new-find = run the find algorithm which also selects the first found unit
-		         = self._find_count = 0 and self._find_result = []
+		         = self._findIndex = 0 and self._find_result = []
 
 		last-find = restart from top again
-		          = self._find_count = len(self._find_result)
+		          = self._findIndex = len(self._find_result)
 
 		next-find = continue to next found location
-		           = self._find_count = 0 and len(self._find_result)>0
+		           = self._findIndex = 0 and len(self._find_result)>0
 		"""
 		try:
 			if len(self._find_result) == 0:
 				self._find_first()
 			else:
-				if self._find_count == len(self._find_result)-1:
+				if self._findIndex == len(self._find_result)-1:
 					self._find_wrap_around()
 				else:
 					self._find_next()
@@ -358,7 +359,7 @@ class Gonvert(object):
 			if not self._find_result:
 				self._findLabel.set_text('Text not found')
 			else:
-				resultsLeft = len(self._find_result) - self._find_count - 1
+				resultsLeft = len(self._find_result) - self._findIndex - 1
 				self._findLabel.set_text(
 					'%s result(s) left' % (resultsLeft, )
 				)
@@ -425,9 +426,6 @@ class Gonvert(object):
 			_moduleLogger.exception()
 
 	def _on_click_category(self, row):
-		#Colourize each row alternately for easier reading
-		self._unitsView.set_property('rules_hint', 1)
-
 		#Clear out the description
 		text_model = gtk.TextBuffer(None)
 		self._unitDescription.set_buffer(text_model)
