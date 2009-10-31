@@ -2208,6 +2208,14 @@ def get_units_from_category(category):
 	return units
 
 
+def get_base_unit(categoryName):
+	return UNIT_DESCRIPTIONS[categoryName][".base_unit"]
+
+
+def get_base_unit_from_category(category):
+	return category[".base_unit"]
+
+
 future_dic = {
 	_(u"Wire Gauge"): {
 		".base_unit": "circular mils",

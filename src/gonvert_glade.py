@@ -47,7 +47,7 @@ class Gonvert(object):
 		self._find_result = [] # empty find result list
 		self._findIndex = 0 # default to find result number zero
 
-		self._selectedCategory = '' # preset to no selected category
+		self._selectedCategoryName = '' # preset to no selected category
 		self._defaultUnitForCategory = {} # empty dictionary for later use
 
 		#check to see if glade file is in current directory (user must be
@@ -69,7 +69,6 @@ class Gonvert(object):
 		change_menu_label(widgets, 'exitMenuItem', _('Exit'))
 		change_menu_label(widgets, 'toolsMenuItem', _('Tools'))
 		change_menu_label(widgets, 'clearSelectionMenuItem', _('Clear selections'))
-		change_menu_label(widgets, 'writeUnitsMenuItem', _('Write Units'))
 		change_menu_label(widgets, 'helpMenuItem', _('Help'))
 		change_menu_label(widgets, 'aboutMenuItem', _('About'))
 		change_menu_label(widgets, 'findButton', _('Find'))
@@ -87,8 +86,6 @@ class Gonvert(object):
 		self._unitValue = widgets.get_widget('unitValue')
 		self._previousUnitName = widgets.get_widget('previousUnitName')
 		self._previousUnitValue = widgets.get_widget('previousUnitValue')
-		messagebox = widgets.get_widget('msgbox')
-		messageboxtext = widgets.get_widget('msgboxtext')
 
 		self._unitSymbol = widgets.get_widget('unitSymbol')
 		self._previousUnitSymbol = widgets.get_widget('previousUnitSymbol')
@@ -157,12 +154,10 @@ class Gonvert(object):
 			"on_categoryView_select_row": self._on_click_category,
 			"on_unitValue_changed": self._on_unit_value_changed,
 			"on_previousUnitValue_changed": self._on_previous_unit_value_changed,
-			"on_writeUnitsMenuItem_activate": self._on_user_write_units,
 			"on_findButton_clicked": self._on_find_activate,
 			"on_findEntry_activated": self._on_find_activate,
 			"on_findEntry_changed": self._on_findEntry_changed,
 			"on_aboutMenuItem_activate": self._on_about_clicked,
-			"on_messagebox_ok_clicked": self.messagebox_ok_clicked,
 			"on_clearSelectionMenuItem_activate": self._on_user_clear_selections,
 			"on_unitsView_cursor_changed": self._on_click_unit,
 			"on_shortlistcheck_toggled": self._on_shortlist_changed,
@@ -210,7 +205,7 @@ class Gonvert(object):
 			#If the 'selected_unts' has been stored, then extract self._defaultUnitForCategory from selections.
 			if 'selected_units' in selections:
 				self._defaultUnitForCategory = selections['selected_units']
-			#Make sure that the 'self._selectedCategory' has been stored.
+			#Make sure that the 'self._selectedCategoryName' has been stored.
 			if 'selected_category' in selections:
 				#Match an available category to the previously selected category.
 				for counter in range(len(unit_data.UNIT_CATEGORIES)):
@@ -235,16 +230,16 @@ class Gonvert(object):
 		should therefore only be called when exiting the program.
 
 		Update selections dictionary which consists of the following keys:
-		'self._selectedCategory': full name of selected category
+		'self._selectedCategoryName': full name of selected category
 		'self._defaultUnitForCategory': self._defaultUnitForCategory dictionary which contains:
 		[categoryname: #1 displayed unit, #2 displayed unit]
 		"""
 		#Determine the contents of the selected category row
 		selected, iter = self._categoryView.get_selection().get_selected()
-		self._selectedCategory = self._categoryModel.get_value(iter, 0)
+		self._selectedCategoryName = self._categoryModel.get_value(iter, 0)
 
 		selections = {
-			'selected_category': self._selectedCategory,
+			'selected_category': self._selectedCategoryName,
 			'selected_units': self._defaultUnitForCategory
 		}
 		selectionsDatPath = "/".join((constants._data_path_, "selections.dat"))
@@ -284,7 +279,7 @@ class Gonvert(object):
 		assert 0 < len(self._find_result)
 
 		#check if next find is in a new category (prevent category changes when unnecessary
-		if self._selectedCategory != self._find_result[self._findIndex][0]:
+		if self._selectedCategoryName != self._find_result[self._findIndex][0]:
 			self._categoryView.set_cursor(
 				self._find_result[self._findIndex][2], self._categoryColumn, False
 			)
@@ -371,7 +366,7 @@ class Gonvert(object):
 
 	def _value_model_cmp(self, sortedModel, leftItr, rightItr):
 		#special sorting exceptions for ascii values (instead of float values)
-		if self._selectedCategory == "Computer Numbers":
+		if self._selectedCategoryName == "Computer Numbers":
 			leftValue = self._unitModel.get_value(leftItr, 1)
 			rightValue = self._unitModel.get_value(rightItr, 1)
 		else:
@@ -391,12 +386,12 @@ class Gonvert(object):
 		return columns
 
 	def _switch_category(self, category):
-		self._selectedCategory = category
-		self._unitDataInCategory = unit_data.UNIT_DESCRIPTIONS[self._selectedCategory]
+		self._selectedCategoryName = category
+		self._unitDataInCategory = unit_data.UNIT_DESCRIPTIONS[self._selectedCategoryName]
 
 		#Fill up the units descriptions and clear the value cells
 		self._clear_visible_unit_data()
-		for key in unit_data.get_units(self._selectedCategory):
+		for key in unit_data.get_units(self._selectedCategoryName):
 			iter = self._unitModel.append()
 			self._unitModel.set(iter, 0, key, 1, '', 2, self._unitDataInCategory[key][1])
 		self._sortedUnitModel.sort_column_changed()
@@ -418,25 +413,32 @@ class Gonvert(object):
 	def _select_default_unit(self):
 		# Restore the previous historical settings of previously selected units
 		# in this newly selected category
-		if self._selectedCategory in self._defaultUnitForCategory:
-			units = unit_data.get_units(self._selectedCategory)
+		defaultPrimary = unit_data.get_base_unit(self._selectedCategoryName)
+		defaultSecondary = ""
+		if self._selectedCategoryName in self._defaultUnitForCategory:
+			if self._defaultUnitForCategory[self._selectedCategoryName][0]:
+				defaultPrimary = self._defaultUnitForCategory[self._selectedCategoryName][0]
+			if self._defaultUnitForCategory[self._selectedCategoryName][1]:
+				defaultSecondary = self._defaultUnitForCategory[self._selectedCategoryName][1]
 
-			#Restore oldest selection first.
-			if self._defaultUnitForCategory[self._selectedCategory][1]:
-				unitIndex = units.index(self._defaultUnitForCategory[self._selectedCategory][1])
-				self._unitsView.set_cursor(unitIndex, self._unitNameColumn, True)
+		units = unit_data.get_units(self._selectedCategoryName)
 
-			#Restore newest selection second.
-			if self._defaultUnitForCategory[self._selectedCategory][0]:
-				unitIndex = units.index(self._defaultUnitForCategory[self._selectedCategory][0])
-				self._unitsView.set_cursor(unitIndex, self._unitNameColumn, True)
+		#Restore oldest selection first.
+		if defaultPrimary:
+			unitIndex = units.index(defaultPrimary)
+			self._unitsView.set_cursor(unitIndex, self._unitNameColumn, True)
+
+		#Restore newest selection second.
+		if defaultSecondary:
+			unitIndex = units.index(defaultSecondary)
+			self._unitsView.set_cursor(unitIndex, self._unitNameColumn, True)
 
 		# select the text so user can start typing right away
 		self._unitValue.grab_focus()
 		self._unitValue.select_region(0, -1)
 
 	def _sanitize_value(self, userEntry):
-		if self._selectedCategory == "Computer Numbers":
+		if self._selectedCategoryName == "Computer Numbers":
 			if userEntry == '':
 				value = '0'
 			else:
@@ -550,6 +552,9 @@ class Gonvert(object):
 	def _on_click_category(self, *args):
 		try:
 			selected, iter = self._categoryView.get_selection().get_selected()
+			if iter is None:
+				# User is typing in an invalid string, not selecting any category
+				return
 			selectedCategory = self._categoryModel.get_value(iter, 0)
 			self._switch_category(selectedCategory)
 		except Exception:
@@ -573,12 +578,12 @@ class Gonvert(object):
 			self._unitSymbol.set_text(unit_spec[1]) # put units into label text
 
 			if self._unitValue.get_text() == '':
-				if self._selectedCategory == "Computer Numbers":
+				if self._selectedCategoryName == "Computer Numbers":
 					self._unitValue.set_text("0")
 				else:
 					self._unitValue.set_text("0.0")
 
-			self._defaultUnitForCategory[self._selectedCategory] = [
+			self._defaultUnitForCategory[self._selectedCategoryName] = [
 				self._unitName.get_text(), self._previousUnitName.get_text()
 			]
 
@@ -634,35 +639,6 @@ class Gonvert(object):
 			self._unitValue.set_text(str(func.from_base(base, arg, )))
 		except Exception:
 			_moduleLogger.exception("")
-
-	def messagebox_ok_clicked(self, a):
-		messagebox.hide()
-
-	def _on_user_write_units(self, a):
-		''"Write the list of categories and units to stdout for documentation purposes.''"
-		messagebox_model = gtk.TextBuffer(None)
-		messageboxtext.set_buffer(messagebox_model)
-		messagebox_model.insert_at_cursor(_(u'The units are being written to stdout. You can capture this printout by starting gonvert from the command line as follows: \n$ gonvert > file.txt'), -1)
-		messagebox.show()
-		while gtk.events_pending():
-			gtk.mainiteration(False)
-
-		total_categories = 0
-		total_units = 0
-		print 'gonvert-%s%s' % (
-			constants.__version__,
-			_(u' - Unit Conversion Utility  - Convertible units listing: ')
-		)
-		for category_key in unit_data.UNIT_CATEGORIES:
-			total_categories = total_categories + 1
-			print category_key, ": "
-			self._unitDataInCategory = unit_data.UNIT_DESCRIPTIONS[category_key]
-			unit_keys = unit_data.get_units_from_category(self._unitDataInCategory)
-			for unit_key in unit_keys:
-				total_units = total_units + 1
-				print "\t", unit_key
-		print total_categories, ' categories'
-		print total_units, ' units'
 
 	def _on_about_clicked(self, a):
 		dlg = gtk.AboutDialog()
