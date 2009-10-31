@@ -100,13 +100,13 @@ UNIT_DESCRIPTIONS = {
 	_(u"Area"): {
 		".base_unit": _(u"square meter"),
 		_(u"meter diameter circle"):
-		[(converters.f, ('pi*(x/2.0)**2', '2.0*(x/pi)**(0.5)')), "m dia.", _(u"Type the diameter of the circle in meters to find its area displayed in other fields.")],
+		[(converters.f, ('math.pi*(x/2.0)**2', '2.0*(x/math.pi)**(0.5)')), "m dia.", _(u"Type the diameter of the circle in meters to find its area displayed in other fields.")],
 		_(u"centimeter diameter circle"):
-		[(converters.f, ('pi*(x/200.0)**2', '200.0*(x/pi)**(0.5)')), "cm dia.", _(u"Type the diameter of the circle in centimeters to find its area displayed in other fields.")],
+		[(converters.f, ('math.pi*(x/200.0)**2', '200.0*(x/math.pi)**(0.5)')), "cm dia.", _(u"Type the diameter of the circle in centimeters to find its area displayed in other fields.")],
 		_(u"inch diameter circle"):
-		[(converters.f, ('pi*(((x*(25.4/1000))/2.0) )**2', '1000/25.4 * 2.0*(x/pi)**(0.5)')), "in dia.", _(u"Type the diameter of the circle in inches to find its area displayed in other fields.")],
+		[(converters.f, ('math.pi*(((x*(25.4/1000))/2.0) )**2', '1000/25.4 * 2.0*(x/math.pi)**(0.5)')), "in dia.", _(u"Type the diameter of the circle in inches to find its area displayed in other fields.")],
 		_(u"foot diameter circle"):
-		[(converters.f, ('pi*(((x*((12*25.4)/1000))/2.0) )**2', '1000/(12*25.4) * 2.0*(x/pi)**(0.5)')), "ft dia.", _(u"Type the diameter of the circle in feet to find its area displayed in other fields.")],
+		[(converters.f, ('math.pi*(((x*((12*25.4)/1000))/2.0) )**2', '1000/(12*25.4) * 2.0*(x/math.pi)**(0.5)')), "ft dia.", _(u"Type the diameter of the circle in feet to find its area displayed in other fields.")],
 		_(u"are"):
 		[(converters.m, 100.0), '', _(u"The unit of superficial measure, being a square of which each side is ten meters in length; 100 square meters, or about 119.6 square yards.")],
 		_(u"acre"):
@@ -422,7 +422,7 @@ UNIT_DESCRIPTIONS = {
 		[(converters.m, 1.0e-6), u"\xb5A", ''],
 		_(u"nanoampere"):
 		[(converters.m, 1.0e-9), "nA", ''],
-		_(u"picoampere"):
+		_(u"math.picoampere"):
 		[(converters.m, 1.0e-12), "pA", ''],
 		_(u"abampere"):
 		[(converters.m, 10.0), "abA", _(u"The CGS electromagnetic unit of current.")],
@@ -2190,8 +2190,17 @@ _(u"Electrical Voltage"): {".base_unit": _(u"volt"),
 UNIT_CATEGORIES = sorted(UNIT_DESCRIPTIONS.iterkeys())
 
 
-def get_units(category):
-	units = sorted(UNIT_DESCRIPTIONS[category].iterkeys())
+def get_units(categoryName):
+	units = sorted(UNIT_DESCRIPTIONS[categoryName].iterkeys())
+
+	# do not display .base_unit description key
+	del units[0]
+
+	return units
+
+
+def get_units_from_category(category):
+	units = sorted(category.iterkeys())
 
 	# do not display .base_unit description key
 	del units[0]

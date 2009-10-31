@@ -4,6 +4,9 @@ All classes for conversions are defined below:
 the return value is the converted value to or from base
 """
 
+# For the sake of eval'ing some code
+import math
+
 
 # used for Computer numbers base definitions.
 ALPHA_NUMERIC = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
