@@ -290,18 +290,6 @@ class Gonvert(object):
 		)
 
 	def _find_next(self):
-		"""
-		check if 'new find' or 'last find' or 'next-find'
-
-		new-find = run the find algorithm which also selects the first found unit
-		         = self._findIndex = 0 and self._find_result = []
-
-		last-find = restart from top again
-		          = self._findIndex = len(self._find_result)
-
-		next-find = continue to next found location
-		           = self._findIndex = 0 and len(self._find_result)>0
-		"""
 		if len(self._find_result) == 0:
 			self._find_first()
 		else:
@@ -320,18 +308,6 @@ class Gonvert(object):
 			)
 
 	def _find_previous(self):
-		"""
-		check if 'new find' or 'last find' or 'next-find'
-
-		new-find = run the find algorithm which also selects the first found unit
-		         = self._findIndex = 0 and self._find_result = []
-
-		last-find = restart from top again
-		          = self._findIndex = len(self._find_result)
-
-		next-find = continue to next found location
-		           = self._findIndex = 0 and len(self._find_result)>0
-		"""
 		if len(self._find_result) == 0:
 			self._find_first()
 		else:
