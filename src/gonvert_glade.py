@@ -3,7 +3,6 @@
 
 import os
 import pickle
-import string
 import gettext
 import logging
 
@@ -256,7 +255,7 @@ class Gonvert(object):
 	def _find_first(self):
 		assert len(self._find_result) == 0
 		assert self._findIndex == 0
-		findString = string.lower(string.strip(self._findEntry.get_text()))
+		findString = self._findEntry.get_text().strip().lower()
 		if not findString:
 			return
 
