@@ -589,48 +589,54 @@ class Gonvert(object):
 			_moduleLogger.exception("")
 
 	def _on_unit_value_changed(self, *args):
-		if self._unitName.get_text() == '':
-			return
-		if not self._unitValue.is_focus():
-			return
+		try:
+			if self._unitName.get_text() == '':
+				return
+			if not self._unitValue.is_focus():
+				return
 
-		value = self._sanitize_value(self._unitValue.get_text())
+			value = self._sanitize_value(self._unitValue.get_text())
 
-		#retrieve the conversion function and value from the selected unit
-		func, arg = self._unitDataInCategory[self._unitName.get_text()][0]
-		base = func.to_base(value, arg)
+			#retrieve the conversion function and value from the selected unit
+			func, arg = self._unitDataInCategory[self._unitName.get_text()][0]
+			base = func.to_base(value, arg)
 
-		#point to the first row
-		for row in self._unitModel:
-			func, arg = self._unitDataInCategory[row[0]][0]
-			row[1] = str(func.from_base(base, arg))
+			#point to the first row
+			for row in self._unitModel:
+				func, arg = self._unitDataInCategory[row[0]][0]
+				row[1] = str(func.from_base(base, arg))
 
-		# if the second row has a unit then update its value
-		if self._previousUnitName.get_text() != '':
-			func, arg = self._unitDataInCategory[self._previousUnitName.get_text()][0]
-			self._previousUnitValue.set_text(str(func.from_base(base, arg, )))
+			# if the second row has a unit then update its value
+			if self._previousUnitName.get_text() != '':
+				func, arg = self._unitDataInCategory[self._previousUnitName.get_text()][0]
+				self._previousUnitValue.set_text(str(func.from_base(base, arg, )))
+		except Exception:
+			_moduleLogger.exception("")
 
 	def _on_previous_unit_value_changed(self, *args):
-		if self._previousUnitName.get_text() == '':
-			return
-		if not self._previousUnitValue.is_focus():
-			return
+		try:
+			if self._previousUnitName.get_text() == '':
+				return
+			if not self._previousUnitValue.is_focus():
+				return
 
-		value = self._sanitize_value(self._previousUnitValue.get_text())
+			value = self._sanitize_value(self._previousUnitValue.get_text())
 
-		#retrieve the conversion function and value from the selected unit
-		func, arg = self._unitDataInCategory[self._previousUnitName.get_text()][0]
-		base = func.to_base(value, arg)
+			#retrieve the conversion function and value from the selected unit
+			func, arg = self._unitDataInCategory[self._previousUnitName.get_text()][0]
+			base = func.to_base(value, arg)
 
-		#point to the first row
-		for row in self._unitModel:
-			func, arg = self._unitDataInCategory[row[0]][0]
-			row[1] = str(func.from_base(base, arg))
+			#point to the first row
+			for row in self._unitModel:
+				func, arg = self._unitDataInCategory[row[0]][0]
+				row[1] = str(func.from_base(base, arg))
 
-		# if the second row has a unit then update its value
-		if self._unitName.get_text() != '':
-			func, arg = self._unitDataInCategory[self._unitName.get_text()][0]
-			self._unitValue.set_text(str(func.from_base(base, arg, )))
+			# if the second row has a unit then update its value
+			if self._unitName.get_text() != '':
+				func, arg = self._unitDataInCategory[self._unitName.get_text()][0]
+				self._unitValue.set_text(str(func.from_base(base, arg, )))
+		except Exception:
+			_moduleLogger.exception("")
 
 	def messagebox_ok_clicked(self, a):
 		messagebox.hide()
