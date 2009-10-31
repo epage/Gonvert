@@ -130,7 +130,7 @@ __changelog__ = """
 __postinstall__ = """#!/bin/sh -e
 
 gtk-update-icon-cache -f /usr/share/icons/hicolor
-rm -f ~/.gonvert/gonvert.log
+rm -f ~/.gonvert/gonvert.log ~/.gonvert/selections.dat ~/.gonvert/window.dat
 """
 
 __preremove__ = """#!/bin/sh -e
