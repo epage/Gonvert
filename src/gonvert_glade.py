@@ -18,7 +18,7 @@ import unit_data
 
 _moduleLogger = logging.getLogger("gonvert_glade")
 PROFILE_STARTUP = False
-FORCE_HILDON_LIKE = True
+FORCE_HILDON_LIKE = False
 
 gettext.bindtextdomain('gonvert', '/usr/share/locale')
 gettext.textdomain('gonvert')
@@ -191,7 +191,7 @@ class Gonvert(object):
 			replacementButtons
 		)
 		if not hildonize.IS_HILDON_SUPPORTED:
-			_moduleLogger.warning("No hildonization support")
+			_moduleLogger.info("No hildonization support")
 
 		hildonize.set_application_title(
 			self._mainWindow, "%s - Unit Conversion Utility" % constants.__pretty_app_name__
@@ -586,10 +586,14 @@ class Gonvert(object):
 			selected_unit = selected.get_value(iter, 0)
 			unit_spec = self._unitDataInCategory[selected_unit]
 
+			showSymbol = False
+
 			if self._unitName.get_text() != selected_unit:
 				self._previousUnitName.set_text(self._unitName.get_text())
 				self._previousUnitValue.set_text(self._unitValue.get_text())
-				self._previousUnitSymbol.set_text(self._unitSymbol.get())
+				self._previousUnitSymbol.set_text(self._unitSymbol.get_text())
+				if self._unitSymbol.get_text():
+					showSymbol = True
 
 			self._unitName.set_text(selected_unit)
 			self._unitValue.set_text(selected.get_value(iter, 1))
@@ -597,9 +601,16 @@ class Gonvert(object):
 			buffer.set_text(unit_spec[2])
 			self._unitSymbol.set_text(unit_spec[1]) # put units into label text
 			if unit_spec[1]:
+				showSymbol = True
+			else:
+				showSymbol = False
+
+			if showSymbol:
 				self._unitSymbol.show()
+				self._previousUnitSymbol.show()
 			else:
 				self._unitSymbol.hide()
+				self._previousUnitSymbol.hide()
 
 			if self._unitValue.get_text() == '':
 				if self._selectedCategoryName == "Computer Numbers":
