@@ -17,6 +17,7 @@ import unit_data
 
 
 _moduleLogger = logging.getLogger("gonvert_glade")
+PROFILE_STARTUP = False
 
 gettext.bindtextdomain('gonvert', '/usr/share/locale')
 gettext.textdomain('gonvert')
@@ -669,7 +670,8 @@ def main():
 			raise
 
 	gonvert = Gonvert()
-	gtk.main()
+	if not PROFILE_STARTUP:
+		gtk.main()
 
 
 if __name__ == "__main__":
