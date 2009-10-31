@@ -422,7 +422,7 @@ UNIT_DESCRIPTIONS = {
 		[(converters.m, 1.0e-6), u"\xb5A", ''],
 		_(u"nanoampere"):
 		[(converters.m, 1.0e-9), "nA", ''],
-		_(u"math.picoampere"):
+		_(u"picoampere"):
 		[(converters.m, 1.0e-12), "pA", ''],
 		_(u"abampere"):
 		[(converters.m, 10.0), "abA", _(u"The CGS electromagnetic unit of current.")],

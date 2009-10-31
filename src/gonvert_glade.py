@@ -39,7 +39,6 @@ class Gonvert(object):
 
 	def __init__(self):
 		self._unitDataInCategory = None
-		self._calcsuppress = False
 		self._unit_sort_direction = False
 		self._value_sort_direction = False
 		self._units_sort_direction = False
@@ -436,6 +435,19 @@ class Gonvert(object):
 		self._unitValue.grab_focus()
 		self._unitValue.select_region(0, -1)
 
+	def _sanitize_value(self, userEntry):
+		if self._selectedCategory == "Computer Numbers":
+			if userEntry == '':
+				value = '0'
+			else:
+				value = userEntry
+		else:
+			if userEntry == '':
+				value = 0.0
+			else:
+				value = float(userEntry)
+		return value
+
 	def _on_shortlist_changed(self, *args):
 		try:
 			raise NotImplementedError("%s" % self._shortlistcheck.get_active())
@@ -500,14 +512,14 @@ class Gonvert(object):
 		except Exception:
 			_moduleLogger.exception("")
 
-	def _on_find_activate(self, a):
+	def _on_find_activate(self, *args):
 		try:
 			self._find_next()
 			self._findButton.grab_focus()
 		except Exception:
 			_moduleLogger.exception("")
 
-	def _on_click_unit_column(self, col):
+	def _on_click_unit_column(self, *args):
 		"""
 		Sort the contents of the col when the user clicks on the title.
 		"""
@@ -543,115 +555,74 @@ class Gonvert(object):
 		except Exception:
 			_moduleLogger.exception("")
 
-	def _on_click_unit(self, row):
-		self._calcsuppress = True #suppress calculations
+	def _on_click_unit(self, *args):
+		try:
+			selected, iter = self._unitsView.get_selection().get_selected()
+			selected_unit = selected.get_value(iter, 0)
+			unit_spec = self._unitDataInCategory[selected_unit]
 
-		#Determine the contents of the selected row.
-		selected, iter = self._unitsView.get_selection().get_selected()
-
-		selected_unit = selected.get_value(iter, 0)
-
-		unit_spec = self._unitDataInCategory[selected_unit]
-
-		#Clear out the description
-		text_model = gtk.TextBuffer(None)
-		self._unitDescription.set_buffer(text_model)
-
-		enditer = text_model.get_end_iter()
-		text_model.insert(enditer, unit_spec[2])
-
-		if self._unitName.get_text() != selected_unit:
-			self._previousUnitName.set_text(self._unitName.get_text())
-			self._previousUnitValue.set_text(self._unitValue.get_text())
-			if self._unitSymbol.get() == None:
-				self._previousUnitSymbol.set_text('')
-			else:
+			if self._unitName.get_text() != selected_unit:
+				self._previousUnitName.set_text(self._unitName.get_text())
+				self._previousUnitValue.set_text(self._unitValue.get_text())
 				self._previousUnitSymbol.set_text(self._unitSymbol.get())
-		self._unitName.set_text(selected_unit)
 
-		self._unitValue.set_text(selected.get_value(iter, 1))
+			self._unitName.set_text(selected_unit)
+			self._unitValue.set_text(selected.get_value(iter, 1))
+			buffer = self._unitDescription.get_buffer()
+			buffer.set_text(unit_spec[2])
+			self._unitSymbol.set_text(unit_spec[1]) # put units into label text
 
-		self._unitSymbol.set_text(unit_spec[1]) # put units into label text
-		if self._unitValue.get_text() == '':
-			if self._selectedCategory == "Computer Numbers":
-				self._unitValue.set_text("0")
-			else:
-				self._unitValue.set_text("0.0")
+			if self._unitValue.get_text() == '':
+				if self._selectedCategory == "Computer Numbers":
+					self._unitValue.set_text("0")
+				else:
+					self._unitValue.set_text("0.0")
 
-		#For historical purposes, record this unit as the most recent one in this category.
-		# Also, if a previous unit exists, then shift that previous unit to oldest unit.
-		if self._selectedCategory in self._defaultUnitForCategory:
-			if self._defaultUnitForCategory[self._selectedCategory][0]:
-				self._defaultUnitForCategory[self._selectedCategory] = [selected_unit, self._defaultUnitForCategory[self._selectedCategory][0]]
-		else:
-			self._defaultUnitForCategory[self._selectedCategory] = [selected_unit, '']
+			self._defaultUnitForCategory[self._selectedCategory] = [
+				self._unitName.get_text(), self._previousUnitName.get_text()
+			]
 
-		# select the text so user can start typing right away
-		self._unitValue.grab_focus()
-		self._unitValue.select_region(0, -1)
-
-		self._calcsuppress = False #enable calculations
+			# select the text so user can start typing right away
+			self._unitValue.grab_focus()
+			self._unitValue.select_region(0, -1)
+		except Exception:
+			_moduleLogger.exception("")
 
 	def _on_unit_value_changed(self, a):
-		if self._calcsuppress:
-			#self._calcsuppress = False
+		if self._unitName.get_text() == '':
 			return
+
 		# determine if value to be calculated is empty
-		if self._selectedCategory == "Computer Numbers":
-			if self._unitValue.get_text() == '':
-				value = '0'
-			else:
-				value = self._unitValue.get_text()
-		else:
-			if self._unitValue.get_text() == '':
-				value = 0.0
-			else:
-				value = float(self._unitValue.get_text())
+		value = self._sanitize_value(self._unitValue.get_text())
 
-		if self._unitName.get_text() != '':
-			func, arg = self._unitDataInCategory[self._unitName.get_text()][0] #retrieve the conversion function and value from the selected unit
-			base = apply(func.to_base, (value, arg, )) #determine the base unit value
+		func, arg = self._unitDataInCategory[self._unitName.get_text()][0] #retrieve the conversion function and value from the selected unit
+		base = apply(func.to_base, (value, arg, )) #determine the base unit value
 
-			keys = self._unitDataInCategory.keys()
-			keys.sort()
-			del keys[0]
-			row = 0
+		keys = self._unitDataInCategory.keys()
+		keys.sort()
+		del keys[0]
+		row = 0
 
-			#point to the first row
-			iter = self._unitModel.get_iter_first()
+		#point to the first row
+		iter = self._unitModel.get_iter_first()
 
-			while iter:
-				#get the formula from the name at the row
-				func, arg = self._unitDataInCategory[self._unitModel.get_value(iter, 0)][0]
+		while iter:
+			#get the formula from the name at the row
+			func, arg = self._unitDataInCategory[self._unitModel.get_value(iter, 0)][0]
 
-				#set the result in the value column
-				self._unitModel.set(iter, 1, str(apply(func.from_base, (base, arg, ))))
+			#set the result in the value column
+			self._unitModel.set(iter, 1, str(apply(func.from_base, (base, arg, ))))
 
-				#point to the next row in the self._unitModel
-				iter = self._unitModel.iter_next(iter)
+			#point to the next row in the self._unitModel
+			iter = self._unitModel.iter_next(iter)
 
-			# if the second row has a unit then update its value
-			if self._previousUnitName.get_text() != '':
-				self._calcsuppress = True
-				func, arg = self._unitDataInCategory[self._previousUnitName.get_text()][0]
-				self._previousUnitValue.set_text(str(apply(func.from_base, (base, arg, ))))
-				self._calcsuppress = False
+		# if the second row has a unit then update its value
+		if self._previousUnitName.get_text() != '':
+			func, arg = self._unitDataInCategory[self._previousUnitName.get_text()][0]
+			self._previousUnitValue.set_text(str(apply(func.from_base, (base, arg, ))))
 
 	def _on_previous_unit_value_changed(self, a):
-		if self._calcsuppress == True:
-			#self._calcsuppress = False
-			return
-		# determine if value to be calculated is empty
-		if self._selectedCategory == "Computer Numbers":
-			if self._previousUnitValue.get_text() == '':
-				value = '0'
-			else:
-				value = self._previousUnitValue.get_text()
-		else:
-			if self._previousUnitValue.get_text() == '':
-				value = 0.0
-			else:
-				value = float(self._previousUnitValue.get_text())
+		value = self._sanitize_value(self._previousUnitValue.get_text())
 
 		if self._previousUnitName.get_text() != '':
 			func, arg = self._unitDataInCategory[self._previousUnitName.get_text()][0] #retrieve the conversion function and value from the selected unit
@@ -677,10 +648,8 @@ class Gonvert(object):
 
 			# if the second row has a unit then update its value
 			if self._unitName.get_text() != '':
-				self._calcsuppress = True
 				func, arg = self._unitDataInCategory[self._unitName.get_text()][0]
 				self._unitValue.set_text(str(apply(func.from_base, (base, arg, ))))
-				self._calcsuppress = False
 
 	def messagebox_ok_clicked(self, a):
 		messagebox.hide()
