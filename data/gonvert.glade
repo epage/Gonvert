@@ -89,7 +89,7 @@
           </packing>
         </child>
         <child>
-          <widget class="GtkHBox" id="hbox1">
+          <widget class="GtkHBox" id="actionAreaLayout">
             <property name="visible">True</property>
             <child>
               <widget class="GtkScrolledWindow" id="categoryScrolledWindow">
@@ -117,6 +117,19 @@
               <widget class="GtkVBox" id="unitConversionLayout">
                 <property name="visible">True</property>
                 <property name="orientation">vertical</property>
+                <child>
+                  <widget class="GtkButton" id="categorySelectionButton">
+                    <property name="label" translatable="yes">ERROR</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="focus_on_click">False</property>
+                  </widget>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
                 <child>
                   <widget class="GtkHBox" id="selectedUnitLayout">
                     <property name="visible">True</property>
@@ -157,7 +170,7 @@
                   </widget>
                   <packing>
                     <property name="expand">False</property>
-                    <property name="position">0</property>
+                    <property name="position">1</property>
                   </packing>
                 </child>
                 <child>
@@ -200,11 +213,11 @@
                   </widget>
                   <packing>
                     <property name="expand">False</property>
-                    <property name="position">1</property>
+                    <property name="position">2</property>
                   </packing>
                 </child>
                 <child>
-                  <widget class="GtkVBox" id="vbox1">
+                  <widget class="GtkVBox" id="unitsAndDescriptionLayout">
                     <property name="visible">True</property>
                     <property name="orientation">vertical</property>
                     <child>
@@ -255,7 +268,7 @@
                     </child>
                   </widget>
                   <packing>
-                    <property name="position">2</property>
+                    <property name="position">3</property>
                   </packing>
                 </child>
                 <child>
@@ -317,7 +330,6 @@
                     <child>
                       <widget class="GtkCheckButton" id="shortlistcheck">
                         <property name="label" translatable="yes">Shortlist</property>
-                        <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">False</property>
                         <property name="use_underline">True</property>
@@ -335,7 +347,7 @@
                   <packing>
                     <property name="expand">False</property>
                     <property name="fill">False</property>
-                    <property name="position">3</property>
+                    <property name="position">4</property>
                   </packing>
                 </child>
               </widget>

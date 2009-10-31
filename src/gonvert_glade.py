@@ -80,7 +80,12 @@ class Gonvert(object):
 		self._shortlistcheck = widgets.get_widget('shortlistcheck')
 		self._toggleShortList = widgets.get_widget('toggleShortList')
 
+		self._categorySelectionButton = widgets.get_widget("categorySelectionButton")
 		self._categoryView = widgets.get_widget('categoryView')
+		if hildonize.IS_HILDON_SUPPORTED or FORCE_HILDON_LIKE:
+			self._categoryView.get_parent().hide()
+		else:
+			self._categorySelectionButton.hide()
 
 		self._unitsView = widgets.get_widget('unitsView')
 		self._unitsView.set_property('rules_hint', 1)
@@ -177,6 +182,7 @@ class Gonvert(object):
 		widgets.signal_autoconnect(dic)
 		self._mainWindow.connect("key-press-event", self._on_key_press)
 		self._mainWindow.connect("window-state-event", self._on_window_state_change)
+		self._categorySelectionButton.connect("clicked", self._on_category_selector_clicked)
 
 		replacementButtons = []
 		menu = hildonize.hildonize_menu(
@@ -210,7 +216,8 @@ class Gonvert(object):
 				self._mainWindow.resize(a, b)
 
 		#Restore selections from previously saved settings if it exists and is valid.
-		historical_catergory_found = False
+		categoryIndex = 0
+		selectedCategoryName = unit_data.UNIT_CATEGORIES[0]
 		selectionsDatPath = "/".join((constants._data_path_, "selections.dat"))
 		if os.path.exists(selectionsDatPath):
 			#Retrieving previous selections from ~/.gonvert/selections.dat
@@ -222,19 +229,15 @@ class Gonvert(object):
 			#Make sure that the 'self._selectedCategoryName' has been stored.
 			if 'selected_category' in selections:
 				#Match an available category to the previously selected category.
-				for counter in range(len(unit_data.UNIT_CATEGORIES)):
-					if selections['selected_category'] == unit_data.UNIT_CATEGORIES[counter]:
-						# Restore the previously selected category.
-						self._categoryView.set_cursor(counter, self._categoryColumn, False)
-						self._categoryView.grab_focus()
-				historical_catergory_found = True
+				selectedCategoryName = selections['selected_category']
+				try:
+					categoryIndex = unit_data.UNIT_CATEGORIES.index(selectedCategoryName)
+				except ValueError:
+					_moduleLogger.warn("Unknown category: %s" % selectedCategoryName)
 
-		if not historical_catergory_found:
-			print "Couldn't find saved category, using default."
-			#If historical records were not kept then default to
-			# put the focus on the first category
-			self._categoryView.set_cursor(0, self._categoryColumn, False)
-			self._categoryView.grab_focus()
+		self._categorySelectionButton.set_label(selectedCategoryName)
+		self._categoryView.set_cursor(categoryIndex, self._categoryColumn, False)
+		self._categoryView.grab_focus()
 
 		self._select_default_unit()
 
@@ -293,7 +296,9 @@ class Gonvert(object):
 		assert 0 < len(self._find_result)
 
 		#check if next find is in a new category (prevent category changes when unnecessary
-		if self._selectedCategoryName != self._find_result[self._findIndex][0]:
+		searchCategoryName = self._find_result[self._findIndex][0]
+		if self._selectedCategoryName != searchCategoryName:
+			self._categorySelectionButton.set_label(searchCategoryName)
 			self._categoryView.set_cursor(
 				self._find_result[self._findIndex][2], self._categoryColumn, False
 			)
@@ -341,8 +346,10 @@ class Gonvert(object):
 	def _toggle_find(self):
 		if self._searchLayout.get_property("visible"):
 			self._searchLayout.hide()
+			self._unitsView.grab_focus()
 		else:
 			self._searchLayout.show()
+			self._findEntry.grab_focus()
 
 	def _unit_model_cmp(self, sortedModel, leftItr, rightItr):
 		leftUnitText = self._unitModel.get_value(leftItr, 0)
@@ -415,12 +422,18 @@ class Gonvert(object):
 
 		#Restore oldest selection first.
 		if defaultPrimary:
-			unitIndex = units.index(defaultPrimary)
+			try:
+				unitIndex = units.index(defaultPrimary)
+			except ValueError:
+				unitIndex = 0
 			self._unitsView.set_cursor(unitIndex, self._unitNameColumn, True)
 
 		#Restore newest selection second.
 		if defaultSecondary:
-			unitIndex = units.index(defaultSecondary)
+			try:
+				unitIndex = units.index(defaultSecondary)
+			except ValueError:
+				unitIndex = 0
 			self._unitsView.set_cursor(unitIndex, self._unitNameColumn, True)
 
 		# select the text so user can start typing right away
@@ -536,6 +549,23 @@ class Gonvert(object):
 					maybeCol.set_sort_indicator(False)
 			else:
 				assert False, "Unknown column: %s" % (col.get_title(), )
+		except Exception:
+			_moduleLogger.exception("")
+
+	def _on_category_selector_clicked(self, *args):
+		try:
+			currenntIndex = unit_data.UNIT_CATEGORIES.index(self._selectedCategoryName)
+			newIndex = hildonize.touch_selector(
+				self._mainWindow,
+				"Categories",
+				unit_data.UNIT_CATEGORIES,
+				currenntIndex,
+			)
+
+			selectedCategoryName = unit_data.UNIT_CATEGORIES[newIndex]
+			self._categorySelectionButton.set_label(selectedCategoryName)
+			self._categoryView.set_cursor(newIndex, self._categoryColumn, False)
+			self._categoryView.grab_focus()
 		except Exception:
 			_moduleLogger.exception("")
 
