@@ -12,11 +12,13 @@ import gtk.glade
 import gtk.gdk
 
 import constants
+import hildonize
 import unit_data
 
 
 _moduleLogger = logging.getLogger("gonvert_glade")
 PROFILE_STARTUP = False
+FORCE_HILDON_LIKE = True
 
 gettext.bindtextdomain('gonvert', '/usr/share/locale')
 gettext.textdomain('gonvert')
@@ -64,6 +66,8 @@ class Gonvert(object):
 			return
 
 		self._mainWindow = widgets.get_widget('mainWindow')
+		self._app = hildonize.get_app_class()()
+		self._mainWindow = hildonize.hildonize_window(self._app, self._mainWindow)
 
 		change_menu_label(widgets, 'fileMenuItem', _('File'))
 		change_menu_label(widgets, 'exitMenuItem', _('Exit'))
@@ -81,16 +85,22 @@ class Gonvert(object):
 		self._unitsView = widgets.get_widget('unitsView')
 		self._unitsView.set_property('rules_hint', 1)
 		self._unitsView_selection = self._unitsView.get_selection()
+		if hildonize.IS_HILDON_SUPPORTED or FORCE_HILDON_LIKE:
+			self._unitsView.set_headers_visible(False)
 
 		self._unitName = widgets.get_widget('unitName')
 		self._unitValue = widgets.get_widget('unitValue')
 		self._previousUnitName = widgets.get_widget('previousUnitName')
 		self._previousUnitValue = widgets.get_widget('previousUnitValue')
+		if hildonize.IS_HILDON_SUPPORTED or FORCE_HILDON_LIKE:
+			self._previousUnitName.get_parent().hide()
 
 		self._unitSymbol = widgets.get_widget('unitSymbol')
 		self._previousUnitSymbol = widgets.get_widget('previousUnitSymbol')
 
 		self._unitDescription = widgets.get_widget('unitDescription')
+		if hildonize.IS_HILDON_SUPPORTED or FORCE_HILDON_LIKE:
+			self._unitDescription.get_parent().get_parent().hide()
 
 		self._searchLayout = widgets.get_widget('searchLayout')
 		self._searchLayout.hide()
@@ -544,6 +554,10 @@ class Gonvert(object):
 			buffer = self._unitDescription.get_buffer()
 			buffer.set_text(unit_spec[2])
 			self._unitSymbol.set_text(unit_spec[1]) # put units into label text
+			if unit_spec[1]:
+				self._unitSymbol.show()
+			else:
+				self._unitSymbol.hide()
 
 			if self._unitValue.get_text() == '':
 				if self._selectedCategoryName == "Computer Numbers":
