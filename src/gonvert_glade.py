@@ -592,37 +592,6 @@ class Gonvert(object):
 
 		self._calcsuppress = False #enable calculations
 
-	def messagebox_ok_clicked(self, a):
-		messagebox.hide()
-
-	def _on_user_write_units(self, a):
-		''"Write the list of categories and units to stdout for documentation purposes.''"
-		messagebox_model = gtk.TextBuffer(None)
-		messageboxtext.set_buffer(messagebox_model)
-		messagebox_model.insert_at_cursor(_(u'The units are being written to stdout. You can capture this printout by starting gonvert from the command line as follows: \n$ gonvert > file.txt'), -1)
-		messagebox.show()
-		while gtk.events_pending():
-			gtk.mainiteration(False)
-
-		total_categories = 0
-		total_units = 0
-		print 'gonvert-%s%s' % (
-			constants.__version__,
-			_(u' - Unit Conversion Utility  - Convertible units listing: ')
-		)
-		for category_key in unit_data.UNIT_CATEGORIES:
-			total_categories = total_categories + 1
-			print category_key, ": "
-			self._unitDataInCategory = unit_data.UNIT_DESCRIPTIONS[category_key]
-			unit_keys = self._unitDataInCategory.keys()
-			unit_keys.sort()
-			del unit_keys[0] # do not display .base_unit description key
-			for unit_key in unit_keys:
-				total_units = total_units + 1
-				print "\t", unit_key
-		print total_categories, ' categories'
-		print total_units, ' units'
-
 	def _on_unit_value_changed(self, a):
 		if self._calcsuppress:
 			#self._calcsuppress = False
@@ -712,6 +681,37 @@ class Gonvert(object):
 				func, arg = self._unitDataInCategory[self._unitName.get_text()][0]
 				self._unitValue.set_text(str(apply(func.from_base, (base, arg, ))))
 				self._calcsuppress = False
+
+	def messagebox_ok_clicked(self, a):
+		messagebox.hide()
+
+	def _on_user_write_units(self, a):
+		''"Write the list of categories and units to stdout for documentation purposes.''"
+		messagebox_model = gtk.TextBuffer(None)
+		messageboxtext.set_buffer(messagebox_model)
+		messagebox_model.insert_at_cursor(_(u'The units are being written to stdout. You can capture this printout by starting gonvert from the command line as follows: \n$ gonvert > file.txt'), -1)
+		messagebox.show()
+		while gtk.events_pending():
+			gtk.mainiteration(False)
+
+		total_categories = 0
+		total_units = 0
+		print 'gonvert-%s%s' % (
+			constants.__version__,
+			_(u' - Unit Conversion Utility  - Convertible units listing: ')
+		)
+		for category_key in unit_data.UNIT_CATEGORIES:
+			total_categories = total_categories + 1
+			print category_key, ": "
+			self._unitDataInCategory = unit_data.UNIT_DESCRIPTIONS[category_key]
+			unit_keys = self._unitDataInCategory.keys()
+			unit_keys.sort()
+			del unit_keys[0] # do not display .base_unit description key
+			for unit_key in unit_keys:
+				total_units = total_units + 1
+				print "\t", unit_key
+		print total_categories, ' categories'
+		print total_units, ' units'
 
 	def _on_about_clicked(self, a):
 		dlg = gtk.AboutDialog()
