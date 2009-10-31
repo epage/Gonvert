@@ -48,8 +48,8 @@ class Gonvert(object):
 		self._find_result = [] # empty find result list
 		self._findIndex = 0 # default to find result number zero
 
-		self._selected_category = '' # preset to no selected category
-		self._selected_units = {} # empty dictionary for later use
+		self._selectedCategory = '' # preset to no selected category
+		self._defaultUnitForCategory = {} # empty dictionary for later use
 
 		#check to see if glade file is in current directory (user must be
 		# running from download untar directory)
@@ -60,6 +60,8 @@ class Gonvert(object):
 				widgets = gtk.glade.XML(gladePath)
 				break
 		else:
+			_moduleLogger.error("UI Descriptor not found!")
+			gtk.main_quit()
 			return
 
 		self._mainWindow = widgets.get_widget('mainWindow')
@@ -98,9 +100,9 @@ class Gonvert(object):
 		self._searchLayout.hide()
 		self._findEntry = widgets.get_widget('findEntry')
 		self._findLabel = widgets.get_widget('findLabel')
-		findButton = widgets.get_widget('findButton')
+		self._findButton = widgets.get_widget('findButton')
 		ToolTips = gtk.Tooltips()
-		ToolTips.set_tip(findButton, _(u'Find unit (F6)'))
+		ToolTips.set_tip(self._findButton, _(u'Find unit (F6)'))
 
 		#insert a self._categoryColumnumn into the units list even though the heading will not be seen
 		renderer = gtk.CellRendererText()
@@ -206,10 +208,10 @@ class Gonvert(object):
 			#Retrieving previous selections from ~/.gonvert/selections.dat
 			selections = pickle.load(open(selectionsDatPath, 'r'))
 			#Restoring previous selections.
-			#If the 'selected_unts' has been stored, then extract self._selected_units from selections.
+			#If the 'selected_unts' has been stored, then extract self._defaultUnitForCategory from selections.
 			if 'selected_units' in selections:
-				self._selected_units = selections['selected_units']
-			#Make sure that the 'self._selected_category' has been stored.
+				self._defaultUnitForCategory = selections['selected_units']
+			#Make sure that the 'self._selectedCategory' has been stored.
 			if 'selected_category' in selections:
 				#Match an available category to the previously selected category.
 				for counter in range(len(unit_data.UNIT_CATEGORIES)):
@@ -226,7 +228,7 @@ class Gonvert(object):
 			self._categoryView.set_cursor(0, self._categoryColumn, False)
 			self._categoryView.grab_focus()
 
-		self.restore_units()
+		self._select_default_unit()
 
 	def _save_settings(self):
 		"""
@@ -234,17 +236,17 @@ class Gonvert(object):
 		should therefore only be called when exiting the program.
 
 		Update selections dictionary which consists of the following keys:
-		'self._selected_category': full name of selected category
-		'self._selected_units': self._selected_units dictionary which contains:
+		'self._selectedCategory': full name of selected category
+		'self._defaultUnitForCategory': self._defaultUnitForCategory dictionary which contains:
 		[categoryname: #1 displayed unit, #2 displayed unit]
 		"""
 		#Determine the contents of the selected category row
 		selected, iter = self._categoryView.get_selection().get_selected()
-		self._selected_category = self._categoryModel.get_value(iter, 0)
+		self._selectedCategory = self._categoryModel.get_value(iter, 0)
 
 		selections = {
-			'selected_category': self._selected_category,
-			'selected_units': self._selected_units
+			'selected_category': self._selectedCategory,
+			'selected_units': self._defaultUnitForCategory
 		}
 		selectionsDatPath = "/".join((constants._data_path_, "selections.dat"))
 		pickle.dump(selections, open(selectionsDatPath, 'w'))
@@ -283,7 +285,7 @@ class Gonvert(object):
 		assert 0 < len(self._find_result)
 
 		#check if next find is in a new category (prevent category changes when unnecessary
-		if self._selected_category != self._find_result[self._findIndex][0]:
+		if self._selectedCategory != self._find_result[self._findIndex][0]:
 			self._categoryView.set_cursor(
 				self._find_result[self._findIndex][2], self._categoryColumn, False
 			)
@@ -358,6 +360,82 @@ class Gonvert(object):
 		else:
 			self._searchLayout.show()
 
+	def _unit_model_cmp(self, sortedModel, leftItr, rightItr):
+		leftUnitText = self._unitModel.get_value(leftItr, 0)
+		rightUnitText = self._unitModel.get_value(rightItr, 0)
+		return cmp(leftUnitText, rightUnitText)
+
+	def _symbol_model_cmp(self, sortedModel, leftItr, rightItr):
+		leftSymbolText = self._unitModel.get_value(leftItr, 2)
+		rightSymbolText = self._unitModel.get_value(rightItr, 2)
+		return cmp(leftSymbolText, rightSymbolText)
+
+	def _value_model_cmp(self, sortedModel, leftItr, rightItr):
+		#special sorting exceptions for ascii values (instead of float values)
+		if self._selectedCategory == "Computer Numbers":
+			leftValue = self._unitModel.get_value(leftItr, 1)
+			rightValue = self._unitModel.get_value(rightItr, 1)
+		else:
+			leftValueText = self._unitModel.get_value(leftItr, 1)
+			leftValue = float(leftValueText) if leftValueText else 0.0
+
+			rightValueText = self._unitModel.get_value(rightItr, 1)
+			rightValue = float(rightValueText) if rightValueText else 0.0
+		return cmp(leftValue, rightValue)
+
+	def _get_column_sort_stuff(self):
+		columns = (
+			(self._unitNameColumn, "_unit_sort_direction", self._unit_model_cmp),
+			(self._unitValueColumn, "_value_sort_direction", self._value_model_cmp),
+			(self._unitSymbolColumn, "_units_sort_direction", self._symbol_model_cmp),
+		)
+		return columns
+
+	def _switch_category(self, category):
+		self._selectedCategory = category
+		self._unitDataInCategory = unit_data.UNIT_DESCRIPTIONS[self._selectedCategory]
+
+		#Fill up the units descriptions and clear the value cells
+		self._clear_visible_unit_data()
+		for key in unit_data.get_units(self._selectedCategory):
+			iter = self._unitModel.append()
+			self._unitModel.set(iter, 0, key, 1, '', 2, self._unitDataInCategory[key][1])
+		self._sortedUnitModel.sort_column_changed()
+
+		self._select_default_unit()
+
+	def _clear_visible_unit_data(self):
+		self._unitDescription.get_buffer().set_text("")
+		self._unitName.set_text('')
+		self._unitValue.set_text('')
+		self._unitSymbol.set_text('')
+
+		self._previousUnitName.set_text('')
+		self._previousUnitValue.set_text('')
+		self._previousUnitSymbol.set_text('')
+
+		self._unitModel.clear()
+
+	def _select_default_unit(self):
+		# Restore the previous historical settings of previously selected units
+		# in this newly selected category
+		if self._selectedCategory in self._defaultUnitForCategory:
+			units = unit_data.get_units(self._selectedCategory)
+
+			#Restore oldest selection first.
+			if self._defaultUnitForCategory[self._selectedCategory][1]:
+				unitIndex = units.index(self._defaultUnitForCategory[self._selectedCategory][1])
+				self._unitsView.set_cursor(unitIndex, self._unitNameColumn, True)
+
+			#Restore newest selection second.
+			if self._defaultUnitForCategory[self._selectedCategory][0]:
+				unitIndex = units.index(self._defaultUnitForCategory[self._selectedCategory][0])
+				self._unitsView.set_cursor(unitIndex, self._unitNameColumn, True)
+
+		# select the text so user can start typing right away
+		self._unitValue.grab_focus()
+		self._unitValue.select_region(0, -1)
+
 	def _on_shortlist_changed(self, *args):
 		try:
 			raise NotImplementedError("%s" % self._shortlistcheck.get_active())
@@ -374,7 +452,7 @@ class Gonvert(object):
 		try:
 			selectionsDatPath = "/".join((constants._data_path_, "selections.dat"))
 			os.remove(selectionsDatPath)
-			self._selected_units = {}
+			self._defaultUnitForCategory = {}
 		except Exception:
 			_moduleLogger.exception("")
 
@@ -425,39 +503,9 @@ class Gonvert(object):
 	def _on_find_activate(self, a):
 		try:
 			self._find_next()
+			self._findButton.grab_focus()
 		except Exception:
 			_moduleLogger.exception("")
-
-	def _unit_model_cmp(self, sortedModel, leftItr, rightItr):
-		leftUnitText = self._unitModel.get_value(leftItr, 0)
-		rightUnitText = self._unitModel.get_value(rightItr, 0)
-		return cmp(leftUnitText, rightUnitText)
-
-	def _symbol_model_cmp(self, sortedModel, leftItr, rightItr):
-		leftSymbolText = self._unitModel.get_value(leftItr, 2)
-		rightSymbolText = self._unitModel.get_value(rightItr, 2)
-		return cmp(leftSymbolText, rightSymbolText)
-
-	def _value_model_cmp(self, sortedModel, leftItr, rightItr):
-		#special sorting exceptions for ascii values (instead of float values)
-		if self._selected_category == "Computer Numbers":
-			leftValue = self._unitModel.get_value(leftItr, 1)
-			rightValue = self._unitModel.get_value(rightItr, 1)
-		else:
-			leftValueText = self._unitModel.get_value(leftItr, 1)
-			leftValue = float(leftValueText) if leftValueText else 0.0
-
-			rightValueText = self._unitModel.get_value(rightItr, 1)
-			rightValue = float(rightValueText) if rightValueText else 0.0
-		return cmp(leftValue, rightValue)
-
-	def _get_column_sort_stuff(self):
-		columns = (
-			(self._unitNameColumn, "_unit_sort_direction", self._unit_model_cmp),
-			(self._unitValueColumn, "_value_sort_direction", self._value_model_cmp),
-			(self._unitSymbolColumn, "_units_sort_direction", self._symbol_model_cmp),
-		)
-		return columns
 
 	def _on_click_unit_column(self, col):
 		"""
@@ -466,8 +514,6 @@ class Gonvert(object):
 		try:
 			#Determine which column requires sorting
 			columns = self._get_column_sort_stuff()
-			for column, directionName, col_cmp in columns:
-				column.set_sort_indicator(False)
 			for columnIndex, (maybeCol, directionName, col_cmp) in enumerate(columns):
 				if col is maybeCol:
 					direction = getattr(self, directionName)
@@ -482,66 +528,20 @@ class Gonvert(object):
 
 					setattr(self, directionName, not direction)
 					break
+				else:
+					maybeCol.set_sort_indicator(False)
 			else:
 				assert False, "Unknown column: %s" % (col.get_title(), )
 		except Exception:
 			_moduleLogger.exception("")
 
 	def _on_click_category(self, *args):
-		#Clear out the description
-		self._unitDescription.get_buffer().set_text("")
-
-		#Determine the contents of the selected category row
-		selected, iter = self._categoryView.get_selection().get_selected()
-		self._selected_category = self._categoryModel.get_value(iter, 0)
-
-		self._unitDataInCategory = unit_data.UNIT_DESCRIPTIONS[self._selected_category]
-
-		#Fill up the units descriptions and clear the value cells
-		self._unitModel.clear()
-		for key in unit_data.get_units(self._selected_category):
-			iter = self._unitModel.append()
-			self._unitModel.set(iter, 0, key, 1, '', 2, self._unitDataInCategory[key][1])
-		self._sortedUnitModel.sort_column_changed()
-
-		self._unitName.set_text('')
-		self._unitValue.set_text('')
-		self._previousUnitName.set_text('')
-		self._previousUnitValue.set_text('')
-		self._unitSymbol.set_text('')
-		self._previousUnitSymbol.set_text('')
-
-		self.restore_units()
-
-	def restore_units(self):
-		# Restore the previous historical settings of previously selected units in this newly selected category
-		#Since category has just been clicked, the list will be sorted already.
-		if self._selected_category in self._selected_units:
-			if self._selected_units[self._selected_category][0]:
-				#self._selected_units[self._selected_category] = [selected_unit, self._selected_units[self._selected_category][0]]
-
-				units = unit_data.UNIT_DESCRIPTIONS[self._selected_category].keys()
-				units.sort()
-				del units[0] # do not display .base_unit description key
-
-				#Restore oldest selection first.
-				if self._selected_units[self._selected_category][1]:
-					unit_no = 0
-					for unit in units:
-						if unit == self._selected_units[self._selected_category][1]:
-							self._unitsView.set_cursor(unit_no, self._unitNameColumn, True)
-						unit_no = unit_no+1
-
-				#Restore newest selection second.
-				unit_no = 0
-				for unit in units:
-					if unit == self._selected_units[self._selected_category][0]:
-						self._unitsView.set_cursor(unit_no, self._unitNameColumn, True)
-					unit_no = unit_no+1
-
-		# select the text so user can start typing right away
-		self._unitValue.grab_focus()
-		self._unitValue.select_region(0, -1)
+		try:
+			selected, iter = self._categoryView.get_selection().get_selected()
+			selectedCategory = self._categoryModel.get_value(iter, 0)
+			self._switch_category(selectedCategory)
+		except Exception:
+			_moduleLogger.exception("")
 
 	def _on_click_unit(self, row):
 		self._calcsuppress = True #suppress calculations
@@ -573,18 +573,18 @@ class Gonvert(object):
 
 		self._unitSymbol.set_text(unit_spec[1]) # put units into label text
 		if self._unitValue.get_text() == '':
-			if self._selected_category == "Computer Numbers":
+			if self._selectedCategory == "Computer Numbers":
 				self._unitValue.set_text("0")
 			else:
 				self._unitValue.set_text("0.0")
 
 		#For historical purposes, record this unit as the most recent one in this category.
 		# Also, if a previous unit exists, then shift that previous unit to oldest unit.
-		if self._selected_category in self._selected_units:
-			if self._selected_units[self._selected_category][0]:
-				self._selected_units[self._selected_category] = [selected_unit, self._selected_units[self._selected_category][0]]
+		if self._selectedCategory in self._defaultUnitForCategory:
+			if self._defaultUnitForCategory[self._selectedCategory][0]:
+				self._defaultUnitForCategory[self._selectedCategory] = [selected_unit, self._defaultUnitForCategory[self._selectedCategory][0]]
 		else:
-			self._selected_units[self._selected_category] = [selected_unit, '']
+			self._defaultUnitForCategory[self._selectedCategory] = [selected_unit, '']
 
 		# select the text so user can start typing right away
 		self._unitValue.grab_focus()
@@ -628,7 +628,7 @@ class Gonvert(object):
 			#self._calcsuppress = False
 			return
 		# determine if value to be calculated is empty
-		if self._selected_category == "Computer Numbers":
+		if self._selectedCategory == "Computer Numbers":
 			if self._unitValue.get_text() == '':
 				value = '0'
 			else:
@@ -673,7 +673,7 @@ class Gonvert(object):
 			#self._calcsuppress = False
 			return
 		# determine if value to be calculated is empty
-		if self._selected_category == "Computer Numbers":
+		if self._selectedCategory == "Computer Numbers":
 			if self._previousUnitValue.get_text() == '':
 				value = '0'
 			else:
