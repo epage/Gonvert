@@ -187,14 +187,6 @@ class Gonvert(object):
 			if 'size' in saved_window:
 				a, b = saved_window['size']
 				self._mainWindow.resize(a, b)
-			else:
-				#Maximize if no previous size was found
-				#self._mainWindow.maximize()
-				pass
-		else:
-			#Maximize if no previous window.dat file was found
-			#self._mainWindow.maximize()
-			pass
 
 		#Restore selections from previously saved settings if it exists and is valid.
 		historical_catergory_found = False
