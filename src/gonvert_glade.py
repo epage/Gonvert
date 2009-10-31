@@ -595,9 +595,8 @@ class Gonvert(object):
 			if not self._unitValue.is_focus():
 				return
 
-			value = self._sanitize_value(self._unitValue.get_text())
-
 			#retrieve the conversion function and value from the selected unit
+			value = self._sanitize_value(self._unitValue.get_text())
 			func, arg = self._unitDataInCategory[self._unitName.get_text()][0]
 			base = func.to_base(value, arg)
 
@@ -606,6 +605,7 @@ class Gonvert(object):
 				func, arg = self._unitDataInCategory[row[0]][0]
 				row[1] = str(func.from_base(base, arg))
 
+			# Update the secondary unit entry
 			if self._previousUnitName.get_text() != '':
 				func, arg = self._unitDataInCategory[self._previousUnitName.get_text()][0]
 				self._previousUnitValue.set_text(str(func.from_base(base, arg, )))
@@ -619,9 +619,8 @@ class Gonvert(object):
 			if not self._previousUnitValue.is_focus():
 				return
 
-			value = self._sanitize_value(self._previousUnitValue.get_text())
-
 			#retrieve the conversion function and value from the selected unit
+			value = self._sanitize_value(self._previousUnitValue.get_text())
 			func, arg = self._unitDataInCategory[self._previousUnitName.get_text()][0]
 			base = func.to_base(value, arg)
 
@@ -630,6 +629,7 @@ class Gonvert(object):
 				func, arg = self._unitDataInCategory[row[0]][0]
 				row[1] = str(func.from_base(base, arg))
 
+			# Update the primary unit entry
 			func, arg = self._unitDataInCategory[self._unitName.get_text()][0]
 			self._unitValue.set_text(str(func.from_base(base, arg, )))
 		except Exception:
