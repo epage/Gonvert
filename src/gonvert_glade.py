@@ -519,7 +519,7 @@ class Gonvert(object):
 		except Exception:
 			_moduleLogger.exception("")
 
-	def _on_click_unit_column(self, *args):
+	def _on_click_unit_column(self, col):
 		"""
 		Sort the contents of the col when the user clicks on the title.
 		"""
@@ -588,68 +588,49 @@ class Gonvert(object):
 		except Exception:
 			_moduleLogger.exception("")
 
-	def _on_unit_value_changed(self, a):
+	def _on_unit_value_changed(self, *args):
 		if self._unitName.get_text() == '':
 			return
+		if not self._unitValue.is_focus():
+			return
 
-		# determine if value to be calculated is empty
 		value = self._sanitize_value(self._unitValue.get_text())
 
-		func, arg = self._unitDataInCategory[self._unitName.get_text()][0] #retrieve the conversion function and value from the selected unit
-		base = apply(func.to_base, (value, arg, )) #determine the base unit value
-
-		keys = self._unitDataInCategory.keys()
-		keys.sort()
-		del keys[0]
-		row = 0
+		#retrieve the conversion function and value from the selected unit
+		func, arg = self._unitDataInCategory[self._unitName.get_text()][0]
+		base = func.to_base(value, arg)
 
 		#point to the first row
-		iter = self._unitModel.get_iter_first()
-
-		while iter:
-			#get the formula from the name at the row
-			func, arg = self._unitDataInCategory[self._unitModel.get_value(iter, 0)][0]
-
-			#set the result in the value column
-			self._unitModel.set(iter, 1, str(apply(func.from_base, (base, arg, ))))
-
-			#point to the next row in the self._unitModel
-			iter = self._unitModel.iter_next(iter)
+		for row in self._unitModel:
+			func, arg = self._unitDataInCategory[row[0]][0]
+			row[1] = str(func.from_base(base, arg))
 
 		# if the second row has a unit then update its value
 		if self._previousUnitName.get_text() != '':
 			func, arg = self._unitDataInCategory[self._previousUnitName.get_text()][0]
-			self._previousUnitValue.set_text(str(apply(func.from_base, (base, arg, ))))
+			self._previousUnitValue.set_text(str(func.from_base(base, arg, )))
 
-	def _on_previous_unit_value_changed(self, a):
+	def _on_previous_unit_value_changed(self, *args):
+		if self._previousUnitName.get_text() == '':
+			return
+		if not self._previousUnitValue.is_focus():
+			return
+
 		value = self._sanitize_value(self._previousUnitValue.get_text())
 
-		if self._previousUnitName.get_text() != '':
-			func, arg = self._unitDataInCategory[self._previousUnitName.get_text()][0] #retrieve the conversion function and value from the selected unit
-			base = apply(func.to_base, (value, arg, )) #determine the base unit value
+		#retrieve the conversion function and value from the selected unit
+		func, arg = self._unitDataInCategory[self._previousUnitName.get_text()][0]
+		base = func.to_base(value, arg)
 
-			keys = self._unitDataInCategory.keys()
-			keys.sort()
-			del keys[0]
-			row = 0
+		#point to the first row
+		for row in self._unitModel:
+			func, arg = self._unitDataInCategory[row[0]][0]
+			row[1] = str(func.from_base(base, arg))
 
-			#point to the first row
-			iter = self._unitModel.get_iter_first()
-
-			while iter:
-				#get the formula from the name at the row
-				func, arg = self._unitDataInCategory[self._unitModel.get_value(iter, 0)][0]
-
-				#set the result in the value column
-				self._unitModel.set(iter, 1, str(apply(func.from_base, (base, arg, ))))
-
-				#point to the next row in the self._unitModel
-				iter = self._unitModel.iter_next(iter)
-
-			# if the second row has a unit then update its value
-			if self._unitName.get_text() != '':
-				func, arg = self._unitDataInCategory[self._unitName.get_text()][0]
-				self._unitValue.set_text(str(apply(func.from_base, (base, arg, ))))
+		# if the second row has a unit then update its value
+		if self._unitName.get_text() != '':
+			func, arg = self._unitDataInCategory[self._unitName.get_text()][0]
+			self._unitValue.set_text(str(func.from_base(base, arg, )))
 
 	def messagebox_ok_clicked(self, a):
 		messagebox.hide()
@@ -673,9 +654,7 @@ class Gonvert(object):
 			total_categories = total_categories + 1
 			print category_key, ": "
 			self._unitDataInCategory = unit_data.UNIT_DESCRIPTIONS[category_key]
-			unit_keys = self._unitDataInCategory.keys()
-			unit_keys.sort()
-			del unit_keys[0] # do not display .base_unit description key
+			unit_keys = unit_data.get_units_from_category(self._unitDataInCategory)
 			for unit_key in unit_keys:
 				total_units = total_units + 1
 				print "\t", unit_key
