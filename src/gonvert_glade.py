@@ -112,6 +112,7 @@ class Gonvert(object):
 
 		#insert a self._categoryColumnumn into the units list even though the heading will not be seen
 		renderer = gtk.CellRendererText()
+		hildonize.set_cell_thumb_selectable(renderer)
 		self._unitNameColumn = gtk.TreeViewColumn(_('Unit Name'), renderer)
 		self._unitNameColumn.set_property('resizable', 1)
 		self._unitNameColumn.add_attribute(renderer, 'text', 0)
@@ -154,8 +155,8 @@ class Gonvert(object):
 
 		#Populate the catagories list
 		for key in unit_data.UNIT_CATEGORIES:
-			iter = self._categoryModel.append()
-			self._categoryModel.set(iter, 0, key)
+			row = (key, )
+			self._categoryModel.append(row)
 
 		#--------- connections to GUI ----------------
 		dic = {
@@ -177,7 +178,18 @@ class Gonvert(object):
 		self._mainWindow.connect("key-press-event", self._on_key_press)
 		self._mainWindow.connect("window-state-event", self._on_window_state_change)
 
-		self._mainWindow.set_title('gonvert- %s - Unit Conversion Utility' % constants.__version__)
+		replacementButtons = []
+		menu = hildonize.hildonize_menu(
+			self._mainWindow,
+			widgets.get_widget("mainMenuBar"),
+			replacementButtons
+		)
+		if not hildonize.IS_HILDON_SUPPORTED:
+			_moduleLogger.warning("No hildonization support")
+
+		hildonize.set_application_title(
+			self._mainWindow, "%s - Unit Conversion Utility" % constants.__pretty_app_name__
+		)
 		iconPath = pixmapspath + '/gonvert.png'
 		if os.path.exists(iconPath):
 			self._mainWindow.set_icon(gtk.gdk.pixbuf_new_from_file(iconPath))
