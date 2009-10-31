@@ -606,7 +606,6 @@ class Gonvert(object):
 				func, arg = self._unitDataInCategory[row[0]][0]
 				row[1] = str(func.from_base(base, arg))
 
-			# if the second row has a unit then update its value
 			if self._previousUnitName.get_text() != '':
 				func, arg = self._unitDataInCategory[self._previousUnitName.get_text()][0]
 				self._previousUnitValue.set_text(str(func.from_base(base, arg, )))
@@ -631,10 +630,8 @@ class Gonvert(object):
 				func, arg = self._unitDataInCategory[row[0]][0]
 				row[1] = str(func.from_base(base, arg))
 
-			# if the second row has a unit then update its value
-			if self._unitName.get_text() != '':
-				func, arg = self._unitDataInCategory[self._unitName.get_text()][0]
-				self._unitValue.set_text(str(func.from_base(base, arg, )))
+			func, arg = self._unitDataInCategory[self._unitName.get_text()][0]
+			self._unitValue.set_text(str(func.from_base(base, arg, )))
 		except Exception:
 			_moduleLogger.exception("")
 
