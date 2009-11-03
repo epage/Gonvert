@@ -3,7 +3,6 @@
   <!-- interface-requires gtk+ 2.16 -->
   <!-- interface-naming-policy toplevel-contextual -->
   <widget class="GtkWindow" id="mainWindow">
-    <property name="visible">True</property>
     <property name="title" translatable="yes">Gonvert</property>
     <child>
       <widget class="GtkVBox" id="mainLayout">

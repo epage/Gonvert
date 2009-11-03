@@ -2,6 +2,8 @@
 # -*- coding: UTF8 -*-
 
 """
+@todo Get rid of autoconnects except for menus
+
 @todo Look into using two columns for displaying the value, split by the
 decimal place.  The left one would be right aligned and the right would be left
 aligned (only if not in exponential notation
@@ -16,7 +18,6 @@ OR display everything in engineering notation
 
 import os
 import pickle
-import gettext
 import logging
 
 import pango
@@ -29,14 +30,22 @@ import constants
 import hildonize
 import unit_data
 
+try:
+	import gettext
+except ImportError:
+	_ = lambda x: x
+	gettext = None
+else:
+	_ = gettext.gettext
+
 
 _moduleLogger = logging.getLogger("gonvert_glade")
 PROFILE_STARTUP = False
-FORCE_HILDON_LIKE = True
+FORCE_HILDON_LIKE = False
 
-gettext.bindtextdomain('gonvert', '/usr/share/locale')
-gettext.textdomain('gonvert')
-_ = gettext.gettext
+if gettext is not None:
+	gettext.bindtextdomain('gonvert', '/usr/share/locale')
+	gettext.textdomain('gonvert')
 
 
 def change_menu_label(widgets, labelname, newtext):
@@ -120,8 +129,6 @@ class Gonvert(object):
 		self._findEntry = widgets.get_widget('findEntry')
 		self._findLabel = widgets.get_widget('findLabel')
 		self._findButton = widgets.get_widget('findButton')
-		ToolTips = gtk.Tooltips()
-		ToolTips.set_tip(self._findButton, _(u'Find unit (F6)'))
 
 		#insert a self._categoryColumnumn into the units list even though the heading will not be seen
 		renderer = gtk.CellRendererText()
@@ -199,7 +206,7 @@ class Gonvert(object):
 			"on_toggleShortList_activate": self._on_edit_shortlist,
 		}
 		widgets.signal_autoconnect(dic)
-		self._mainWindow.connect("destroy", self._on_user_exit)
+		self._mainWindow.connect("delete-event", self._on_user_exit)
 		self._mainWindow.connect("key-press-event", self._on_key_press)
 		self._mainWindow.connect("window-state-event", self._on_window_state_change)
 		self._categorySelectionButton.connect("clicked", self._on_category_selector_clicked)
@@ -244,11 +251,12 @@ class Gonvert(object):
 		#Restore window size from previously saved settings if it exists and is valid.
 		windowDatPath = "/".join((constants._data_path_, "window.dat"))
 		if os.path.exists(windowDatPath):
-			#Retrieving previous window settings from ~/.gonvert/window.dat
 			saved_window = pickle.load(open(windowDatPath, "r"))
-			#If the 'size' has been stored, then extract size from saved_window.
-			if 'size' in saved_window:
+			try:
 				a, b = saved_window['size']
+			except KeyError:
+				pass
+			else:
 				self._mainWindow.resize(a, b)
 
 		#Restore selections from previously saved settings if it exists and is valid.
@@ -256,16 +264,17 @@ class Gonvert(object):
 		selectedCategoryName = unit_data.UNIT_CATEGORIES[0]
 		selectionsDatPath = "/".join((constants._data_path_, "selections.dat"))
 		if os.path.exists(selectionsDatPath):
-			#Retrieving previous selections from ~/.gonvert/selections.dat
 			selections = pickle.load(open(selectionsDatPath, 'r'))
-			#Restoring previous selections.
-			#If the 'selected_unts' has been stored, then extract self._defaultUnitForCategory from selections.
-			if 'selected_units' in selections:
+			try:
 				self._defaultUnitForCategory = selections['selected_units']
-			#Make sure that the 'self._selectedCategoryName' has been stored.
-			if 'selected_category' in selections:
-				#Match an available category to the previously selected category.
+			except KeyError:
+				pass
+
+			try:
 				selectedCategoryName = selections['selected_category']
+			except KeyError:
+				pass
+			else:
 				try:
 					categoryIndex = unit_data.UNIT_CATEGORIES.index(selectedCategoryName)
 				except ValueError:
@@ -493,13 +502,13 @@ class Gonvert(object):
 		try:
 			raise NotImplementedError("%s" % self._shortlistcheck.get_active())
 		except Exception:
-			_moduleLogger.exception("")
+			_moduleLogger.exception("_on_shortlist_changed")
 
 	def _on_edit_shortlist(self, *args):
 		try:
 			raise NotImplementedError("%s" % self._toggleShortList.get_active())
 		except Exception:
-			_moduleLogger.exception("")
+			_moduleLogger.exception("_on_edit_shortlist")
 
 	def _on_user_clear_selections(self, *args):
 		try:
@@ -507,7 +516,7 @@ class Gonvert(object):
 			os.remove(selectionsDatPath)
 			self._defaultUnitForCategory = {}
 		except Exception:
-			_moduleLogger.exception("")
+			_moduleLogger.exception("_on_user_clear_selections")
 
 	def _on_key_press(self, widget, event, *args):
 		"""
@@ -530,7 +539,7 @@ class Gonvert(object):
 			elif event.keyval == gtk.keysyms.n and event.get_state() & gtk.gdk.CONTROL_MASK:
 				self._find_next()
 		except Exception, e:
-			_moduleLogger.exception("")
+			_moduleLogger.exception("_on_key_press")
 
 	def _on_window_state_change(self, widget, event, *args):
 		"""
@@ -542,7 +551,7 @@ class Gonvert(object):
 			else:
 				self._isFullScreen = False
 		except Exception, e:
-			_moduleLogger.exception("")
+			_moduleLogger.exception("_on_window_state_change")
 
 	def _on_findEntry_changed(self, *args):
 		"""
@@ -551,14 +560,14 @@ class Gonvert(object):
 		try:
 			self._clear_find()
 		except Exception:
-			_moduleLogger.exception("")
+			_moduleLogger.exception("_on_findEntry_changed")
 
 	def _on_find_activate(self, *args):
 		try:
 			self._find_next()
 			self._findButton.grab_focus()
 		except Exception:
-			_moduleLogger.exception("")
+			_moduleLogger.exception("_on_find_activate")
 
 	def _on_click_unit_column(self, col):
 		"""
@@ -586,7 +595,7 @@ class Gonvert(object):
 			else:
 				assert False, "Unknown column: %s" % (col.get_title(), )
 		except Exception:
-			_moduleLogger.exception("")
+			_moduleLogger.exception("_on_click_unit_column")
 
 	def _on_category_selector_clicked(self, *args):
 		try:
@@ -603,7 +612,7 @@ class Gonvert(object):
 			self._categoryView.set_cursor(newIndex, self._categoryColumn, False)
 			self._categoryView.grab_focus()
 		except Exception:
-			_moduleLogger.exception("")
+			_moduleLogger.exception("_on_category_selector_clicked")
 
 	def _on_click_category(self, *args):
 		try:
@@ -614,7 +623,7 @@ class Gonvert(object):
 			selectedCategory = self._categoryModel.get_value(iter, 0)
 			self._switch_category(selectedCategory)
 		except Exception:
-			_moduleLogger.exception("")
+			_moduleLogger.exception("_on_click_category")
 
 	def _on_click_unit(self, *args):
 		try:
@@ -662,7 +671,7 @@ class Gonvert(object):
 			self._unitValue.grab_focus()
 			self._unitValue.select_region(0, -1)
 		except Exception:
-			_moduleLogger.exception("")
+			_moduleLogger.exception("_on_click_unit")
 
 	def _on_unit_value_changed(self, *args):
 		try:
@@ -686,7 +695,7 @@ class Gonvert(object):
 				func, arg = self._unitDataInCategory[self._previousUnitName.get_text()][0]
 				self._previousUnitValue.set_text(str(func.from_base(base, arg, )))
 		except Exception:
-			_moduleLogger.exception("")
+			_moduleLogger.exception("_on_unit_value_changed")
 
 	def _on_previous_unit_value_changed(self, *args):
 		try:
@@ -709,7 +718,7 @@ class Gonvert(object):
 			func, arg = self._unitDataInCategory[self._unitName.get_text()][0]
 			self._unitValue.set_text(str(func.from_base(base, arg, )))
 		except Exception:
-			_moduleLogger.exception("")
+			_moduleLogger.exception("_on_previous_unit_value_changed")
 
 	def _on_about_clicked(self, a):
 		dlg = gtk.AboutDialog()
@@ -726,7 +735,7 @@ class Gonvert(object):
 		try:
 			self._save_settings()
 		except Exception:
-			_moduleLogger.exception("")
+			_moduleLogger.exception("_on_user_exit")
 		finally:
 			gtk.main_quit()
 

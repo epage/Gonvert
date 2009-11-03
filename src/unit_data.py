@@ -1,9 +1,14 @@
 import math
-import gettext
 
 import converters
 
-_ = gettext.gettext
+try:
+	raise ImportError()
+	import gettext
+except ImportError:
+	_ = lambda x: x
+else:
+	_ = gettext.gettext
 
 
 
