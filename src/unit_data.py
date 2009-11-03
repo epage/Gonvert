@@ -2189,6 +2189,32 @@ _(u"Electrical Voltage"): {".base_unit": _(u"volt"),
 		_(u"pony"):
 		[(converters.m, 25.0), "", """Equal to twenty five pounds sterling"""],
 	},
+
+	_(u"Radioactivity"): {
+		".base_unit": "becquerel",
+		_(u"becquerel"):
+		[(converters.m, 1.0), u"Bq", 'The SI derived unit of radioactivity.'],
+		_(u"curie"):
+		[(converters.m, 3.7e10), u"Ci", 'Roughly the activity of 1 gram of the radium isotope 226 Ra.'],
+		_(u"pico curie"):
+		[(converters.m, 3.7e-2), u"pCi", ''],
+	},
+
+	_(u"Radiation dose"): {
+		".base_unit": "Sievert",
+		_(u"Sievert"):
+		[(converters.m, 1.0), u"Sv", ''],
+		_(u"milli Sievert"):
+		[(converters.m, 1.0e-3), u"mSv", ''],
+		_(u"micro Sievert"):
+		[(converters.m, 1.0e-6), u"\xb5Sv", ''],
+		_(u"rem"):
+		[(converters.m, 0.01), u"rem", ''],
+		_(u"milli rem"):
+		[(converters.m, 1.0e-5), u"mrem", ''],
+		_(u"roentgen"):
+		[(converters.m, 1/1.07185e2), u"R", ''],
+	},
 }
 
 

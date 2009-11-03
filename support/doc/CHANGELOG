@@ -1,6 +1,8 @@
 Project: gonvert
 
 Version:
+0.2.24	- Ed Page updated files for Maemo.
+ 	- Add Radioactivity and Radiation dose categories.
 0.2.23  - Added UK currency category and other UK measurements thanks to Dale Hair
 0.2.22  - Restore previously used window size
 0.2.21  - Category column widened. Maximize on start.
