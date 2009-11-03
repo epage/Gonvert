@@ -5,8 +5,6 @@
   <widget class="GtkWindow" id="mainWindow">
     <property name="visible">True</property>
     <property name="title" translatable="yes">Gonvert</property>
-    <signal name="destroy" handler="on_main_window_destroy"/>
-    <signal name="size_allocate" handler="on_app1_size_allocate"/>
     <child>
       <widget class="GtkVBox" id="mainLayout">
         <property name="visible">True</property>

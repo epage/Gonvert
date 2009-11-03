@@ -32,7 +32,7 @@ import unit_data
 
 _moduleLogger = logging.getLogger("gonvert_glade")
 PROFILE_STARTUP = False
-FORCE_HILDON_LIKE = False
+FORCE_HILDON_LIKE = True
 
 gettext.bindtextdomain('gonvert', '/usr/share/locale')
 gettext.textdomain('gonvert')
@@ -86,12 +86,6 @@ class Gonvert(object):
 		self._mainWindow = widgets.get_widget('mainWindow')
 		self._app = hildonize.get_app_class()()
 		self._mainWindow = hildonize.hildonize_window(self._app, self._mainWindow)
-		for scrollingWidgetName in (
-			"unitsViewScrolledWindow",
-		):
-			scrollingWidget = widgets.get_widget(scrollingWidgetName)
-			assert scrollingWidget is not None, scrollingWidgetName
-			hildonize.hildonize_scrollwindow_with_viewport(scrollingWidget)
 
 		change_menu_label(widgets, 'fileMenuItem', _('File'))
 		change_menu_label(widgets, 'exitMenuItem', _('Exit'))
@@ -106,30 +100,20 @@ class Gonvert(object):
 
 		self._categorySelectionButton = widgets.get_widget("categorySelectionButton")
 		self._categoryView = widgets.get_widget('categoryView')
-		if hildonize.IS_HILDON_SUPPORTED or FORCE_HILDON_LIKE:
-			self._categoryView.get_parent().hide()
-		else:
-			self._categorySelectionButton.hide()
 
 		self._unitsView = widgets.get_widget('unitsView')
 		self._unitsView.set_property('rules_hint', 1)
 		self._unitsView_selection = self._unitsView.get_selection()
-		if hildonize.IS_HILDON_SUPPORTED or FORCE_HILDON_LIKE:
-			self._unitsView.set_headers_visible(False)
 
 		self._unitName = widgets.get_widget('unitName')
 		self._unitValue = widgets.get_widget('unitValue')
 		self._previousUnitName = widgets.get_widget('previousUnitName')
 		self._previousUnitValue = widgets.get_widget('previousUnitValue')
-		if hildonize.IS_HILDON_SUPPORTED or FORCE_HILDON_LIKE:
-			self._previousUnitName.get_parent().hide()
 
 		self._unitSymbol = widgets.get_widget('unitSymbol')
 		self._previousUnitSymbol = widgets.get_widget('previousUnitSymbol')
 
 		self._unitDescription = widgets.get_widget('unitDescription')
-		if hildonize.IS_HILDON_SUPPORTED or FORCE_HILDON_LIKE:
-			self._unitDescription.get_parent().get_parent().hide()
 
 		self._searchLayout = widgets.get_widget('searchLayout')
 		self._searchLayout.hide()
@@ -142,7 +126,7 @@ class Gonvert(object):
 		#insert a self._categoryColumnumn into the units list even though the heading will not be seen
 		renderer = gtk.CellRendererText()
 		renderer.set_property("ellipsize", pango.ELLIPSIZE_END)
-		renderer.set_property("width-chars", len("grams per cubic cm"))
+		renderer.set_property("width-chars", len("grams per cubic cm plus some"))
 		hildonize.set_cell_thumb_selectable(renderer)
 		self._unitNameColumn = gtk.TreeViewColumn(_('Name'), renderer)
 		self._unitNameColumn.set_property('resizable', 1)
@@ -153,7 +137,7 @@ class Gonvert(object):
 
 		renderer = gtk.CellRendererText()
 		renderer.set_property("ellipsize", pango.ELLIPSIZE_END)
-		renderer.set_property("width-chars", len("G ohm"))
+		renderer.set_property("width-chars", len("G ohm plus some"))
 		hildonize.set_cell_thumb_selectable(renderer)
 		self._unitSymbolColumn = gtk.TreeViewColumn(_('Units'), renderer)
 		self._unitSymbolColumn.set_property('resizable', 1)
@@ -202,7 +186,6 @@ class Gonvert(object):
 		#--------- connections to GUI ----------------
 		dic = {
 			"on_exit_menu_activate": self._on_user_exit,
-			"on_main_window_destroy": self._on_user_exit,
 			"on_categoryView_select_row": self._on_click_category,
 			"on_unitValue_changed": self._on_unit_value_changed,
 			"on_previousUnitValue_changed": self._on_previous_unit_value_changed,
@@ -216,9 +199,25 @@ class Gonvert(object):
 			"on_toggleShortList_activate": self._on_edit_shortlist,
 		}
 		widgets.signal_autoconnect(dic)
+		self._mainWindow.connect("destroy", self._on_user_exit)
 		self._mainWindow.connect("key-press-event", self._on_key_press)
 		self._mainWindow.connect("window-state-event", self._on_window_state_change)
 		self._categorySelectionButton.connect("clicked", self._on_category_selector_clicked)
+
+		for scrollingWidgetName in (
+			"unitsViewScrolledWindow",
+		):
+			scrollingWidget = widgets.get_widget(scrollingWidgetName)
+			assert scrollingWidget is not None, scrollingWidgetName
+			hildonize.hildonize_scrollwindow_with_viewport(scrollingWidget)
+
+		if hildonize.IS_HILDON_SUPPORTED or FORCE_HILDON_LIKE:
+			self._categoryView.get_parent().hide()
+			self._unitsView.set_headers_visible(False)
+			self._previousUnitName.get_parent().hide()
+			self._unitDescription.get_parent().get_parent().hide()
+		else:
+			self._categorySelectionButton.hide()
 
 		replacementButtons = []
 		menu = hildonize.hildonize_menu(
@@ -239,6 +238,7 @@ class Gonvert(object):
 			_moduleLogger.warn("Error: Could not find gonvert icon: %s" % iconPath)
 
 		self._load_settings()
+		self._mainWindow.show()
 
 	def _load_settings(self):
 		#Restore window size from previously saved settings if it exists and is valid.

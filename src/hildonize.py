@@ -66,6 +66,7 @@ def _fremantle_hildonize_window(app, window):
 	newWindow = hildon.StackableWindow()
 	oldWindow.get_child().reparent(newWindow)
 	app.add_window(newWindow)
+	oldWindow.destroy()
 	return newWindow
 
 
@@ -74,6 +75,7 @@ def _hildon_hildonize_window(app, window):
 	newWindow = hildon.Window()
 	oldWindow.get_child().reparent(newWindow)
 	app.add_window(newWindow)
+	oldWindow.destroy()
 	return newWindow
 
 
