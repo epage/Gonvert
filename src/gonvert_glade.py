@@ -1,11 +1,25 @@
 #!/usr/bin/env python
 # -*- coding: UTF8 -*-
 
+"""
+@todo Look into using two columns for displaying the value, split by the
+decimal place.  The left one would be right aligned and the right would be left
+aligned (only if not in exponential notation
+OR display everything in engineering notation
+
+@tood Add a unit description dialog for when hildonized
+
+@todo Add support for custom units
+
+@todo Add support for compound units
+"""
+
 import os
 import pickle
 import gettext
 import logging
 
+import pango
 import gobject
 import gtk
 import gtk.glade
@@ -39,6 +53,10 @@ class Gonvert(object):
 		'/usr/lib/gonvert/gonvert.glade',
 	]
 
+	UNITS_NAME_IDX = 0
+	UNITS_VALUE_IDX = 1
+	UNITS_SYMBOL_IDX = 2
+
 	def __init__(self):
 		self._unitDataInCategory = None
 		self._unit_sort_direction = False
@@ -68,6 +86,12 @@ class Gonvert(object):
 		self._mainWindow = widgets.get_widget('mainWindow')
 		self._app = hildonize.get_app_class()()
 		self._mainWindow = hildonize.hildonize_window(self._app, self._mainWindow)
+		for scrollingWidgetName in (
+			"unitsViewScrolledWindow",
+		):
+			scrollingWidget = widgets.get_widget(scrollingWidgetName)
+			assert scrollingWidget is not None, scrollingWidgetName
+			hildonize.hildonize_scrollwindow_with_viewport(scrollingWidget)
 
 		change_menu_label(widgets, 'fileMenuItem', _('File'))
 		change_menu_label(widgets, 'exitMenuItem', _('Exit'))
@@ -117,29 +141,41 @@ class Gonvert(object):
 
 		#insert a self._categoryColumnumn into the units list even though the heading will not be seen
 		renderer = gtk.CellRendererText()
+		renderer.set_property("ellipsize", pango.ELLIPSIZE_END)
+		renderer.set_property("width-chars", len("grams per cubic cm"))
 		hildonize.set_cell_thumb_selectable(renderer)
-		self._unitNameColumn = gtk.TreeViewColumn(_('Unit Name'), renderer)
+		self._unitNameColumn = gtk.TreeViewColumn(_('Name'), renderer)
 		self._unitNameColumn.set_property('resizable', 1)
-		self._unitNameColumn.add_attribute(renderer, 'text', 0)
+		self._unitNameColumn.add_attribute(renderer, 'text', self.UNITS_NAME_IDX)
 		self._unitNameColumn.set_clickable(True)
 		self._unitNameColumn.connect("clicked", self._on_click_unit_column)
 		self._unitsView.append_column(self._unitNameColumn)
 
-		self._unitValueColumn = gtk.TreeViewColumn(_('Value'), renderer)
-		self._unitValueColumn.set_property('resizable', 1)
-		self._unitValueColumn.add_attribute(renderer, 'text', 1)
-		self._unitValueColumn.set_clickable(True)
-		self._unitValueColumn.connect("clicked", self._on_click_unit_column)
-		self._unitsView.append_column(self._unitValueColumn)
-
+		renderer = gtk.CellRendererText()
+		renderer.set_property("ellipsize", pango.ELLIPSIZE_END)
+		renderer.set_property("width-chars", len("G ohm"))
+		hildonize.set_cell_thumb_selectable(renderer)
 		self._unitSymbolColumn = gtk.TreeViewColumn(_('Units'), renderer)
 		self._unitSymbolColumn.set_property('resizable', 1)
-		self._unitSymbolColumn.add_attribute(renderer, 'text', 2)
+		self._unitSymbolColumn.add_attribute(renderer, 'text', self.UNITS_SYMBOL_IDX)
 		self._unitSymbolColumn.set_clickable(True)
 		self._unitSymbolColumn.connect("clicked", self._on_click_unit_column)
 		self._unitsView.append_column(self._unitSymbolColumn)
 
-		self._unitModel = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING)
+		renderer = gtk.CellRendererText()
+		hildonize.set_cell_thumb_selectable(renderer)
+		self._unitValueColumn = gtk.TreeViewColumn(_('Value'), renderer)
+		self._unitValueColumn.set_property('resizable', 1)
+		self._unitValueColumn.add_attribute(renderer, 'text', self.UNITS_VALUE_IDX)
+		self._unitValueColumn.set_clickable(True)
+		self._unitValueColumn.connect("clicked", self._on_click_unit_column)
+		self._unitsView.append_column(self._unitValueColumn)
+
+		self._unitModel = gtk.ListStore(
+			gobject.TYPE_STRING, # UNITS_NAME_IDX
+			gobject.TYPE_STRING, # UNITS_VALUE_IDX
+			gobject.TYPE_STRING, # UNITS_SYMBOL_IDX
+		)
 		self._sortedUnitModel = gtk.TreeModelSort(self._unitModel)
 		columns = self._get_column_sort_stuff()
 		for columnIndex, (column, sortDirection, col_cmp) in enumerate(columns):
@@ -695,7 +731,16 @@ class Gonvert(object):
 			gtk.main_quit()
 
 
-def main():
+def run_gonvert():
+	gtk.gdk.threads_init()
+	if hildonize.IS_HILDON_SUPPORTED:
+		gtk.set_application_name(constants.__pretty_app_name__)
+	handle = Gonvert()
+	if not PROFILE_STARTUP:
+		gtk.main()
+
+
+if __name__ == "__main__":
 	logging.basicConfig(level = logging.DEBUG)
 	try:
 		os.makedirs(constants._data_path_)
@@ -703,10 +748,4 @@ def main():
 		if e.errno != 17:
 			raise
 
-	gonvert = Gonvert()
-	if not PROFILE_STARTUP:
-		gtk.main()
-
-
-if __name__ == "__main__":
-	main()
+	run_gonvert()
