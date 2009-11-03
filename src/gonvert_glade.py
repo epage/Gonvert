@@ -143,6 +143,15 @@ class Gonvert(object):
 		self._unitsView.append_column(self._unitNameColumn)
 
 		renderer = gtk.CellRendererText()
+		hildonize.set_cell_thumb_selectable(renderer)
+		self._unitValueColumn = gtk.TreeViewColumn(_('Value'), renderer)
+		self._unitValueColumn.set_property('resizable', 1)
+		self._unitValueColumn.add_attribute(renderer, 'text', self.UNITS_VALUE_IDX)
+		self._unitValueColumn.set_clickable(True)
+		self._unitValueColumn.connect("clicked", self._on_click_unit_column)
+		self._unitsView.append_column(self._unitValueColumn)
+
+		renderer = gtk.CellRendererText()
 		renderer.set_property("ellipsize", pango.ELLIPSIZE_END)
 		renderer.set_property("width-chars", len("G ohm plus some"))
 		hildonize.set_cell_thumb_selectable(renderer)
@@ -152,15 +161,6 @@ class Gonvert(object):
 		self._unitSymbolColumn.set_clickable(True)
 		self._unitSymbolColumn.connect("clicked", self._on_click_unit_column)
 		self._unitsView.append_column(self._unitSymbolColumn)
-
-		renderer = gtk.CellRendererText()
-		hildonize.set_cell_thumb_selectable(renderer)
-		self._unitValueColumn = gtk.TreeViewColumn(_('Value'), renderer)
-		self._unitValueColumn.set_property('resizable', 1)
-		self._unitValueColumn.add_attribute(renderer, 'text', self.UNITS_VALUE_IDX)
-		self._unitValueColumn.set_clickable(True)
-		self._unitValueColumn.connect("clicked", self._on_click_unit_column)
-		self._unitsView.append_column(self._unitValueColumn)
 
 		self._unitModel = gtk.ListStore(
 			gobject.TYPE_STRING, # UNITS_NAME_IDX
