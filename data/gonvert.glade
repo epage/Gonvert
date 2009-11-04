@@ -22,7 +22,6 @@
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">_Exit</property>
                         <property name="use_underline">True</property>
-                        <signal name="activate" handler="on_exit_menu_activate"/>
                         <accelerator key="q" signal="activate" modifiers="GDK_CONTROL_MASK"/>
                       </widget>
                     </child>
@@ -43,7 +42,6 @@
                         <property name="tooltip" translatable="yes">Show shortlist selections</property>
                         <property name="label" translatable="yes">_Edit shortlist</property>
                         <property name="use_underline">True</property>
-                        <signal name="activate" handler="on_editShortListMenuItem_activate"/>
                       </widget>
                     </child>
                     <child>
@@ -52,7 +50,6 @@
                         <property name="tooltip" translatable="yes">Clear saved selections</property>
                         <property name="label" translatable="yes">_Clear selections</property>
                         <property name="use_underline">True</property>
-                        <signal name="activate" handler="on_clearSelectionMenuItem_activate"/>
                       </widget>
                     </child>
                   </widget>
@@ -71,7 +68,6 @@
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">_About</property>
                         <property name="use_underline">True</property>
-                        <signal name="activate" handler="on_aboutMenuItem_activate"/>
                       </widget>
                     </child>
                   </widget>
@@ -102,7 +98,6 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="headers_visible">False</property>
-                    <signal name="cursor_changed" handler="on_categoryView_select_row"/>
                   </widget>
                 </child>
               </widget>
@@ -146,7 +141,6 @@
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="invisible_char">&#x25CF;</property>
-                        <signal name="changed" handler="on_unitValue_changed"/>
                       </widget>
                       <packing>
                         <property name="position">1</property>
@@ -189,7 +183,6 @@
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="invisible_char">&#x25CF;</property>
-                        <signal name="changed" handler="on_previousUnitValue_changed"/>
                       </widget>
                       <packing>
                         <property name="position">1</property>
@@ -229,7 +222,6 @@
                           <widget class="GtkTreeView" id="unitsView">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <signal name="cursor_changed" handler="on_unitsView_cursor_changed"/>
                           </widget>
                         </child>
                       </widget>
@@ -277,8 +269,6 @@
                         <property name="can_focus">True</property>
                         <property name="tooltip" translatable="yes">Enter unit to find here</property>
                         <property name="invisible_char">&#x25CF;</property>
-                        <signal name="changed" handler="on_findEntry_changed"/>
-                        <signal name="activate" handler="on_findEntry_activated"/>
                       </widget>
                       <packing>
                         <property name="expand">False</property>
@@ -292,7 +282,6 @@
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
                         <property name="use_underline">True</property>
-                        <signal name="clicked" handler="on_findButton_clicked"/>
                         <accelerator key="F6" signal="clicked"/>
                       </widget>
                       <packing>
@@ -331,7 +320,6 @@
                         <property name="receives_default">False</property>
                         <property name="use_underline">True</property>
                         <property name="draw_indicator">True</property>
-                        <signal name="toggled" handler="on_shortlistcheck_toggled"/>
                       </widget>
                       <packing>
                         <property name="expand">False</property>

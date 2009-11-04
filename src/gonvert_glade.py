@@ -2,8 +2,6 @@
 # -*- coding: UTF8 -*-
 
 """
-@todo Get rid of autoconnects except for menus
-
 @todo Look into using two columns for displaying the value, split by the
 decimal place.  The left one would be right aligned and the right would be left
 aligned (only if not in exponential notation
@@ -191,25 +189,23 @@ class Gonvert(object):
 			self._categoryModel.append(row)
 
 		#--------- connections to GUI ----------------
-		dic = {
-			"on_exit_menu_activate": self._on_user_exit,
-			"on_categoryView_select_row": self._on_click_category,
-			"on_unitValue_changed": self._on_unit_value_changed,
-			"on_previousUnitValue_changed": self._on_previous_unit_value_changed,
-			"on_findButton_clicked": self._on_find_activate,
-			"on_findEntry_activated": self._on_find_activate,
-			"on_findEntry_changed": self._on_findEntry_changed,
-			"on_aboutMenuItem_activate": self._on_about_clicked,
-			"on_clearSelectionMenuItem_activate": self._on_user_clear_selections,
-			"on_unitsView_cursor_changed": self._on_click_unit,
-			"on_shortlistcheck_toggled": self._on_shortlist_changed,
-			"on_toggleShortList_activate": self._on_edit_shortlist,
-		}
-		widgets.signal_autoconnect(dic)
 		self._mainWindow.connect("delete-event", self._on_user_exit)
 		self._mainWindow.connect("key-press-event", self._on_key_press)
 		self._mainWindow.connect("window-state-event", self._on_window_state_change)
 		self._categorySelectionButton.connect("clicked", self._on_category_selector_clicked)
+		self._categoryView.connect("cursor-changed", self._on_click_category)
+		self._findButton.connect("clicked", self._on_find_activate)
+		self._findEntry.connect("activate", self._on_find_activate)
+		self._findEntry.connect("changed", self._on_findEntry_changed)
+		self._previousUnitValue.connect("changed", self._on_previous_unit_value_changed)
+		self._shortlistcheck.connect("toggled", self._on_shortlist_changed)
+		self._unitValue.connect("changed", self._on_unit_value_changed)
+		self._unitsView.connect("cursor-changed", self._on_click_unit)
+		if hildonize.GTK_MENU_USED:
+			widgets.get_widget("aboutMenuItem").connect("activate", self._on_about_clicked)
+			widgets.get_widget("clearSelectionMenuItem").connect("activate", self._on_user_clear_selections)
+			widgets.get_widget("editShortListMenuItem").connect("activate", self._on_edit_shortlist)
+			widgets.get_widget("exitMenuItem").connect("activate", self._on_user_exit)
 
 		for scrollingWidgetName in (
 			"unitsViewScrolledWindow",
@@ -232,6 +228,7 @@ class Gonvert(object):
 			widgets.get_widget("mainMenuBar"),
 			replacementButtons
 		)
+
 		if not hildonize.IS_HILDON_SUPPORTED:
 			_moduleLogger.info("No hildonization support")
 
