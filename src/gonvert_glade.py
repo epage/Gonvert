@@ -57,6 +57,7 @@ class Gonvert(object):
 		os.path.join(os.path.dirname(__file__), "gonvert.glade"),
 		os.path.join(os.path.dirname(__file__), "../data/gonvert.glade"),
 		os.path.join(os.path.dirname(__file__), "../lib/gonvert.glade"),
+		'/usr/share/gonvert/gonvert.glade',
 		'/usr/lib/gonvert/gonvert.glade',
 	]
 

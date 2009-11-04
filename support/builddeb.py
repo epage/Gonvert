@@ -220,7 +220,7 @@ def build_package(distribution):
 			for (oldName, newName) in files
 		)
 	for relPath, files in unflatten_files(find_files("data", ".")).iteritems():
-		fullPath = "/usr/lib/gonvert"
+		fullPath = "/usr/share/gonvert"
 		if relPath:
 			fullPath += os.sep+relPath
 		p[fullPath] = list(
