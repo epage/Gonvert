@@ -20,6 +20,7 @@ __version__ = constants.__version__
 __build__ = constants.__build__
 __changelog__ = """
 0.2.24
+* Added Radioactivity and Radiation dose categories.
 * Added shortcuts for fullscreen
 * Switched to Find being brought up by CTRL+F
 * Added Find Previous and Find Next shortcuts (CTRL+P, CTRL+N)
