@@ -226,6 +226,9 @@ class base_converter(object):
 		"""
 		Convert from any base to base 10 (decimal)
 		"""
+		# Protection against fractional values
+		value = value.split(".", 1)[0]
+
 		result = 0L #will contain the long base-10 (decimal) number to be returned
 		position = len(value) #length of the string that is to be converted
 		for x in value:
@@ -237,7 +240,7 @@ class base_converter(object):
 		"""
 		Convert from decimal to any base
 		"""
-		return makeBase(value, base)
+		return makeBase(int(value), base)
 
 
 class roman_numeral(object):
@@ -255,7 +258,7 @@ class roman_numeral(object):
 		"""
 		Convert from decimal to roman numeral
 		"""
-		return toroman(value)
+		return toroman(int(value))
 
 
 
@@ -265,10 +268,12 @@ class function(object):
 	#value is assumed to be a string
 	#convert from a defined function to base
 	def to_base(self, value, (to_base, from_base)):
+		y = 0 # "undefined" y was driving me nuts
 		exec "y="+to_base[:to_base.find('x')]+str(value)+to_base[to_base.find('x')+1:]
 		return y
 
 	def from_base(self, value, (to_base, from_base)):
+		y = 0 # "undefined" y was driving me nuts
 		exec "y="+from_base[:from_base.find('x')]+str(value)+from_base[from_base.find('x')+1:]
 		return y
 

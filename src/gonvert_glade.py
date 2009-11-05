@@ -15,6 +15,7 @@ OR display everything in engineering notation
 """
 
 import os
+import math
 import pickle
 import logging
 
@@ -39,7 +40,7 @@ else:
 
 _moduleLogger = logging.getLogger("gonvert_glade")
 PROFILE_STARTUP = False
-FORCE_HILDON_LIKE = True
+FORCE_HILDON_LIKE = False
 
 if gettext is not None:
 	gettext.bindtextdomain('gonvert', '/usr/share/locale')
@@ -49,6 +50,31 @@ if gettext is not None:
 def change_menu_label(widgets, labelname, newtext):
 	item_label = widgets.get_widget(labelname).get_children()[0]
 	item_label.set_text(newtext)
+
+
+def split_number(number):
+	try:
+		fractional, integer = math.modf(number)
+	except TypeError:
+		integerDisplay = number
+		fractionalDisplay = ""
+	else:
+		integerDisplay = str(integer)
+		fractionalDisplay = str(fractional)
+		if "e+" in integerDisplay:
+			integerDisplay = number
+			fractionalDisplay = ""
+		elif "e-" in fractionalDisplay and 0.0 < integer:
+			integerDisplay = number
+			fractionalDisplay = ""
+		elif "e-" in fractionalDisplay:
+			integerDisplay = ""
+			fractionalDisplay = number
+		else:
+			integerDisplay = integerDisplay.split(".", 1)[0] + "."
+			fractionalDisplay = fractionalDisplay.rsplit(".", 1)[-1]
+
+	return integerDisplay, fractionalDisplay
 
 
 class Gonvert(object):
@@ -64,6 +90,8 @@ class Gonvert(object):
 	UNITS_NAME_IDX = 0
 	UNITS_VALUE_IDX = 1
 	UNITS_SYMBOL_IDX = 2
+	UNITS_INTEGER_IDX = 3
+	UNITS_FRACTION_IDX = 4
 
 	def __init__(self):
 		self._unitDataInCategory = None
@@ -134,27 +162,38 @@ class Gonvert(object):
 		renderer.set_property("ellipsize", pango.ELLIPSIZE_END)
 		renderer.set_property("width-chars", len("grams per cubic cm plus some"))
 		self._unitNameColumn = gtk.TreeViewColumn(_('Name'), renderer)
-		self._unitNameColumn.set_property('resizable', 1)
+		self._unitNameColumn.set_property('resizable', True)
 		self._unitNameColumn.add_attribute(renderer, 'text', self.UNITS_NAME_IDX)
 		self._unitNameColumn.set_clickable(True)
 		self._unitNameColumn.connect("clicked", self._on_click_unit_column)
 		self._unitsView.append_column(self._unitNameColumn)
 
 		renderer = gtk.CellRendererText()
+		renderer.set_property("xalign", 1.0)
+		renderer.set_property("alignment", pango.ALIGN_RIGHT)
 		hildonize.set_cell_thumb_selectable(renderer)
-		self._unitValueColumn = gtk.TreeViewColumn(_('Value'), renderer)
-		self._unitValueColumn.set_property('resizable', 1)
-		self._unitValueColumn.add_attribute(renderer, 'text', self.UNITS_VALUE_IDX)
-		self._unitValueColumn.set_clickable(True)
-		self._unitValueColumn.connect("clicked", self._on_click_unit_column)
-		self._unitsView.append_column(self._unitValueColumn)
+		self._unitIntegerColumn = gtk.TreeViewColumn(_('Value'), renderer)
+		self._unitIntegerColumn.set_property('resizable', True)
+		self._unitIntegerColumn.add_attribute(renderer, 'text', self.UNITS_INTEGER_IDX)
+		self._unitIntegerColumn.set_clickable(True)
+		self._unitIntegerColumn.connect("clicked", self._on_click_unit_column)
+		self._unitsView.append_column(self._unitIntegerColumn)
+
+		renderer = gtk.CellRendererText()
+		renderer.set_property("xalign", 0.0)
+		renderer.set_property("alignment", pango.ALIGN_LEFT)
+		self._unitFractionalColumn = gtk.TreeViewColumn(_(''), renderer)
+		self._unitFractionalColumn.set_property('resizable', True)
+		self._unitFractionalColumn.add_attribute(renderer, 'text', self.UNITS_FRACTION_IDX)
+		self._unitFractionalColumn.set_clickable(True)
+		self._unitFractionalColumn.connect("clicked", self._on_click_unit_column)
+		self._unitsView.append_column(self._unitFractionalColumn)
 
 		renderer = gtk.CellRendererText()
 		renderer.set_property("ellipsize", pango.ELLIPSIZE_END)
 		renderer.set_property("width-chars", len("G ohm plus some"))
-		hildonize.set_cell_thumb_selectable(renderer)
 		self._unitSymbolColumn = gtk.TreeViewColumn(_('Units'), renderer)
-		self._unitSymbolColumn.set_property('resizable', 1)
+		self._unitSymbolColumn.set_property('resizable', True)
 		self._unitSymbolColumn.add_attribute(renderer, 'text', self.UNITS_SYMBOL_IDX)
 		self._unitSymbolColumn.set_clickable(True)
 		self._unitSymbolColumn.connect("clicked", self._on_click_unit_column)
@@ -164,6 +203,8 @@ class Gonvert(object):
 			gobject.TYPE_STRING, # UNITS_NAME_IDX
 			gobject.TYPE_STRING, # UNITS_VALUE_IDX
 			gobject.TYPE_STRING, # UNITS_SYMBOL_IDX
+			gobject.TYPE_STRING, # UNITS_INTEGER_IDX
+			gobject.TYPE_STRING, # UNITS_FRACTION_IDX
 		)
 		self._sortedUnitModel = gtk.TreeModelSort(self._unitModel)
 		columns = self._get_column_sort_stuff()
@@ -394,32 +435,33 @@ class Gonvert(object):
 			self._findEntry.grab_focus()
 
 	def _unit_model_cmp(self, sortedModel, leftItr, rightItr):
-		leftUnitText = self._unitModel.get_value(leftItr, 0)
-		rightUnitText = self._unitModel.get_value(rightItr, 0)
+		leftUnitText = self._unitModel.get_value(leftItr, self.UNITS_NAME_IDX)
+		rightUnitText = self._unitModel.get_value(rightItr, self.UNITS_NAME_IDX)
 		return cmp(leftUnitText, rightUnitText)
 
 	def _symbol_model_cmp(self, sortedModel, leftItr, rightItr):
-		leftSymbolText = self._unitModel.get_value(leftItr, 2)
-		rightSymbolText = self._unitModel.get_value(rightItr, 2)
+		leftSymbolText = self._unitModel.get_value(leftItr, self.UNITS_SYMBOL_IDX)
+		rightSymbolText = self._unitModel.get_value(rightItr, self.UNITS_SYMBOL_IDX)
 		return cmp(leftSymbolText, rightSymbolText)
 
 	def _value_model_cmp(self, sortedModel, leftItr, rightItr):
 		#special sorting exceptions for ascii values (instead of float values)
 		if self._selectedCategoryName == "Computer Numbers":
-			leftValue = self._unitModel.get_value(leftItr, 1)
-			rightValue = self._unitModel.get_value(rightItr, 1)
+			leftValue = self._unitModel.get_value(leftItr, self.UNITS_VALUE_IDX)
+			rightValue = self._unitModel.get_value(rightItr, self.UNITS_VALUE_IDX)
 		else:
-			leftValueText = self._unitModel.get_value(leftItr, 1)
+			leftValueText = self._unitModel.get_value(leftItr, self.UNITS_VALUE_IDX)
 			leftValue = float(leftValueText) if leftValueText else 0.0
 
-			rightValueText = self._unitModel.get_value(rightItr, 1)
+			rightValueText = self._unitModel.get_value(rightItr, self.UNITS_VALUE_IDX)
 			rightValue = float(rightValueText) if rightValueText else 0.0
 		return cmp(leftValue, rightValue)
 
 	def _get_column_sort_stuff(self):
 		columns = (
 			(self._unitNameColumn, "_unit_sort_direction", self._unit_model_cmp),
-			(self._unitValueColumn, "_value_sort_direction", self._value_model_cmp),
+			(self._unitIntegerColumn, "_value_sort_direction", self._value_model_cmp),
+			(self._unitFractionalColumn, "_value_sort_direction", self._value_model_cmp),
 			(self._unitSymbolColumn, "_units_sort_direction", self._symbol_model_cmp),
 		)
 		return columns
@@ -431,8 +473,8 @@ class Gonvert(object):
 		#Fill up the units descriptions and clear the value cells
 		self._clear_visible_unit_data()
 		for key in unit_data.get_units(self._selectedCategoryName):
-			iter = self._unitModel.append()
-			self._unitModel.set(iter, 0, key, 1, '', 2, self._unitDataInCategory[key][1])
+			row = key, '', self._unitDataInCategory[key][1], '', ''
+			self._unitModel.append(row)
 		self._sortedUnitModel.sort_column_changed()
 
 		self._select_default_unit()
@@ -625,7 +667,7 @@ class Gonvert(object):
 	def _on_click_unit(self, *args):
 		try:
 			selected, iter = self._unitsView.get_selection().get_selected()
-			selected_unit = selected.get_value(iter, 0)
+			selected_unit = selected.get_value(iter, self.UNITS_NAME_IDX)
 			unit_spec = self._unitDataInCategory[selected_unit]
 
 			showSymbol = False
@@ -638,7 +680,7 @@ class Gonvert(object):
 					showSymbol = True
 
 			self._unitName.set_text(selected_unit)
-			self._unitValue.set_text(selected.get_value(iter, 1))
+			self._unitValue.set_text(selected.get_value(iter, self.UNITS_VALUE_IDX))
 			buffer = self._unitDescription.get_buffer()
 			buffer.set_text(unit_spec[2])
 			self._unitSymbol.set_text(unit_spec[1]) # put units into label text
@@ -684,13 +726,22 @@ class Gonvert(object):
 
 			#point to the first row
 			for row in self._unitModel:
-				func, arg = self._unitDataInCategory[row[0]][0]
-				row[1] = str(func.from_base(base, arg))
+				func, arg = self._unitDataInCategory[row[self.UNITS_NAME_IDX]][0]
+				newValue = func.from_base(base, arg)
+
+				newValueDisplay = str(newValue)
+				integerDisplay, fractionalDisplay = split_number(newValue)
+
+				row[self.UNITS_VALUE_IDX] = newValueDisplay
+				row[self.UNITS_INTEGER_IDX] = integerDisplay
+				row[self.UNITS_FRACTION_IDX] = fractionalDisplay
 
 			# Update the secondary unit entry
 			if self._previousUnitName.get_text() != '':
 				func, arg = self._unitDataInCategory[self._previousUnitName.get_text()][0]
 				self._previousUnitValue.set_text(str(func.from_base(base, arg, )))
+
+			self._sortedUnitModel.sort_column_changed()
 		except Exception:
 			_moduleLogger.exception("_on_unit_value_changed")
 
@@ -708,12 +759,21 @@ class Gonvert(object):
 
 			#point to the first row
 			for row in self._unitModel:
-				func, arg = self._unitDataInCategory[row[0]][0]
-				row[1] = str(func.from_base(base, arg))
+				func, arg = self._unitDataInCategory[row[self.UNITS_NAME_IDX]][0]
+				newValue = func.from_base(base, arg)
+
+				newValueDisplay = str(newValue)
+				integerDisplay, fractionalDisplay = split_number(newValue)
+
+				row[self.UNITS_VALUE_IDX] = newValueDisplay
+				row[self.UNITS_INTEGER_IDX] = integerDisplay
+				row[self.UNITS_FRACTION_IDX] = fractionalDisplay
 
 			# Update the primary unit entry
 			func, arg = self._unitDataInCategory[self._unitName.get_text()][0]
 			self._unitValue.set_text(str(func.from_base(base, arg, )))
+
+			self._sortedUnitModel.sort_column_changed()
 		except Exception:
 			_moduleLogger.exception("_on_previous_unit_value_changed")
 
