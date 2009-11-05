@@ -30,33 +30,6 @@
               </widget>
             </child>
             <child>
-              <widget class="GtkMenuItem" id="toolsMenuItem">
-                <property name="visible">True</property>
-                <property name="label" translatable="yes">_Tools</property>
-                <property name="use_underline">True</property>
-                <child>
-                  <widget class="GtkMenu" id="toolsMenu">
-                    <child>
-                      <widget class="GtkCheckMenuItem" id="editShortListMenuItem">
-                        <property name="visible">True</property>
-                        <property name="tooltip" translatable="yes">Show shortlist selections</property>
-                        <property name="label" translatable="yes">_Edit shortlist</property>
-                        <property name="use_underline">True</property>
-                      </widget>
-                    </child>
-                    <child>
-                      <widget class="GtkMenuItem" id="clearSelectionMenuItem">
-                        <property name="visible">True</property>
-                        <property name="tooltip" translatable="yes">Clear saved selections</property>
-                        <property name="label" translatable="yes">_Clear selections</property>
-                        <property name="use_underline">True</property>
-                      </widget>
-                    </child>
-                  </widget>
-                </child>
-              </widget>
-            </child>
-            <child>
               <widget class="GtkMenuItem" id="helpMenuItem">
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">_Help</property>
@@ -300,32 +273,6 @@
                         <property name="expand">False</property>
                         <property name="fill">False</property>
                         <property name="position">2</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <widget class="GtkVSeparator" id="vseparator1">
-                        <property name="visible">True</property>
-                        <property name="orientation">vertical</property>
-                      </widget>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">False</property>
-                        <property name="position">3</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <widget class="GtkCheckButton" id="shortlistcheck">
-                        <property name="label" translatable="yes">Shortlist</property>
-                        <property name="can_focus">True</property>
-                        <property name="receives_default">False</property>
-                        <property name="use_underline">True</property>
-                        <property name="draw_indicator">True</property>
-                      </widget>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">False</property>
-                        <property name="pack_type">end</property>
-                        <property name="position">4</property>
                       </packing>
                     </child>
                   </widget>

@@ -125,14 +125,9 @@ class Gonvert(object):
 
 		change_menu_label(widgets, 'fileMenuItem', _('File'))
 		change_menu_label(widgets, 'exitMenuItem', _('Exit'))
-		change_menu_label(widgets, 'toolsMenuItem', _('Tools'))
-		change_menu_label(widgets, 'clearSelectionMenuItem', _('Clear selections'))
 		change_menu_label(widgets, 'helpMenuItem', _('Help'))
 		change_menu_label(widgets, 'aboutMenuItem', _('About'))
 		change_menu_label(widgets, 'findButton', _('Find'))
-
-		self._shortlistcheck = widgets.get_widget('shortlistcheck')
-		self._toggleShortList = widgets.get_widget('toggleShortList')
 
 		self._categorySelectionButton = widgets.get_widget("categorySelectionButton")
 		self._categoryView = widgets.get_widget('categoryView')
@@ -239,13 +234,10 @@ class Gonvert(object):
 		self._findEntry.connect("activate", self._on_find_activate)
 		self._findEntry.connect("changed", self._on_findEntry_changed)
 		self._previousUnitValue.connect("changed", self._on_previous_unit_value_changed)
-		self._shortlistcheck.connect("toggled", self._on_shortlist_changed)
 		self._unitValue.connect("changed", self._on_unit_value_changed)
 		self._unitsView.connect("cursor-changed", self._on_click_unit)
 		if hildonize.GTK_MENU_USED:
 			widgets.get_widget("aboutMenuItem").connect("activate", self._on_about_clicked)
-			widgets.get_widget("clearSelectionMenuItem").connect("activate", self._on_user_clear_selections)
-			widgets.get_widget("editShortListMenuItem").connect("activate", self._on_edit_shortlist)
 			widgets.get_widget("exitMenuItem").connect("activate", self._on_user_exit)
 
 		for scrollingWidgetName in (
@@ -536,26 +528,6 @@ class Gonvert(object):
 			else:
 				value = float(userEntry)
 		return value
-
-	def _on_shortlist_changed(self, *args):
-		try:
-			raise NotImplementedError("%s" % self._shortlistcheck.get_active())
-		except Exception:
-			_moduleLogger.exception("_on_shortlist_changed")
-
-	def _on_edit_shortlist(self, *args):
-		try:
-			raise NotImplementedError("%s" % self._toggleShortList.get_active())
-		except Exception:
-			_moduleLogger.exception("_on_edit_shortlist")
-
-	def _on_user_clear_selections(self, *args):
-		try:
-			selectionsDatPath = "/".join((constants._data_path_, "selections.dat"))
-			os.remove(selectionsDatPath)
-			self._defaultUnitForCategory = {}
-		except Exception:
-			_moduleLogger.exception("_on_user_clear_selections")
 
 	def _on_key_press(self, widget, event, *args):
 		"""

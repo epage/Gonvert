@@ -19,12 +19,17 @@ __email__ = "eopage@byu.net"
 __version__ = constants.__version__
 __build__ = constants.__build__
 __changelog__ = """
-0.2.24
+0.9.0
 * Added Radioactivity and Radiation dose categories.
+* Aligning the numbers by their decimal place
 * Added shortcuts for fullscreen
 * Switched to Find being brought up by CTRL+F
 * Added Find Previous and Find Next shortcuts (CTRL+P, CTRL+N)
+* Adjusted the sizing on various widgets
+* Removed unused UI features for polish
+* Bug fix: improved behavior when corner case values are inputted (like floats for base conversions)
 * Debugging: Added logging support
+* Marketting: Huge version bump to express a basic level of feature complete
 * Internal: Massive cleanup of code
 
 0.2.23  - Added UK currency category and other UK measurements thanks to Dale Hair
