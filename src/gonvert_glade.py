@@ -39,7 +39,7 @@ else:
 
 _moduleLogger = logging.getLogger("gonvert_glade")
 PROFILE_STARTUP = False
-FORCE_HILDON_LIKE = False
+FORCE_HILDON_LIKE = True
 
 if gettext is not None:
 	gettext.bindtextdomain('gonvert', '/usr/share/locale')
@@ -278,7 +278,7 @@ class Gonvert(object):
 				except ValueError:
 					_moduleLogger.warn("Unknown category: %s" % selectedCategoryName)
 
-		self._categorySelectionButton.set_label(selectedCategoryName)
+		self._categorySelectionButton.get_child().set_markup("<big>%s</big>" % selectedCategoryName)
 		self._categoryView.set_cursor(categoryIndex, self._categoryColumn, False)
 		self._categoryView.grab_focus()
 
@@ -341,7 +341,7 @@ class Gonvert(object):
 		#check if next find is in a new category (prevent category changes when unnecessary
 		searchCategoryName = self._find_result[self._findIndex][0]
 		if self._selectedCategoryName != searchCategoryName:
-			self._categorySelectionButton.set_label(searchCategoryName)
+			self._categorySelectionButton.get_child().set_markup("<big>%s</big>" % searchCategoryName)
 			self._categoryView.set_cursor(
 				self._find_result[self._findIndex][2], self._categoryColumn, False
 			)
