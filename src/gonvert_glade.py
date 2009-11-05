@@ -473,7 +473,7 @@ class Gonvert(object):
 		#Fill up the units descriptions and clear the value cells
 		self._clear_visible_unit_data()
 		for key in unit_data.get_units(self._selectedCategoryName):
-			row = key, '', self._unitDataInCategory[key][1], '', ''
+			row = key, '0.0', self._unitDataInCategory[key][1], '0.', '0'
 			self._unitModel.append(row)
 		self._sortedUnitModel.sort_column_changed()
 
