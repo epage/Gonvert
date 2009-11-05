@@ -133,7 +133,6 @@ class Gonvert(object):
 		renderer = gtk.CellRendererText()
 		renderer.set_property("ellipsize", pango.ELLIPSIZE_END)
 		renderer.set_property("width-chars", len("grams per cubic cm plus some"))
-		hildonize.set_cell_thumb_selectable(renderer)
 		self._unitNameColumn = gtk.TreeViewColumn(_('Name'), renderer)
 		self._unitNameColumn.set_property('resizable', 1)
 		self._unitNameColumn.add_attribute(renderer, 'text', self.UNITS_NAME_IDX)
