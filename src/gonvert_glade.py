@@ -2,11 +2,6 @@
 # -*- coding: UTF8 -*-
 
 """
-@todo Look into using two columns for displaying the value, split by the
-decimal place.  The left one would be right aligned and the right would be left
-aligned (only if not in exponential notation
-OR display everything in engineering notation
-
 @tood Add a unit description dialog for when hildonized
 
 @todo Add support for custom units
@@ -152,13 +147,13 @@ class Gonvert(object):
 		self._findLabel = widgets.get_widget('findLabel')
 		self._findButton = widgets.get_widget('findButton')
 
-		#insert a self._categoryColumnumn into the units list even though the heading will not be seen
-		renderer = gtk.CellRendererText()
-		renderer.set_property("ellipsize", pango.ELLIPSIZE_END)
-		renderer.set_property("width-chars", len("grams per cubic cm plus some"))
-		self._unitNameColumn = gtk.TreeViewColumn(_('Name'), renderer)
+		self._unitsNameRenderer = gtk.CellRendererText()
+		self._unitsNameRenderer.set_property("ellipsize", pango.ELLIPSIZE_END)
+		self._unitsNameRenderer.set_property("scale", 0.75)
+		self._unitsNameRenderer.set_property("width-chars", 5)
+		self._unitNameColumn = gtk.TreeViewColumn(_('Name'), self._unitsNameRenderer)
 		self._unitNameColumn.set_property('resizable', True)
-		self._unitNameColumn.add_attribute(renderer, 'text', self.UNITS_NAME_IDX)
+		self._unitNameColumn.add_attribute(self._unitsNameRenderer, 'text', self.UNITS_NAME_IDX)
 		self._unitNameColumn.set_clickable(True)
 		self._unitNameColumn.connect("clicked", self._on_click_unit_column)
 		self._unitsView.append_column(self._unitNameColumn)
@@ -177,6 +172,7 @@ class Gonvert(object):
 		renderer = gtk.CellRendererText()
 		renderer.set_property("xalign", 0.0)
 		renderer.set_property("alignment", pango.ALIGN_LEFT)
+		renderer.set_property("scale", 0.75)
 		self._unitFractionalColumn = gtk.TreeViewColumn(_(''), renderer)
 		self._unitFractionalColumn.set_property('resizable', True)
 		self._unitFractionalColumn.add_attribute(renderer, 'text', self.UNITS_FRACTION_IDX)
@@ -186,7 +182,7 @@ class Gonvert(object):
 
 		renderer = gtk.CellRendererText()
 		renderer.set_property("ellipsize", pango.ELLIPSIZE_END)
-		renderer.set_property("width-chars", len("G ohm plus some"))
+		#renderer.set_property("scale", 0.5)
 		self._unitSymbolColumn = gtk.TreeViewColumn(_('Units'), renderer)
 		self._unitSymbolColumn.set_property('resizable', True)
 		self._unitSymbolColumn.add_attribute(renderer, 'text', self.UNITS_SYMBOL_IDX)
@@ -464,10 +460,13 @@ class Gonvert(object):
 
 		#Fill up the units descriptions and clear the value cells
 		self._clear_visible_unit_data()
+		nameLength = 0
 		for key in unit_data.get_units(self._selectedCategoryName):
 			row = key, '0.0', self._unitDataInCategory[key][1], '0.', '0'
 			self._unitModel.append(row)
+			nameLength = max(nameLength, len(key))
 		self._sortedUnitModel.sort_column_changed()
+		self._unitsNameRenderer.set_property("width-chars", int(nameLength * 0.75))
 
 		self._select_default_unit()
 
