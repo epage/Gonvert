@@ -1,14 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: UTF8 -*-
 
-"""
-@tood Add a unit description dialog for when hildonized
-
-@todo Add support for custom units
-
-@todo Add support for compound units
-"""
-
 import os
 import math
 import pickle

@@ -1,10 +1,5 @@
 #!/usr/bin/env python
 
-"""
-Open Issues
-	@bug Buttons are too small
-"""
-
 
 import gobject
 import gtk
