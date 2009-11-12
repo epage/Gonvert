@@ -140,9 +140,10 @@ class Gonvert(object):
 		self._findButton = widgets.get_widget('findButton')
 
 		self._unitsNameRenderer = gtk.CellRendererText()
-		self._unitsNameRenderer.set_property("ellipsize", pango.ELLIPSIZE_END)
 		self._unitsNameRenderer.set_property("scale", 0.75)
-		self._unitsNameRenderer.set_property("width-chars", 5)
+		if FORCE_HILDON_LIKE:
+			self._unitsNameRenderer.set_property("ellipsize", pango.ELLIPSIZE_END)
+			self._unitsNameRenderer.set_property("width-chars", 5)
 		self._unitNameColumn = gtk.TreeViewColumn(_('Name'), self._unitsNameRenderer)
 		self._unitNameColumn.set_property('resizable', True)
 		self._unitNameColumn.add_attribute(self._unitsNameRenderer, 'text', self.UNITS_NAME_IDX)
@@ -458,7 +459,11 @@ class Gonvert(object):
 			self._unitModel.append(row)
 			nameLength = max(nameLength, len(key))
 		self._sortedUnitModel.sort_column_changed()
-		self._unitsNameRenderer.set_property("width-chars", int(nameLength * 0.75))
+
+		if FORCE_HILDON_LIKE:
+			charWidth = int(nameLength * 0.75)
+			charWidth = min(charWidth, 20)
+			self._unitsNameRenderer.set_property("width-chars", charWidth)
 
 		self._select_default_unit()
 
