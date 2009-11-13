@@ -86,6 +86,7 @@ class Gonvert(object):
 		self._value_sort_direction = False
 		self._units_sort_direction = False
 		self._isFullScreen = False
+		self._clipboard = gtk.clipboard_get()
 
 		self._find_result = [] # empty find result list
 		self._findIndex = 0 # default to find result number zero
@@ -333,6 +334,17 @@ class Gonvert(object):
 		windowDatPath = "/".join((constants._data_path_, "window.dat"))
 		pickle.dump(window_settings, open(windowDatPath, 'w'))
 
+	def _refresh_columns(self):
+		self._unitsView.remove_column(self._unitNameColumn)
+		self._unitsView.remove_column(self._unitIntegerColumn)
+		self._unitsView.remove_column(self._unitFractionalColumn)
+		self._unitsView.remove_column(self._unitSymbolColumn)
+
+		self._unitsView.append_column(self._unitNameColumn)
+		self._unitsView.append_column(self._unitIntegerColumn)
+		self._unitsView.append_column(self._unitFractionalColumn)
+		self._unitsView.append_column(self._unitSymbolColumn)
+
 	def _clear_find(self):
 		# switch to "new find" state
 		self._find_result = []
@@ -461,8 +473,9 @@ class Gonvert(object):
 		self._sortedUnitModel.sort_column_changed()
 
 		if FORCE_HILDON_LIKE:
-			charWidth = int(nameLength * 0.75)
-			charWidth = min(charWidth, 20)
+			maxCatCharWidth = int(nameLength * 0.75)
+			maxCharWidth = int(len("nibble | hexit | quadbit") * 0.75)
+			charWidth = min(maxCatCharWidth, maxCharWidth)
 			self._unitsNameRenderer.set_property("width-chars", charWidth)
 
 		self._select_default_unit()
@@ -545,6 +558,11 @@ class Gonvert(object):
 				self._find_previous()
 			elif event.keyval == gtk.keysyms.n and event.get_state() & gtk.gdk.CONTROL_MASK:
 				self._find_next()
+			elif event.keyval == ord("l") and event.get_state() & gtk.gdk.CONTROL_MASK:
+				with open(constants._user_logpath_, "r") as f:
+					logLines = f.xreadlines()
+					log = "".join(logLines)
+					self._clipboard.set_text(str(log))
 		except Exception, e:
 			_moduleLogger.exception("_on_key_press")
 
@@ -710,6 +728,7 @@ class Gonvert(object):
 				self._previousUnitValue.set_text(str(func.from_base(base, arg, )))
 
 			self._sortedUnitModel.sort_column_changed()
+			self._refresh_columns()
 		except Exception:
 			_moduleLogger.exception("_on_unit_value_changed")
 
@@ -742,6 +761,7 @@ class Gonvert(object):
 			self._unitValue.set_text(str(func.from_base(base, arg, )))
 
 			self._sortedUnitModel.sort_column_changed()
+			self._refresh_columns()
 		except Exception:
 			_moduleLogger.exception("_on_previous_unit_value_changed")
 
