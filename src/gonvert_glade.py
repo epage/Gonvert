@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: UTF8 -*-
 
+from __future__ import with_statement
+
 import os
 import math
 import pickle
