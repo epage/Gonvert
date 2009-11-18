@@ -14,8 +14,8 @@ A conversion utility that allows conversion between many units like CGS, Ancient
 .
 Homepage: http://www.unihedron.com/projects/gonvert/index.php
 """
-__author__ = "Ed Page (Maemo Porter)"
-__email__ = "eopage@byu.net"
+__author__ = "Anthony Tekatch"
+__email__ = "anthony@unihedron.com"
 __version__ = constants.__version__
 __build__ = constants.__build__
 __changelog__ = """
@@ -174,7 +174,7 @@ def build_package(distribution):
 	p.prettyName = constants.__pretty_app_name__
 	p.description = __description__
 	p.bugTracker = "https://bugs.maemo.org/enter_bug.cgi?product=Gonvert"
-	p.upgradeDescription = __changelog__.split("\n\n", 1)[0]
+	#p.upgradeDescription = __changelog__.split("\n\n", 1)[0]
 	p.author = __author__
 	p.mail = __email__
 	p.license = "gpl"
