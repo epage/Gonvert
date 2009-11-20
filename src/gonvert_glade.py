@@ -774,7 +774,7 @@ class Gonvert(object):
 		dlg.set_copyright("Copyright 2009 - GPL")
 		dlg.set_comments("")
 		dlg.set_website("http://unihedron.com/projects/gonvert/gonvert.php")
-		dlg.set_authors(["Anthony Tekatch <anthony@unihedron.com>", "Ed Page <edpage@byu.net>"])
+		dlg.set_authors(["Anthony Tekatch <anthony@unihedron.com>", "Ed Page <eopage@byu.net> (Blame him for the most recent bugs)"])
 		dlg.run()
 		dlg.destroy()
 
