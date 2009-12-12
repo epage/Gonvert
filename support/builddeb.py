@@ -19,6 +19,9 @@ __email__ = "anthony@unihedron.com"
 __version__ = constants.__version__
 __build__ = constants.__build__
 __changelog__ = """
+0.9.1
+* Bug fix: font of the category button was inconsistent
+
 0.9.0
 * Added Radioactivity and Radiation dose categories.
 * Aligning the numbers by their decimal place
