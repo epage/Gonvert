@@ -640,8 +640,7 @@ class Gonvert(object):
 
 		selectedCategoryName = unit_data.UNIT_CATEGORIES[newIndex]
 		self._categorySelectionButton.get_child().set_markup("<big>%s</big>" % selectedCategoryName)
-		self._categoryView.set_cursor(newIndex, self._categoryColumn, False)
-		self._categoryView.grab_focus()
+		self._switch_category(selectedCategoryName)
 
 	@gtk_toolbox.log_exception(_moduleLogger)
 	def _on_click_category(self, *args):
