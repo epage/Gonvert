@@ -635,7 +635,7 @@ class Gonvert(object):
 			)
 
 			selectedCategoryName = unit_data.UNIT_CATEGORIES[newIndex]
-			self._categorySelectionButton.set_label(selectedCategoryName)
+			self._categorySelectionButton.get_child().set_markup("<big>%s</big>" % selectedCategoryName)
 			self._categoryView.set_cursor(newIndex, self._categoryColumn, False)
 			self._categoryView.grab_focus()
 		except Exception:
