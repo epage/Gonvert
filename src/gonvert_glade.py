@@ -248,11 +248,9 @@ class Gonvert(object):
 		else:
 			self._categorySelectionButton.hide()
 
-		replacementButtons = []
 		menu = hildonize.hildonize_menu(
 			self._mainWindow,
 			widgets.get_widget("mainMenuBar"),
-			replacementButtons
 		)
 
 		if not hildonize.IS_HILDON_SUPPORTED:
