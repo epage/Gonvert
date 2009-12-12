@@ -1973,6 +1973,8 @@ _(u"Electrical Voltage"): {".base_unit": _(u"volt"),
 			[(converters.m, 10*10*1.0), "dl", ''],
 		_(u"mil"):
 			[(converters.m, 1.0), '', _(u"Equal to one thousandth of a liter syn: milliliter, millilitre, ml, cubic centimeter, cubic centimeter, cc")],
+		_(u"fluid dram"): 
+			[(converters.m, 2*3*4.92892159375/8), '', _(u"Used in Pharmaceutical")],
 		_(u"minim"):
 			[(converters.m, 2*3*4.92892159375/480), '', _(u"Used in Pharmaceutical to represent one drop. 1/60 fluid dram or 1/480 fluid ounce. A U.S. minim is about 0.003760 in\xb3 or 61.610 \xb5l. The British minim is about 0.003612 in\xb3 or 59.194 \xb5l. Origin of the word is from the Latin minimus, or small.")],
 	},
