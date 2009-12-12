@@ -16,6 +16,7 @@ import gtk.gdk
 
 import constants
 import hildonize
+import gtk_toolbox
 import unit_data
 
 try:
@@ -28,8 +29,6 @@ else:
 
 
 _moduleLogger = logging.getLogger("gonvert_glade")
-PROFILE_STARTUP = False
-FORCE_HILDON_LIKE = False
 
 if gettext is not None:
 	gettext.bindtextdomain('gonvert', '/usr/share/locale')
@@ -144,7 +143,7 @@ class Gonvert(object):
 
 		self._unitsNameRenderer = gtk.CellRendererText()
 		self._unitsNameRenderer.set_property("scale", 0.75)
-		if FORCE_HILDON_LIKE:
+		if constants.FORCE_HILDON_LIKE:
 			self._unitsNameRenderer.set_property("ellipsize", pango.ELLIPSIZE_END)
 			self._unitsNameRenderer.set_property("width-chars", 5)
 		self._unitNameColumn = gtk.TreeViewColumn(_('Name'), self._unitsNameRenderer)
@@ -241,7 +240,7 @@ class Gonvert(object):
 			assert scrollingWidget is not None, scrollingWidgetName
 			hildonize.hildonize_scrollwindow_with_viewport(scrollingWidget)
 
-		if hildonize.IS_HILDON_SUPPORTED or FORCE_HILDON_LIKE:
+		if hildonize.IS_HILDON_SUPPORTED or constants.FORCE_HILDON_LIKE:
 			self._categoryView.get_parent().hide()
 			self._unitsView.set_headers_visible(False)
 			self._previousUnitName.get_parent().hide()
@@ -476,7 +475,7 @@ class Gonvert(object):
 			nameLength = max(nameLength, len(key))
 		self._sortedUnitModel.sort_column_changed()
 
-		if FORCE_HILDON_LIKE:
+		if constants.FORCE_HILDON_LIKE:
 			maxCatCharWidth = int(nameLength * 0.75)
 			maxCharWidth = int(len("nibble | hexit | quadbit") * 0.75)
 			charWidth = min(maxCatCharWidth, maxCharWidth)
@@ -542,248 +541,227 @@ class Gonvert(object):
 				value = float(userEntry)
 		return value
 
+	@gtk_toolbox.log_exception(_moduleLogger)
 	def _on_key_press(self, widget, event, *args):
 		"""
 		@note Hildon specific
 		"""
 		RETURN_TYPES = (gtk.keysyms.Return, gtk.keysyms.ISO_Enter, gtk.keysyms.KP_Enter)
-		try:
-			if (
-				event.keyval == gtk.keysyms.F6 or
-				event.keyval in RETURN_TYPES and event.get_state() & gtk.gdk.CONTROL_MASK
-			):
-				if self._isFullScreen:
-					self._mainWindow.unfullscreen()
-				else:
-					self._mainWindow.fullscreen()
-			elif event.keyval == gtk.keysyms.f and event.get_state() & gtk.gdk.CONTROL_MASK:
-				self._toggle_find()
-			elif event.keyval == gtk.keysyms.p and event.get_state() & gtk.gdk.CONTROL_MASK:
-				self._find_previous()
-			elif event.keyval == gtk.keysyms.n and event.get_state() & gtk.gdk.CONTROL_MASK:
-				self._find_next()
-			elif event.keyval == ord("l") and event.get_state() & gtk.gdk.CONTROL_MASK:
-				with open(constants._user_logpath_, "r") as f:
-					logLines = f.xreadlines()
-					log = "".join(logLines)
-					self._clipboard.set_text(str(log))
-		except Exception, e:
-			_moduleLogger.exception("_on_key_press")
+		if (
+			event.keyval == gtk.keysyms.F6 or
+			event.keyval in RETURN_TYPES and event.get_state() & gtk.gdk.CONTROL_MASK
+		):
+			if self._isFullScreen:
+				self._mainWindow.unfullscreen()
+			else:
+				self._mainWindow.fullscreen()
+		elif event.keyval == gtk.keysyms.f and event.get_state() & gtk.gdk.CONTROL_MASK:
+			self._toggle_find()
+		elif event.keyval == gtk.keysyms.p and event.get_state() & gtk.gdk.CONTROL_MASK:
+			self._find_previous()
+		elif event.keyval == gtk.keysyms.n and event.get_state() & gtk.gdk.CONTROL_MASK:
+			self._find_next()
+		elif event.keyval == ord("l") and event.get_state() & gtk.gdk.CONTROL_MASK:
+			with open(constants._user_logpath_, "r") as f:
+				logLines = f.xreadlines()
+				log = "".join(logLines)
+				self._clipboard.set_text(str(log))
 
+	@gtk_toolbox.log_exception(_moduleLogger)
 	def _on_browse_key_press(self, widget, event, *args):
-		try:
-			if event.keyval == gtk.keysyms.uparrow or event.keyval == gtk.keysyms.Up:
-				index, column = self._unitsView.get_cursor()
-				newIndex = max(index[0]-1, 0)
-				self._unitsView.set_cursor((newIndex, ), column, True)
-				return True # override default behavior
-			elif event.keyval == gtk.keysyms.downarrow or event.keyval == gtk.keysyms.Down:
-				index, column = self._unitsView.get_cursor()
-				newIndex = min(index[0]+1, len(self._unitModel)-1)
-				self._unitsView.set_cursor((newIndex, ), column, True)
-				return True # override default behavior
-		except Exception, e:
-			_moduleLogger.exception("_on_key_press")
+		if event.keyval == gtk.keysyms.uparrow or event.keyval == gtk.keysyms.Up:
+			index, column = self._unitsView.get_cursor()
+			newIndex = max(index[0]-1, 0)
+			self._unitsView.set_cursor((newIndex, ), column, True)
+			return True # override default behavior
+		elif event.keyval == gtk.keysyms.downarrow or event.keyval == gtk.keysyms.Down:
+			index, column = self._unitsView.get_cursor()
+			newIndex = min(index[0]+1, len(self._unitModel)-1)
+			self._unitsView.set_cursor((newIndex, ), column, True)
+			return True # override default behavior
 
+	@gtk_toolbox.log_exception(_moduleLogger)
 	def _on_window_state_change(self, widget, event, *args):
 		"""
 		@note Hildon specific
 		"""
-		try:
-			if event.new_window_state & gtk.gdk.WINDOW_STATE_FULLSCREEN:
-				self._isFullScreen = True
-			else:
-				self._isFullScreen = False
-		except Exception, e:
-			_moduleLogger.exception("_on_window_state_change")
+		if event.new_window_state & gtk.gdk.WINDOW_STATE_FULLSCREEN:
+			self._isFullScreen = True
+		else:
+			self._isFullScreen = False
 
+	@gtk_toolbox.log_exception(_moduleLogger)
 	def _on_findEntry_changed(self, *args):
 		"""
 		Clear out find results since the user wants to look for something new
 		"""
-		try:
-			self._clear_find()
-		except Exception:
-			_moduleLogger.exception("_on_findEntry_changed")
+		self._clear_find()
 
+	@gtk_toolbox.log_exception(_moduleLogger)
 	def _on_find_activate(self, *args):
-		try:
-			self._find_next()
-			self._findButton.grab_focus()
-		except Exception:
-			_moduleLogger.exception("_on_find_activate")
+		self._find_next()
+		self._findButton.grab_focus()
 
+	@gtk_toolbox.log_exception(_moduleLogger)
 	def _on_click_unit_column(self, col):
 		"""
 		Sort the contents of the col when the user clicks on the title.
 		"""
-		try:
-			#Determine which column requires sorting
-			columns = self._get_column_sort_stuff()
-			for columnIndex, (maybeCol, directionName, col_cmp) in enumerate(columns):
-				if col is maybeCol:
-					direction = getattr(self, directionName)
-					gtkDirection = gtk.SORT_ASCENDING if direction else gtk.SORT_DESCENDING
+		#Determine which column requires sorting
+		columns = self._get_column_sort_stuff()
+		for columnIndex, (maybeCol, directionName, col_cmp) in enumerate(columns):
+			if col is maybeCol:
+				direction = getattr(self, directionName)
+				gtkDirection = gtk.SORT_ASCENDING if direction else gtk.SORT_DESCENDING
 
-					# cause a sort
-					self._sortedUnitModel.set_sort_column_id(columnIndex, gtkDirection)
+				# cause a sort
+				self._sortedUnitModel.set_sort_column_id(columnIndex, gtkDirection)
 
-					# set the visual for sorting
-					col.set_sort_indicator(True)
-					col.set_sort_order(not direction)
+				# set the visual for sorting
+				col.set_sort_indicator(True)
+				col.set_sort_order(not direction)
 
-					setattr(self, directionName, not direction)
-					break
-				else:
-					maybeCol.set_sort_indicator(False)
+				setattr(self, directionName, not direction)
+				break
 			else:
-				assert False, "Unknown column: %s" % (col.get_title(), )
-		except Exception:
-			_moduleLogger.exception("_on_click_unit_column")
+				maybeCol.set_sort_indicator(False)
+		else:
+			assert False, "Unknown column: %s" % (col.get_title(), )
 
+	@gtk_toolbox.log_exception(_moduleLogger)
 	def _on_category_selector_clicked(self, *args):
-		try:
-			currenntIndex = unit_data.UNIT_CATEGORIES.index(self._selectedCategoryName)
-			newIndex = hildonize.touch_selector(
-				self._mainWindow,
-				"Categories",
-				unit_data.UNIT_CATEGORIES,
-				currenntIndex,
-			)
+		currenntIndex = unit_data.UNIT_CATEGORIES.index(self._selectedCategoryName)
+		newIndex = hildonize.touch_selector(
+			self._mainWindow,
+			"Categories",
+			unit_data.UNIT_CATEGORIES,
+			currenntIndex,
+		)
 
-			selectedCategoryName = unit_data.UNIT_CATEGORIES[newIndex]
-			self._categorySelectionButton.get_child().set_markup("<big>%s</big>" % selectedCategoryName)
-			self._categoryView.set_cursor(newIndex, self._categoryColumn, False)
-			self._categoryView.grab_focus()
-		except Exception:
-			_moduleLogger.exception("_on_category_selector_clicked")
+		selectedCategoryName = unit_data.UNIT_CATEGORIES[newIndex]
+		self._categorySelectionButton.get_child().set_markup("<big>%s</big>" % selectedCategoryName)
+		self._categoryView.set_cursor(newIndex, self._categoryColumn, False)
+		self._categoryView.grab_focus()
 
+	@gtk_toolbox.log_exception(_moduleLogger)
 	def _on_click_category(self, *args):
-		try:
-			selected, iter = self._categoryView.get_selection().get_selected()
-			if iter is None:
-				# User is typing in an invalid string, not selecting any category
-				return
-			selectedCategory = self._categoryModel.get_value(iter, 0)
-			self._switch_category(selectedCategory)
-		except Exception:
-			_moduleLogger.exception("_on_click_category")
+		selected, iter = self._categoryView.get_selection().get_selected()
+		if iter is None:
+			# User is typing in an invalid string, not selecting any category
+			return
+		selectedCategory = self._categoryModel.get_value(iter, 0)
+		self._switch_category(selectedCategory)
 
+	@gtk_toolbox.log_exception(_moduleLogger)
 	def _on_click_unit(self, *args):
-		try:
-			selected, iter = self._unitsView.get_selection().get_selected()
-			selected_unit = selected.get_value(iter, self.UNITS_NAME_IDX)
-			unit_spec = self._unitDataInCategory[selected_unit]
+		selected, iter = self._unitsView.get_selection().get_selected()
+		selected_unit = selected.get_value(iter, self.UNITS_NAME_IDX)
+		unit_spec = self._unitDataInCategory[selected_unit]
 
+		showSymbol = False
+
+		if self._unitName.get_text() != selected_unit:
+			self._previousUnitName.set_text(self._unitName.get_text())
+			self._previousUnitValue.set_text(self._unitValue.get_text())
+			self._previousUnitSymbol.set_text(self._unitSymbol.get_text())
+			if self._unitSymbol.get_text():
+				showSymbol = True
+
+		self._unitName.set_text(selected_unit)
+		self._unitValue.set_text(selected.get_value(iter, self.UNITS_VALUE_IDX))
+		buffer = self._unitDescription.get_buffer()
+		buffer.set_text(unit_spec[2])
+		self._unitSymbol.set_text(unit_spec[1]) # put units into label text
+		if unit_spec[1]:
+			showSymbol = True
+		else:
 			showSymbol = False
 
-			if self._unitName.get_text() != selected_unit:
-				self._previousUnitName.set_text(self._unitName.get_text())
-				self._previousUnitValue.set_text(self._unitValue.get_text())
-				self._previousUnitSymbol.set_text(self._unitSymbol.get_text())
-				if self._unitSymbol.get_text():
-					showSymbol = True
+		if showSymbol:
+			self._unitSymbol.show()
+			self._previousUnitSymbol.show()
+		else:
+			self._unitSymbol.hide()
+			self._previousUnitSymbol.hide()
 
-			self._unitName.set_text(selected_unit)
-			self._unitValue.set_text(selected.get_value(iter, self.UNITS_VALUE_IDX))
-			buffer = self._unitDescription.get_buffer()
-			buffer.set_text(unit_spec[2])
-			self._unitSymbol.set_text(unit_spec[1]) # put units into label text
-			if unit_spec[1]:
-				showSymbol = True
+		if self._unitValue.get_text() == '':
+			if self._selectedCategoryName == "Computer Numbers":
+				self._unitValue.set_text("0")
 			else:
-				showSymbol = False
+				self._unitValue.set_text("0.0")
 
-			if showSymbol:
-				self._unitSymbol.show()
-				self._previousUnitSymbol.show()
-			else:
-				self._unitSymbol.hide()
-				self._previousUnitSymbol.hide()
+		self._defaultUnitForCategory[self._selectedCategoryName] = [
+			self._unitName.get_text(), self._previousUnitName.get_text()
+		]
 
-			if self._unitValue.get_text() == '':
-				if self._selectedCategoryName == "Computer Numbers":
-					self._unitValue.set_text("0")
-				else:
-					self._unitValue.set_text("0.0")
+		# select the text so user can start typing right away
+		self._unitValue.grab_focus()
+		self._unitValue.select_region(0, -1)
 
-			self._defaultUnitForCategory[self._selectedCategoryName] = [
-				self._unitName.get_text(), self._previousUnitName.get_text()
-			]
-
-			# select the text so user can start typing right away
-			self._unitValue.grab_focus()
-			self._unitValue.select_region(0, -1)
-		except Exception:
-			_moduleLogger.exception("_on_click_unit")
-
+	@gtk_toolbox.log_exception(_moduleLogger)
 	def _on_unit_value_changed(self, *args):
-		try:
-			if self._unitName.get_text() == '':
-				return
-			if not self._unitValue.is_focus():
-				return
+		if self._unitName.get_text() == '':
+			return
+		if not self._unitValue.is_focus():
+			return
 
-			#retrieve the conversion function and value from the selected unit
-			value = self._sanitize_value(self._unitValue.get_text())
-			func, arg = self._unitDataInCategory[self._unitName.get_text()][0]
-			base = func.to_base(value, arg)
+		#retrieve the conversion function and value from the selected unit
+		value = self._sanitize_value(self._unitValue.get_text())
+		func, arg = self._unitDataInCategory[self._unitName.get_text()][0]
+		base = func.to_base(value, arg)
 
-			#point to the first row
-			for row in self._unitModel:
-				func, arg = self._unitDataInCategory[row[self.UNITS_NAME_IDX]][0]
-				newValue = func.from_base(base, arg)
+		#point to the first row
+		for row in self._unitModel:
+			func, arg = self._unitDataInCategory[row[self.UNITS_NAME_IDX]][0]
+			newValue = func.from_base(base, arg)
 
-				newValueDisplay = str(newValue)
-				integerDisplay, fractionalDisplay = split_number(newValue)
+			newValueDisplay = str(newValue)
+			integerDisplay, fractionalDisplay = split_number(newValue)
 
-				row[self.UNITS_VALUE_IDX] = newValueDisplay
-				row[self.UNITS_INTEGER_IDX] = integerDisplay
-				row[self.UNITS_FRACTION_IDX] = fractionalDisplay
+			row[self.UNITS_VALUE_IDX] = newValueDisplay
+			row[self.UNITS_INTEGER_IDX] = integerDisplay
+			row[self.UNITS_FRACTION_IDX] = fractionalDisplay
 
-			# Update the secondary unit entry
-			if self._previousUnitName.get_text() != '':
-				func, arg = self._unitDataInCategory[self._previousUnitName.get_text()][0]
-				self._previousUnitValue.set_text(str(func.from_base(base, arg, )))
-
-			self._sortedUnitModel.sort_column_changed()
-			self._refresh_columns()
-		except Exception:
-			_moduleLogger.exception("_on_unit_value_changed")
-
-	def _on_previous_unit_value_changed(self, *args):
-		try:
-			if self._previousUnitName.get_text() == '':
-				return
-			if not self._previousUnitValue.is_focus():
-				return
-
-			#retrieve the conversion function and value from the selected unit
-			value = self._sanitize_value(self._previousUnitValue.get_text())
+		# Update the secondary unit entry
+		if self._previousUnitName.get_text() != '':
 			func, arg = self._unitDataInCategory[self._previousUnitName.get_text()][0]
-			base = func.to_base(value, arg)
+			self._previousUnitValue.set_text(str(func.from_base(base, arg, )))
 
-			#point to the first row
-			for row in self._unitModel:
-				func, arg = self._unitDataInCategory[row[self.UNITS_NAME_IDX]][0]
-				newValue = func.from_base(base, arg)
+		self._sortedUnitModel.sort_column_changed()
+		self._refresh_columns()
 
-				newValueDisplay = str(newValue)
-				integerDisplay, fractionalDisplay = split_number(newValue)
+	@gtk_toolbox.log_exception(_moduleLogger)
+	def _on_previous_unit_value_changed(self, *args):
+		if self._previousUnitName.get_text() == '':
+			return
+		if not self._previousUnitValue.is_focus():
+			return
 
-				row[self.UNITS_VALUE_IDX] = newValueDisplay
-				row[self.UNITS_INTEGER_IDX] = integerDisplay
-				row[self.UNITS_FRACTION_IDX] = fractionalDisplay
+		#retrieve the conversion function and value from the selected unit
+		value = self._sanitize_value(self._previousUnitValue.get_text())
+		func, arg = self._unitDataInCategory[self._previousUnitName.get_text()][0]
+		base = func.to_base(value, arg)
 
-			# Update the primary unit entry
-			func, arg = self._unitDataInCategory[self._unitName.get_text()][0]
-			self._unitValue.set_text(str(func.from_base(base, arg, )))
+		#point to the first row
+		for row in self._unitModel:
+			func, arg = self._unitDataInCategory[row[self.UNITS_NAME_IDX]][0]
+			newValue = func.from_base(base, arg)
 
-			self._sortedUnitModel.sort_column_changed()
-			self._refresh_columns()
-		except Exception:
-			_moduleLogger.exception("_on_previous_unit_value_changed")
+			newValueDisplay = str(newValue)
+			integerDisplay, fractionalDisplay = split_number(newValue)
 
+			row[self.UNITS_VALUE_IDX] = newValueDisplay
+			row[self.UNITS_INTEGER_IDX] = integerDisplay
+			row[self.UNITS_FRACTION_IDX] = fractionalDisplay
+
+		# Update the primary unit entry
+		func, arg = self._unitDataInCategory[self._unitName.get_text()][0]
+		self._unitValue.set_text(str(func.from_base(base, arg, )))
+
+		self._sortedUnitModel.sort_column_changed()
+		self._refresh_columns()
+
+	@gtk_toolbox.log_exception(_moduleLogger)
 	def _on_about_clicked(self, a):
 		dlg = gtk.AboutDialog()
 		dlg.set_name(constants.__pretty_app_name__)
@@ -795,11 +773,12 @@ class Gonvert(object):
 		dlg.run()
 		dlg.destroy()
 
+	@gtk_toolbox.log_exception(_moduleLogger)
 	def _on_user_exit(self, *args):
 		try:
 			self._save_settings()
 		except Exception:
-			_moduleLogger.exception("_on_user_exit")
+			pass
 		finally:
 			gtk.main_quit()
 
@@ -809,7 +788,7 @@ def run_gonvert():
 	if hildonize.IS_HILDON_SUPPORTED:
 		gtk.set_application_name(constants.__pretty_app_name__)
 	handle = Gonvert()
-	if not PROFILE_STARTUP:
+	if not constants.PROFILE_STARTUP:
 		gtk.main()
 
 
