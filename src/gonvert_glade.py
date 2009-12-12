@@ -227,7 +227,9 @@ class Gonvert(object):
 		self._findEntry.connect("changed", self._on_findEntry_changed)
 		self._previousUnitValue.connect("changed", self._on_previous_unit_value_changed)
 		self._unitValue.connect("changed", self._on_unit_value_changed)
+		self._unitValue.connect("key-press-event", self._on_browse_key_press)
 		self._unitsView.connect("cursor-changed", self._on_click_unit)
+		self._unitsView.connect("key-press-event", self._on_browse_key_press)
 		if hildonize.GTK_MENU_USED:
 			widgets.get_widget("aboutMenuItem").connect("activate", self._on_about_clicked)
 			widgets.get_widget("exitMenuItem").connect("activate", self._on_user_exit)
@@ -565,6 +567,21 @@ class Gonvert(object):
 					logLines = f.xreadlines()
 					log = "".join(logLines)
 					self._clipboard.set_text(str(log))
+		except Exception, e:
+			_moduleLogger.exception("_on_key_press")
+
+	def _on_browse_key_press(self, widget, event, *args):
+		try:
+			if event.keyval == gtk.keysyms.uparrow or event.keyval == gtk.keysyms.Up:
+				index, column = self._unitsView.get_cursor()
+				newIndex = max(index[0]-1, 0)
+				self._unitsView.set_cursor((newIndex, ), column, True)
+				return True # override default behavior
+			elif event.keyval == gtk.keysyms.downarrow or event.keyval == gtk.keysyms.Down:
+				index, column = self._unitsView.get_cursor()
+				newIndex = min(index[0]+1, len(self._unitModel)-1)
+				self._unitsView.set_cursor((newIndex, ), column, True)
+				return True # override default behavior
 		except Exception, e:
 			_moduleLogger.exception("_on_key_press")
 
