@@ -20,7 +20,11 @@ __version__ = constants.__version__
 __build__ = constants.__build__
 __changelog__ = """
 0.9.1
+* Added support for creating generic .deb files
+* Added an apothecary unit
+* Bug fix: Can directly enter numbers after selecting category
 * Bug fix: font of the category button was inconsistent
+* Bug fix: Improved up/down arrow keys
 
 0.9.0
 * Added Radioactivity and Radiation dose categories.
