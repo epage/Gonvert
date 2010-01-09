@@ -116,7 +116,6 @@ class Gonvert(object):
 		change_menu_label(widgets, 'exitMenuItem', _('Exit'))
 		change_menu_label(widgets, 'helpMenuItem', _('Help'))
 		change_menu_label(widgets, 'aboutMenuItem', _('About'))
-		change_menu_label(widgets, 'findButton', _('Find'))
 
 		self._categorySelectionButton = widgets.get_widget("categorySelectionButton")
 		self._categoryView = widgets.get_widget('categoryView')
@@ -140,6 +139,7 @@ class Gonvert(object):
 		self._findEntry = widgets.get_widget('findEntry')
 		self._findLabel = widgets.get_widget('findLabel')
 		self._findButton = widgets.get_widget('findButton')
+		self._closeSearchButton = widgets.get_widget('closeSearchButton')
 
 		self._unitsNameRenderer = gtk.CellRendererText()
 		self._unitsNameRenderer.set_property("scale", 0.75)
@@ -224,6 +224,7 @@ class Gonvert(object):
 		self._findButton.connect("clicked", self._on_find_activate)
 		self._findEntry.connect("activate", self._on_find_activate)
 		self._findEntry.connect("changed", self._on_findEntry_changed)
+		self._closeSearchButton.connect("clicked", self._on_toggle_search)
 		self._previousUnitValue.connect("changed", self._on_previous_unit_value_changed)
 		self._unitValue.connect("changed", self._on_unit_value_changed)
 		self._unitValue.connect("key-press-event", self._on_browse_key_press)

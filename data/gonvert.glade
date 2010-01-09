@@ -210,7 +210,6 @@
                         <property name="can_focus">True</property>
                         <property name="hscrollbar_policy">never</property>
                         <property name="vscrollbar_policy">automatic</property>
-                        <property name="shadow_type">in</property>
                         <child>
                           <widget class="GtkViewport" id="maemo5HackViewport">
                             <property name="visible">True</property>
@@ -272,6 +271,22 @@
                   <widget class="GtkHBox" id="searchLayout">
                     <property name="visible">True</property>
                     <child>
+                      <widget class="GtkButton" id="findButton">
+                        <property name="label" translatable="yes">gtk-find</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <property name="use_underline">True</property>
+                        <property name="use_stock">True</property>
+                        <accelerator key="F6" signal="clicked"/>
+                      </widget>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">False</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
                       <widget class="GtkEntry" id="findEntry">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
@@ -280,21 +295,6 @@
                       </widget>
                       <packing>
                         <property name="expand">False</property>
-                        <property name="position">0</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <widget class="GtkButton" id="findButton">
-                        <property name="label" translatable="yes">Find</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="receives_default">True</property>
-                        <property name="use_underline">True</property>
-                        <accelerator key="F6" signal="clicked"/>
-                      </widget>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">False</property>
                         <property name="position">1</property>
                       </packing>
                     </child>
@@ -310,10 +310,25 @@
                         <property name="position">2</property>
                       </packing>
                     </child>
+                    <child>
+                      <widget class="GtkButton" id="closeSearchButton">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <child>
+                          <widget class="GtkImage" id="image1">
+                            <property name="visible">True</property>
+                            <property name="stock">gtk-close</property>
+                          </widget>
+                        </child>
+                      </widget>
+                      <packing>
+                        <property name="position">3</property>
+                      </packing>
+                    </child>
                   </widget>
                   <packing>
                     <property name="expand">False</property>
-                    <property name="fill">False</property>
                     <property name="position">4</property>
                   </packing>
                 </child>
