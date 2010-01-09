@@ -261,20 +261,20 @@ class Gonvert(object):
 			button = hildonize.hildon.GtkRadioButton(gtk.HILDON_SIZE_AUTO, None)
 			button.set_label("Name")
 			menu.add_filter(button)
-			button.connect("click", self._on_click_menu_filter, self._unitNameColumn)
+			button.connect("clicked", self._on_click_menu_filter, self._unitNameColumn)
 			button.set_mode(False)
 			filterGroup = button
 
 			button = hildonize.hildon.GtkRadioButton(gtk.HILDON_SIZE_AUTO, filterGroup)
 			button.set_label("Value")
 			menu.add_filter(button)
-			button.connect("click", self._on_click_menu_filter, self._unitIntegerColumn)
+			button.connect("clicked", self._on_click_menu_filter, self._unitIntegerColumn)
 			button.set_mode(False)
 
 			button = hildonize.hildon.GtkRadioButton(gtk.HILDON_SIZE_AUTO, filterGroup)
 			button.set_label("Unit")
 			menu.add_filter(button)
-			button.connect("click", self._on_click_menu_filter, self._unitSymbolColumn)
+			button.connect("clicked", self._on_click_menu_filter, self._unitSymbolColumn)
 			button.set_mode(False)
 
 			menu.show_all()
