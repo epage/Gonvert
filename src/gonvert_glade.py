@@ -240,8 +240,9 @@ class Gonvert(object):
 		):
 			scrollingWidget = widgets.get_widget(scrollingWidgetName)
 			assert scrollingWidget is not None, scrollingWidgetName
-			hildonize.hildonize_scrollwindow(scrollingWidget)
+			hildonize.hildonize_scrollwindow_with_viewport(scrollingWidget)
 
+		# Simplify the UI
 		if hildonize.IS_HILDON_SUPPORTED or constants.FORCE_HILDON_LIKE:
 			self._categoryView.get_parent().hide()
 			self._unitsView.set_headers_visible(False)
