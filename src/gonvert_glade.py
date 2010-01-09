@@ -216,7 +216,7 @@ class Gonvert(object):
 			self._categoryModel.append(row)
 
 		#--------- connections to GUI ----------------
-		self._mainWindow.connect("delete-event", self._on_user_exit)
+		self._mainWindow.connect("destroy", self._on_user_exit)
 		self._mainWindow.connect("key-press-event", self._on_key_press)
 		self._mainWindow.connect("window-state-event", self._on_window_state_change)
 		self._categorySelectionButton.connect("clicked", self._on_category_selector_clicked)
@@ -231,6 +231,7 @@ class Gonvert(object):
 		self._unitsView.connect("key-press-event", self._on_browse_key_press)
 		if hildonize.GTK_MENU_USED:
 			widgets.get_widget("aboutMenuItem").connect("activate", self._on_about_clicked)
+			widgets.get_widget("searchMenuItem").connect("activate", self._on_toggle_search)
 			widgets.get_widget("exitMenuItem").connect("activate", self._on_user_exit)
 
 		for scrollingWidgetName in (
@@ -238,7 +239,7 @@ class Gonvert(object):
 		):
 			scrollingWidget = widgets.get_widget(scrollingWidgetName)
 			assert scrollingWidget is not None, scrollingWidgetName
-			hildonize.hildonize_scrollwindow_with_viewport(scrollingWidget)
+			hildonize.hildonize_scrollwindow(scrollingWidget)
 
 		if hildonize.IS_HILDON_SUPPORTED or constants.FORCE_HILDON_LIKE:
 			self._categoryView.get_parent().hide()
@@ -252,6 +253,31 @@ class Gonvert(object):
 			self._mainWindow,
 			widgets.get_widget("mainMenuBar"),
 		)
+		if not hildonize.GTK_MENU_USED:
+			button = gtk.Button("Search")
+			button.connect("clicked", self._on_toggle_search)
+			menu.append(button)
+
+			button = hildonize.hildon.GtkRadioButton(gtk.HILDON_SIZE_AUTO, None)
+			button.set_label("Name")
+			menu.add_filter(button)
+			button.connect("click", self._on_click_menu_filter, self._unitNameColumn)
+			button.set_mode(False)
+			filterGroup = button
+
+			button = hildonize.hildon.GtkRadioButton(gtk.HILDON_SIZE_AUTO, filterGroup)
+			button.set_label("Value")
+			menu.add_filter(button)
+			button.connect("click", self._on_click_menu_filter, self._unitIntegerColumn)
+			button.set_mode(False)
+
+			button = hildonize.hildon.GtkRadioButton(gtk.HILDON_SIZE_AUTO, filterGroup)
+			button.set_label("Unit")
+			menu.add_filter(button)
+			button.connect("click", self._on_click_menu_filter, self._unitSymbolColumn)
+			button.set_mode(False)
+
+			menu.show_all()
 
 		if not hildonize.IS_HILDON_SUPPORTED:
 			_moduleLogger.info("No hildonization support")
@@ -539,6 +565,28 @@ class Gonvert(object):
 				value = float(userEntry)
 		return value
 
+	def _select_sort_column(self, col):
+		#Determine which column requires sorting
+		columns = self._get_column_sort_stuff()
+		for columnIndex, (maybeCol, directionName, col_cmp) in enumerate(columns):
+			if col is maybeCol:
+				direction = getattr(self, directionName)
+				gtkDirection = gtk.SORT_ASCENDING if direction else gtk.SORT_DESCENDING
+
+				# cause a sort
+				self._sortedUnitModel.set_sort_column_id(columnIndex, gtkDirection)
+
+				# set the visual for sorting
+				col.set_sort_indicator(True)
+				col.set_sort_order(not direction)
+
+				setattr(self, directionName, not direction)
+				break
+			else:
+				maybeCol.set_sort_indicator(False)
+		else:
+			assert False, "Unknown column: %s" % (col.get_title(), )
+
 	@gtk_toolbox.log_exception(_moduleLogger)
 	def _on_key_press(self, widget, event, *args):
 		"""
@@ -554,16 +602,26 @@ class Gonvert(object):
 			else:
 				self._mainWindow.fullscreen()
 		elif event.keyval == gtk.keysyms.f and event.get_state() & gtk.gdk.CONTROL_MASK:
-			self._toggle_find()
+			if not hildonize.GTK_MENU_USED:
+				self._toggle_find()
 		elif event.keyval == gtk.keysyms.p and event.get_state() & gtk.gdk.CONTROL_MASK:
 			self._find_previous()
 		elif event.keyval == gtk.keysyms.n and event.get_state() & gtk.gdk.CONTROL_MASK:
 			self._find_next()
-		elif event.keyval == ord("l") and event.get_state() & gtk.gdk.CONTROL_MASK:
+		elif (
+			event.keyval in (gtk.keysyms.w, gtk.keysyms.q) and
+			event.get_state() & gtk.gdk.CONTROL_MASK
+		):
+			self._mainWindow.destroy()
+		elif event.keyval == gtk.keysyms.l and event.get_state() & gtk.gdk.CONTROL_MASK:
 			with open(constants._user_logpath_, "r") as f:
 				logLines = f.xreadlines()
 				log = "".join(logLines)
 				self._clipboard.set_text(str(log))
+
+	@gtk_toolbox.log_exception(_moduleLogger)
+	def _on_toggle_search(self, *args):
+		self._toggle_find()
 
 	@gtk_toolbox.log_exception(_moduleLogger)
 	def _on_browse_key_press(self, widget, event, *args):
@@ -601,30 +659,15 @@ class Gonvert(object):
 		self._findButton.grab_focus()
 
 	@gtk_toolbox.log_exception(_moduleLogger)
+	def _on_click_menu_filter(self, button, col):
+		self._select_sort_column(col)
+
+	@gtk_toolbox.log_exception(_moduleLogger)
 	def _on_click_unit_column(self, col):
 		"""
 		Sort the contents of the col when the user clicks on the title.
 		"""
-		#Determine which column requires sorting
-		columns = self._get_column_sort_stuff()
-		for columnIndex, (maybeCol, directionName, col_cmp) in enumerate(columns):
-			if col is maybeCol:
-				direction = getattr(self, directionName)
-				gtkDirection = gtk.SORT_ASCENDING if direction else gtk.SORT_DESCENDING
-
-				# cause a sort
-				self._sortedUnitModel.set_sort_column_id(columnIndex, gtkDirection)
-
-				# set the visual for sorting
-				col.set_sort_indicator(True)
-				col.set_sort_order(not direction)
-
-				setattr(self, directionName, not direction)
-				break
-			else:
-				maybeCol.set_sort_indicator(False)
-		else:
-			assert False, "Unknown column: %s" % (col.get_title(), )
+		self._select_sort_column(col)
 
 	@gtk_toolbox.log_exception(_moduleLogger)
 	def _on_category_selector_clicked(self, *args):

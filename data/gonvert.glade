@@ -30,6 +30,26 @@
               </widget>
             </child>
             <child>
+              <widget class="GtkMenuItem" id="editMenuItem">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">_Edit</property>
+                <property name="use_underline">True</property>
+                <child>
+                  <widget class="GtkMenu" id="menu1">
+                    <property name="visible">True</property>
+                    <child>
+                      <widget class="GtkImageMenuItem" id="searchMenuItem">
+                        <property name="label">gtk-find</property>
+                        <property name="visible">True</property>
+                        <property name="use_underline">True</property>
+                        <property name="use_stock">True</property>
+                      </widget>
+                    </child>
+                  </widget>
+                </child>
+              </widget>
+            </child>
+            <child>
               <widget class="GtkMenuItem" id="helpMenuItem">
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">_Help</property>
@@ -192,9 +212,24 @@
                         <property name="vscrollbar_policy">automatic</property>
                         <property name="shadow_type">in</property>
                         <child>
-                          <widget class="GtkTreeView" id="unitsView">
+                          <widget class="GtkViewport" id="maemo5HackViewport">
                             <property name="visible">True</property>
-                            <property name="can_focus">True</property>
+                            <property name="resize_mode">queue</property>
+                            <child>
+                              <widget class="GtkVBox" id="maemo5HackVBox">
+                                <property name="visible">True</property>
+                                <property name="orientation">vertical</property>
+                                <child>
+                                  <widget class="GtkTreeView" id="unitsView">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                  </widget>
+                                  <packing>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                              </widget>
+                            </child>
                           </widget>
                         </child>
                       </widget>
