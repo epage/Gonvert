@@ -22,7 +22,6 @@ __changelog__ = """
 0.9.2
 * Added search toggle to the menu
 * Maemo 5: Added sorting to the app menu
-* Bug fix: Made the view area pannable
 
 0.9.1
 * Added support for creating generic .deb files
