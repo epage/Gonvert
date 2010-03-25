@@ -86,6 +86,7 @@ class Gonvert(object):
 		self._unit_sort_direction = False
 		self._value_sort_direction = False
 		self._units_sort_direction = False
+		self.__isPortrait = False
 		self._isFullScreen = False
 		self._clipboard = gtk.clipboard_get()
 
@@ -307,6 +308,24 @@ class Gonvert(object):
 				pass
 			else:
 				self._mainWindow.resize(a, b)
+			try:
+				isFullscreen = saved_window["isFullscreen"]
+			except KeyError:
+				pass
+			else:
+				if isFullscreen:
+					self._mainWindow.fullscreen()
+			try:
+				isPortrait = saved_window["isPortrait"]
+			except KeyError:
+				pass
+			else:
+				if isPortrait ^ self.__isPortrait:
+					if isPortrait:
+						orientation = gtk.ORIENTATION_VERTICAL
+					else:
+						orientation = gtk.ORIENTATION_HORIZONTAL
+					self.set_orientation(orientation)
 
 		#Restore selections from previously saved settings if it exists and is valid.
 		categoryIndex = 0
@@ -358,7 +377,9 @@ class Gonvert(object):
 
 		#Get last size of app and save it
 		window_settings = {
-			'size': self._mainWindow.get_size()
+			'size': self._mainWindow.get_size(),
+			"isFullscreen": self._isFullScreen,
+			"isPortrait": self.__isPortrait,
 		}
 		windowDatPath = "/".join((constants._data_path_, "window.dat"))
 		pickle.dump(window_settings, open(windowDatPath, 'w'))
@@ -589,6 +610,25 @@ class Gonvert(object):
 		else:
 			assert False, "Unknown column: %s" % (col.get_title(), )
 
+	def set_orientation(self, orientation):
+		if orientation == gtk.ORIENTATION_VERTICAL:
+			hildonize.window_to_portrait(self._mainWindow)
+			self.__isPortrait = True
+		elif orientation == gtk.ORIENTATION_HORIZONTAL:
+			hildonize.window_to_landscape(self._mainWindow)
+			self.__isPortrait = False
+		else:
+			raise NotImplementedError(orientation)
+
+	def get_orientation(self):
+		return gtk.ORIENTATION_VERTICAL if self.__isPortrait else gtk.ORIENTATION_HORIZONTAL
+
+	def _toggle_rotate(self):
+		if self.__isPortrait:
+			self.set_orientation(gtk.ORIENTATION_HORIZONTAL)
+		else:
+			self.set_orientation(gtk.ORIENTATION_VERTICAL)
+
 	@gtk_toolbox.log_exception(_moduleLogger)
 	def _on_key_press(self, widget, event, *args):
 		"""
@@ -610,6 +650,8 @@ class Gonvert(object):
 			self._find_previous()
 		elif event.keyval == gtk.keysyms.n and event.get_state() & gtk.gdk.CONTROL_MASK:
 			self._find_next()
+		elif event.keyval == gtk.keysyms.o and event.get_state() & gtk.gdk.CONTROL_MASK:
+			self._toggle_rotate()
 		elif (
 			event.keyval in (gtk.keysyms.w, gtk.keysyms.q) and
 			event.get_state() & gtk.gdk.CONTROL_MASK
