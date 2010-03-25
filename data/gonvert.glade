@@ -319,6 +319,7 @@
                           <widget class="GtkImage" id="image1">
                             <property name="visible">True</property>
                             <property name="stock">gtk-close</property>
+                            <property name="icon-size">1</property>
                           </widget>
                         </child>
                       </widget>
