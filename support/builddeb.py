@@ -198,33 +198,27 @@ def build_package(distribution):
 	maemoSpecificDepends = ", python-osso | python2.5-osso, python-hildon | python2.5-hildon"
 	p.depends += {
 		"debian": ", python-glade2",
-		"chinook": maemoSpecificDepends,
 		"diablo": maemoSpecificDepends,
 		"fremantle": maemoSpecificDepends + ", python-glade2",
-		"mer": maemoSpecificDepends + ", python-glade2",
 	}[distribution]
 	p.recommends = ", ".join([
 	])
 	p.section = {
 		"debian": "science",
-		"chinook": "other",
 		"diablo": "user/science",
 		"fremantle": "user/science",
-		"mer": "user/science",
 	}[distribution]
 	p.arch = "all"
 	p.urgency = "low"
-	p.distribution = "chinook diablo fremantle mer debian"
+	p.distribution = "diablo fremantle debian"
 	p.repository = "extras"
 	p.changelog = __changelog__
 	p.postinstall = __postinstall__
 	p.preremove = __preremove__
 	p.icon = {
 		"debian": "data-pixmaps-gonvert.png",
-		"chinook": "data-pixmaps-gonvert.png",
 		"diablo": "data-pixmaps-gonvert.png",
 		"fremantle": "data-pixmaps-gonvert.png", # Fremantle natively uses 48x48
-		"mer": "data-pixmaps-gonvert.png",
 	}[distribution]
 	p["/usr/bin"] = [ "gonvert.py" ]
 	for relPath, files in unflatten_files(find_files("src", ".")).iteritems():
