@@ -19,6 +19,10 @@ __email__ = "anthony@unihedron.com"
 __version__ = constants.__version__
 __build__ = constants.__build__
 __changelog__ = """
+0.9.3
+* Rotation support through Ctrl+o
+* Switching from scrollbar to panning
+
 0.9.2
 * Added search toggle to the menu
 * Maemo 5: Added sorting to the app menu
