@@ -699,13 +699,13 @@ _(u"Electrical Voltage"): {".base_unit": _(u"volt"),
 		_(u"litres per minute"):
 		[(converters.m, 1.0/60), "lpm", ''],
 		_(u"US gallons per minute"):
-		[(converters.m, 1/(60*3.785411784)), "gpm (US)", ''],
+		[(converters.m, 60*3.785411784), "gpm (US)", ''],
 		_(u"US gallons per second"):
-		[(converters.m, 1/3.785411784), "gps (US)", ''],
+		[(converters.m, 3.785411784), "gps (US)", ''],
 		_(u"UK gallons per minute"):
-		[(converters.m, 1/(60*4.54609028199)), "gpm (UK)", ''],
+		[(converters.m, 60*4.54609028199), "gpm (UK)", ''],
 		_(u"UK gallons per second"):
-		[(converters.m, 1/4.54609028199), "gps (UK)", ''],
+		[(converters.m, 4.54609028199), "gps (UK)", ''],
 	},
 
 	_(u"Force"): {
