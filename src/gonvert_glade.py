@@ -673,12 +673,16 @@ class Gonvert(object):
 		if event.keyval == gtk.keysyms.uparrow or event.keyval == gtk.keysyms.Up:
 			index, column = self._unitsView.get_cursor()
 			newIndex = max(index[0]-1, 0)
-			self._unitsView.set_cursor((newIndex, ), column, True)
+			path = (newIndex, )
+			self._unitsView.set_cursor(path, column, True)
+			self._unitsView.scroll_to_cell(path, column, False, 0, 0)
 			return True # override default behavior
 		elif event.keyval == gtk.keysyms.downarrow or event.keyval == gtk.keysyms.Down:
 			index, column = self._unitsView.get_cursor()
 			newIndex = min(index[0]+1, len(self._unitModel)-1)
-			self._unitsView.set_cursor((newIndex, ), column, True)
+			path = (newIndex, )
+			self._unitsView.set_cursor(path, column, True)
+			self._unitsView.scroll_to_cell(path, column, False, 0, 0)
 			return True # override default behavior
 
 	@gtk_toolbox.log_exception(_moduleLogger)
