@@ -63,8 +63,28 @@ def split_number(number):
 
 class Gonvert(object):
 
+	ORIENTATION_HORIZONTAL = "ORIENTATION_HORIZONTAL"
+	ORIENTATION_VERTICAL = "ORIENTATION_VERTICAL"
+
+	_DATA_PATHS = [
+		os.path.dirname(__file__),
+		os.path.join(os.path.dirname(__file__), "../data"),
+		os.path.join(os.path.dirname(__file__), "../lib"),
+		'/usr/share/gonvert',
+		'/usr/lib/gonvert',
+	]
 
 	def __init__(self):
+		self.__isPortrait = False
+		self._dataPath = ""
+		for dataPath in self._DATA_PATHS:
+			appIconPath = os.path.join(dataPath, "pixmaps", "gonvert.png")
+			if os.path.isfile(appIconPath):
+				self._dataPath = dataPath
+				break
+		else:
+			raise RuntimeError("UI Descriptor not found!")
+
 		self._unitCategory = QtGui.QPushButton()
 
 		self._selectedUnitName = QtGui.QLabel()
@@ -97,10 +117,13 @@ class Gonvert(object):
 		centralWidget.setLayout(self._layout)
 
 		self._window = QtGui.QMainWindow()
+		self._window.setWindowTitle("%s - Unit Conversion Utility" % constants.__pretty_app_name__)
+		self._window.setWindowIcon(QtGui.QIcon(appIconPath))
 		self._window.setCentralWidget(centralWidget)
-		#self._load_settings()
+		self._load_settings()
 
 		self._window.show()
+		self._hide_search()
 
 	def _load_settings(self):
 		#Restore window size from previously saved settings if it exists and is valid.
@@ -112,14 +135,14 @@ class Gonvert(object):
 			except KeyError:
 				pass
 			else:
-				self._mainWindow.resize(a, b)
+				self._window.resize(a, b)
 			try:
 				isFullscreen = saved_window["isFullscreen"]
 			except KeyError:
 				pass
 			else:
 				if isFullscreen:
-					self._mainWindow.fullscreen()
+					self._window.fullscreen()
 			try:
 				isPortrait = saved_window["isPortrait"]
 			except KeyError:
@@ -127,9 +150,9 @@ class Gonvert(object):
 			else:
 				if isPortrait ^ self.__isPortrait:
 					if isPortrait:
-						orientation = gtk.ORIENTATION_VERTICAL
+						orientation = self.ORIENTATION_VERTICAL
 					else:
-						orientation = gtk.ORIENTATION_HORIZONTAL
+						orientation = self.ORIENTATION_HORIZONTAL
 					self.set_orientation(orientation)
 
 		#Restore selections from previously saved settings if it exists and is valid.
@@ -153,11 +176,12 @@ class Gonvert(object):
 				except ValueError:
 					_moduleLogger.warn("Unknown category: %s" % selectedCategoryName)
 
-		self._categorySelectionButton.get_child().set_markup("<big>%s</big>" % selectedCategoryName)
-		self._categoryView.set_cursor(categoryIndex, self._categoryColumn, False)
-		self._categoryView.grab_focus()
+		if False:
+			self._categorySelectionButton.get_child().set_markup("<big>%s</big>" % selectedCategoryName)
+			self._categoryView.set_cursor(categoryIndex, self._categoryColumn, False)
+			self._categoryView.grab_focus()
 
-		self._select_default_unit()
+			self._select_default_unit()
 
 	def _save_settings(self):
 		"""
@@ -169,25 +193,34 @@ class Gonvert(object):
 		'self._defaultUnitForCategory': self._defaultUnitForCategory dictionary which contains:
 		[categoryname: #1 displayed unit, #2 displayed unit]
 		"""
-		#Determine the contents of the selected category row
-		selected, iter = self._categoryView.get_selection().get_selected()
-		self._selectedCategoryName = self._categoryModel.get_value(iter, 0)
+		if False:
+			#Determine the contents of the selected category row
+			selected, iter = self._categoryView.get_selection().get_selected()
+			self._selectedCategoryName = self._categoryModel.get_value(iter, 0)
 
-		selections = {
-			'selected_category': self._selectedCategoryName,
-			'selected_units': self._defaultUnitForCategory
-		}
-		selectionsDatPath = "/".join((constants._data_path_, "selections.dat"))
-		pickle.dump(selections, open(selectionsDatPath, 'w'))
+			selections = {
+				'selected_category': self._selectedCategoryName,
+				'selected_units': self._defaultUnitForCategory
+			}
+			selectionsDatPath = "/".join((constants._data_path_, "selections.dat"))
+			pickle.dump(selections, open(selectionsDatPath, 'w'))
 
 		#Get last size of app and save it
 		window_settings = {
-			'size': self._mainWindow.get_size(),
+			'size': self._window.get_size(),
 			"isFullscreen": self._isFullScreen,
 			"isPortrait": self.__isPortrait,
 		}
 		windowDatPath = "/".join((constants._data_path_, "window.dat"))
 		pickle.dump(window_settings, open(windowDatPath, 'w'))
+
+	def set_orientation(self, orientation):
+		pass
+
+	def _hide_search(self):
+		self._searchButton.hide()
+		self._searchEntry.hide()
+		self._searchCloseButton.hide()
 
 
 def run_gonvert():
