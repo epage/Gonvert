@@ -46,10 +46,10 @@ package: $(OBJ)
 	cp $(SOURCE_PATH)/$(PROJECT_NAME).py  $(BUILD_PATH)/generic
 	$(foreach file, $(DATA), cp $(file) $(BUILD_PATH)/generic/$(subst /,-,$(file)) ; )
 	$(foreach file, $(SOURCE), cp $(file) $(BUILD_PATH)/generic/$(subst /,-,$(file)) ; )
-	#$(foreach file, $(OBJ), cp $(file) $(BUILD_PATH)/generic/$(subst /,-,$(file)) ; )
 	cp support/$(PROJECT_NAME).desktop $(BUILD_PATH)/generic
 	cp support/builddeb.py $(BUILD_PATH)/generic
 	cp support/py2deb.py $(BUILD_PATH)/generic
+	cp support/fake_py2deb.py $(BUILD_PATH)/generic
 
 	mkdir -p $(BUILD_PATH)/diablo
 	cp -R $(BUILD_PATH)/generic/* $(BUILD_PATH)/diablo
@@ -64,7 +64,7 @@ package: $(OBJ)
 upload:
 	dput fremantle-extras-builder $(BUILD_PATH)/fremantle/$(PROJECT_NAME)*.changes
 	dput diablo-extras-builder $(BUILD_PATH)/diablo/$(PROJECT_NAME)*.changes
-	cp $(BUILD_PATH)/debian/*.deb www/$(PROJECT_NAME).deb
+	cp $(BUILD_PATH)/debian/*.deb ./www/$(PROJECT_NAME).deb
 
 lint: $(OBJ)
 	$(foreach file, $(SOURCE), $(LINT) $(file) ; )

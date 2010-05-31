@@ -286,8 +286,8 @@ class Gonvert(object):
 		if not hildonize.IS_HILDON_SUPPORTED:
 			_moduleLogger.info("No hildonization support")
 
-		hildonize.set_application_title(
-			self._mainWindow, "%s - Unit Conversion Utility" % constants.__pretty_app_name__
+		hildonize.set_application_name(
+			"%s - Unit Conversion Utility" % constants.__pretty_app_name__
 		)
 		iconPath = pixmapspath + '/gonvert.png'
 		if os.path.exists(iconPath):
