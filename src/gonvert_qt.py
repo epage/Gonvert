@@ -93,6 +93,7 @@ class CategoryWindow(object):
 		self._categories = QtGui.QTreeWidget()
 		self._categories.setHeaderLabels(["Categories"])
 		self._categories.itemClicked.connect(self._on_category_clicked)
+		self._categories.setHeaderHidden(True)
 		for catName in unit_data.UNIT_CATEGORIES:
 			twi = QtGui.QTreeWidgetItem(self._categories)
 			twi.setText(0, catName)
@@ -195,6 +196,19 @@ class UnitModel(QtCore.QAbstractItemModel):
 			return item[index.column()]
 
 	@misc_utils.log_exception(_moduleLogger)
+	def sort(self, column, order = QtCore.Qt.AscendingOrder):
+		isReverse = order == QtCore.Qt.AscendingOrder
+		if column == 0:
+			key_func = lambda item: item.name
+		elif column in [1, 2]:
+			key_func = lambda item: item.value
+		elif column == 3:
+			key_func = lambda item: item.unit
+		self._children.sort(key=key_func, reverse = isReverse)
+
+		self._all_changed()
+
+	@misc_utils.log_exception(_moduleLogger)
 	def flags(self, index):
 		if not index.isValid():
 			return QtCore.Qt.NoItemFlags
@@ -258,6 +272,9 @@ class UnitModel(QtCore.QAbstractItemModel):
 			newValue = func.from_base(base, arg)
 			child.update_value(newValue)
 
+		self._all_changed()
+
+	def _all_changed(self):
 		topLeft = self.createIndex(0, 1, self._children[0])
 		bottomRight = self.createIndex(len(self._children)-1, 2, self._children[-1])
 		self.dataChanged.emit(topLeft, bottomRight)
@@ -298,6 +315,11 @@ class UnitWindow(object):
 		self._unitsView.setModel(self._unitsModel)
 		self._unitsView.clicked.connect(self._on_unit_clicked)
 		self._unitsView.setUniformRowHeights(True)
+		self._unitsView.header().setSortIndicatorShown(True)
+		self._unitsView.header().setClickable(True)
+		self._unitsView.setSortingEnabled(True)
+		if True:
+			self._unitsView.setHeaderHidden(True)
 
 		self._searchButton = QtGui.QPushButton()
 		self._searchEntry = QtGui.QLineEdit()
