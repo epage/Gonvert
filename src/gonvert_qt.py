@@ -52,7 +52,6 @@ def split_number(number):
 class Gonvert(object):
 
 	# @todo Remember last selection
-	# @todo Recent
 	# @todo Favorites
 	# @todo Fullscreen support (showFullscreen, showNormal)
 	# @todo Close Window / Quit keyboard shortcuts
@@ -77,8 +76,10 @@ class Gonvert(object):
 		else:
 			raise RuntimeError("UI Descriptor not found!")
 		self._appIconPath = appIconPath
+		self._recent = []
 
 		self._jumpWindow = None
+		self._recentWindow = None
 		self._catWindow = None
 
 		self._jumpAction = QtGui.QAction(None)
@@ -87,6 +88,13 @@ class Gonvert(object):
 		self._jumpAction.setToolTip("Search for a unit and jump straight to it")
 		self._jumpAction.setShortcut(QtGui.QKeySequence("CTRL+j"))
 		self._jumpAction.triggered.connect(self._on_jump_start)
+
+		self._recentAction = QtGui.QAction(None)
+		self._recentAction.setText("Recent Units")
+		self._recentAction.setStatusTip("View the recent units")
+		self._recentAction.setToolTip("View the recent units")
+		self._recentAction.setShortcut(QtGui.QKeySequence("CTRL+r"))
+		self._recentAction.triggered.connect(self._on_recent_start)
 
 		self.request_category()
 
@@ -104,6 +112,31 @@ class Gonvert(object):
 		self._jumpWindow = QuickJump(None, self)
 		return self._jumpWindow
 
+	def show_recent(self):
+		if self._recentWindow is not None:
+			self._recentWindow.close()
+			self._recentWindow = None
+		self._recentWindow = Recent(None, self)
+		return self._recentWindow
+
+	def add_recent(self, categoryName, unitName):
+		catUnit = categoryName, unitName
+		try:
+			self._recent.remove(catUnit)
+		except ValueError:
+			pass # ignore if its not already in the recent history
+		self._recent.append(catUnit)
+
+	def get_recent_unit(self, categoryName):
+		for catName, unitName in reversed(self._recent):
+			if catName == categoryName:
+				return unitName
+		else:
+			return ""
+
+	def get_recent(self):
+		return reversed(self._recent)
+
 	@property
 	def appIconPath(self):
 		return self._appIconPath
@@ -112,9 +145,17 @@ class Gonvert(object):
 	def jumpAction(self):
 		return self._jumpAction
 
+	@property
+	def recentAction(self):
+		return self._recentAction
+
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_jump_start(self, checked = False):
 		self.search_units()
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_recent_start(self, checked = False):
+		self.show_recent()
 
 
 class CategoryWindow(object):
@@ -147,6 +188,7 @@ class CategoryWindow(object):
 
 		viewMenu = self._window.menuBar().addMenu("&View")
 		viewMenu.addAction(self._app.jumpAction)
+		viewMenu.addAction(self._app.recentAction)
 
 		self._window.show()
 
@@ -234,6 +276,50 @@ class QuickJump(object):
 					twi = QtGui.QTreeWidgetItem(self._resultsBox)
 					twi.setText(0, category)
 					twi.setText(1, unit)
+
+
+class Recent(object):
+
+	def __init__(self, parent, app):
+		self._app = app
+
+		self._resultsBox = QtGui.QTreeWidget()
+		self._resultsBox.setHeaderLabels(["Categories", "Units"])
+		self._resultsBox.setHeaderHidden(True)
+		self._resultsBox.setAlternatingRowColors(True)
+		self._resultsBox.itemClicked.connect(self._on_result_clicked)
+
+		self._layout = QtGui.QVBoxLayout()
+		self._layout.addWidget(self._resultsBox)
+
+		centralWidget = QtGui.QWidget()
+		centralWidget.setLayout(self._layout)
+
+		self._window = QtGui.QMainWindow(parent)
+		if parent is not None:
+			self._window.setWindowModality(QtCore.Qt.WindowModal)
+		self._window.setWindowTitle("%s - Recent" % constants.__pretty_app_name__)
+		self._window.setWindowIcon(QtGui.QIcon(self._app.appIconPath))
+		self._window.setCentralWidget(centralWidget)
+
+		for cat, unit in self._app.get_recent():
+			twi = QtGui.QTreeWidgetItem(self._resultsBox)
+			twi.setText(0, cat)
+			twi.setText(1, unit)
+
+		self._window.show()
+
+	def close(self):
+		self._window.close()
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_result_clicked(self, item, columnIndex):
+		categoryName = unicode(item.text(0))
+		unitName = unicode(item.text(1))
+		catWindow = self._app.request_category()
+		unitsWindow = catWindow.selectCategory(categoryName)
+		unitsWindow.select_unit(unitName)
+		self.close()
 
 
 class UnitData(object):
@@ -459,7 +545,11 @@ class UnitWindow(object):
 		self._window.setWindowIcon(QtGui.QIcon(app.appIconPath))
 		self._window.setCentralWidget(centralWidget)
 
-		self._select_unit(0)
+		defaultUnitName = self._app.get_recent_unit(self._categoryName)
+		if defaultUnitName:
+			self.select_unit(defaultUnitName)
+		else:
+			self._select_unit(0)
 		self._unitsModel.sort(1)
 
 		self._sortActionGroup = QtGui.QActionGroup(None)
@@ -480,6 +570,7 @@ class UnitWindow(object):
 
 		viewMenu = self._window.menuBar().addMenu("&View")
 		viewMenu.addAction(self._app.jumpAction)
+		viewMenu.addAction(self._app.recentAction)
 		viewMenu.addSeparator()
 		viewMenu.addAction(self._sortByNameAction)
 		viewMenu.addAction(self._sortByValueAction)
@@ -528,6 +619,7 @@ class UnitWindow(object):
 		self._selectedIndex = index
 		qindex = self._unitsModel.createIndex(index, 0, self._unitsModel.get_unit(index))
 		self._unitsView.scrollTo(qindex)
+		self._app.add_recent(self._categoryName, self._unitsModel.get_unit(index).name)
 
 
 def run_gonvert():
