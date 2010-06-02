@@ -131,9 +131,10 @@ class CategoryWindow(object):
 		self._window.setWindowIcon(QtGui.QIcon(self._app.appIconPath))
 		self._window.setCentralWidget(centralWidget)
 
-		self._app.jumpAction.triggered.connect(self._on_jump_start)
 		viewMenu = self._window.menuBar().addMenu("&View")
 		viewMenu.addAction(self._app.jumpAction)
+
+		self._app.jumpAction.triggered.connect(self._on_jump_start)
 
 		self._window.show()
 
@@ -445,9 +446,31 @@ class UnitWindow(object):
 
 		self._select_unit(0)
 
-		self._app.jumpAction.triggered.connect(self._on_jump_start)
+		self._sortActionGroup = QtGui.QActionGroup(None)
+		self._sortByNameAction = QtGui.QAction(self._sortActionGroup)
+		self._sortByNameAction.setText("Sort By Name")
+		self._sortByNameAction.setStatusTip("Sort the units by name")
+		self._sortByNameAction.setToolTip("Sort the units by name")
+		self._sortByValueAction = QtGui.QAction(self._sortActionGroup)
+		self._sortByValueAction.setText("Sort By Value")
+		self._sortByValueAction.setStatusTip("Sort the units by value")
+		self._sortByValueAction.setToolTip("Sort the units by value")
+		self._sortByUnitAction = QtGui.QAction(self._sortActionGroup)
+		self._sortByUnitAction.setText("Sort By Unit")
+		self._sortByUnitAction.setStatusTip("Sort the units by unit")
+		self._sortByUnitAction.setToolTip("Sort the units by unit")
+
 		viewMenu = self._window.menuBar().addMenu("&View")
 		viewMenu.addAction(self._app.jumpAction)
+		viewMenu.addSeparator()
+		viewMenu.addAction(self._sortByNameAction)
+		viewMenu.addAction(self._sortByValueAction)
+		viewMenu.addAction(self._sortByUnitAction)
+
+		self._app.jumpAction.triggered.connect(self._on_jump_start)
+		self._sortByNameAction.triggered.connect(self._on_sort_by_name)
+		self._sortByValueAction.triggered.connect(self._on_sort_by_value)
+		self._sortByUnitAction.triggered.connect(self._on_sort_by_unit)
 
 		self._window.show()
 
@@ -457,6 +480,18 @@ class UnitWindow(object):
 	def select_unit(self, unitName):
 		index = self._unitsModel.index_unit(unitName)
 		self._select_unit(index)
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_sort_by_name(self, checked = False):
+		self._unitsModel.sort(0, QtCore.Qt.DescendingOrder)
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_sort_by_value(self, checked = False):
+		self._unitsModel.sort(1)
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_sort_by_unit(self, checked = False):
+		self._unitsModel.sort(3, QtCore.Qt.DescendingOrder)
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_jump_start(self, checked = False):
