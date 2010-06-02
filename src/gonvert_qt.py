@@ -15,20 +15,8 @@ import constants
 from util import misc as misc_utils
 import unit_data
 
-try:
-	import gettext
-except ImportError:
-	_ = lambda x: x
-	gettext = None
-else:
-	_ = gettext.gettext
-
 
 _moduleLogger = logging.getLogger("gonvert_glade")
-
-if gettext is not None:
-	gettext.bindtextdomain('gonvert', '/usr/share/locale')
-	gettext.textdomain('gonvert')
 
 
 def change_menu_label(widgets, labelname, newtext):
@@ -80,15 +68,47 @@ class Gonvert(object):
 				break
 		else:
 			raise RuntimeError("UI Descriptor not found!")
+		self._appIconPath = appIconPath
 
-		self._catWindow = CategoryWindow(None, appIconPath)
+		self._jumpWindow = None
+		self._catWindow = None
+
+		self._jumpAction = QtGui.QAction(None)
+		self._jumpAction.setText("Quick Jump")
+		self._jumpAction.setStatusTip("Search for a unit and jump straight to it")
+		self._jumpAction.setToolTip("Search for a unit and jump straight to it")
+		self._jumpAction.setShortcut(QtGui.QKeySequence("CTRL+j"))
+
+		self.request_category()
+
+	def request_category(self):
+		if self._catWindow is not None:
+			self._catWindow.close()
+			self._catWindow = None
+		self._catWindow = CategoryWindow(None, self)
+		return self._catWindow
+
+	def search_units(self):
+		if self._jumpWindow is not None:
+			self._jumpWindow.close()
+			self._jumpWindow = None
+		self._jumpWindow = QuickJump(None, self)
+		return self._jumpWindow
+
+	@property
+	def appIconPath(self):
+		return self._appIconPath
+
+	@property
+	def jumpAction(self):
+		return self._jumpAction
 
 
 class CategoryWindow(object):
 
-	def __init__(self, parent, appIconPath):
-		self._appIconPath = appIconPath
-		self._unitWindows = []
+	def __init__(self, parent, app):
+		self._app = app
+		self._unitWindow = None
 
 		self._categories = QtGui.QTreeWidget()
 		self._categories.setHeaderLabels(["Categories"])
@@ -108,16 +128,97 @@ class CategoryWindow(object):
 		if parent is not None:
 			self._window.setWindowModality(QtCore.Qt.WindowModal)
 		self._window.setWindowTitle("%s - Categories" % constants.__pretty_app_name__)
-		self._window.setWindowIcon(QtGui.QIcon(appIconPath))
+		self._window.setWindowIcon(QtGui.QIcon(self._app.appIconPath))
 		self._window.setCentralWidget(centralWidget)
 
+		self._app.jumpAction.triggered.connect(self._on_jump_start)
+		viewMenu = self._window.menuBar().addMenu("&View")
+		viewMenu.addAction(self._app.jumpAction)
+
 		self._window.show()
+
+	def close(self):
+		self._window.close()
+
+	def selectCategory(self, categoryName):
+		if self._unitWindow is not None:
+			self._unitWindow.close()
+			self._unitWindow = None
+		self._unitWindow = UnitWindow(self._window, categoryName, self._app)
+		return self._unitWindow
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_jump_start(self, checked = False):
+		self._app.search_units()
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_category_clicked(self, item, columnIndex):
 		categoryName = unicode(item.text(0))
-		unitWindow = UnitWindow(self._window, categoryName, self._appIconPath)
-		self._unitWindows = [unitWindow]
+		self.selectCategory(categoryName)
+
+
+class QuickJump(object):
+
+	MINIMAL_ENTRY = 3
+
+	def __init__(self, parent, app):
+		self._app = app
+
+		self._searchLabel = QtGui.QLabel("Search:")
+		self._searchEntry = QtGui.QLineEdit("")
+		self._searchEntry.textEdited.connect(self._on_search_edited)
+
+		self._entryLayout = QtGui.QHBoxLayout()
+		self._entryLayout.addWidget(self._searchLabel)
+		self._entryLayout.addWidget(self._searchEntry)
+
+		self._resultsBox = QtGui.QTreeWidget()
+		self._resultsBox.setHeaderLabels(["Categories", "Units"])
+		self._resultsBox.setHeaderHidden(True)
+		self._resultsBox.itemClicked.connect(self._on_result_clicked)
+
+		self._layout = QtGui.QVBoxLayout()
+		self._layout.addLayout(self._entryLayout)
+		self._layout.addWidget(self._resultsBox)
+
+		centralWidget = QtGui.QWidget()
+		centralWidget.setLayout(self._layout)
+
+		self._window = QtGui.QMainWindow(parent)
+		if parent is not None:
+			self._window.setWindowModality(QtCore.Qt.WindowModal)
+		self._window.setWindowTitle("%s - Quick Jump" % constants.__pretty_app_name__)
+		self._window.setWindowIcon(QtGui.QIcon(self._app.appIconPath))
+		self._window.setCentralWidget(centralWidget)
+
+		self._window.show()
+
+	def close(self):
+		self._window.close()
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_result_clicked(self, item, columnIndex):
+		categoryName = unicode(item.text(0))
+		unitName = unicode(item.text(1))
+		catWindow = self._app.request_category()
+		unitsWindow = catWindow.selectCategory(categoryName)
+		unitsWindow.select_unit(unitName)
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_search_edited(self, *args):
+		userInput = self._searchEntry.text()
+		if len(userInput) <  self.MINIMAL_ENTRY:
+			return
+
+		lowerInput = str(userInput).lower()
+		for catIndex, category in enumerate(unit_data.UNIT_CATEGORIES):
+			units = unit_data.get_units(category)
+			for unitIndex, unit in enumerate(units):
+				loweredUnit = unit.lower()
+				if lowerInput in loweredUnit:
+					twi = QtGui.QTreeWidgetItem(self._resultsBox)
+					twi.setText(0, category)
+					twi.setText(1, unit)
 
 
 class UnitData(object):
@@ -261,6 +362,13 @@ class UnitModel(QtCore.QAbstractItemModel):
 	def get_unit(self, index):
 		return self._children[index]
 
+	def index_unit(self, unitName):
+		for i, child in enumerate(self._children):
+			if child.name == unitName:
+				return i
+		else:
+			raise RuntimeError("Unit not found")
+
 	def update_values(self, fromIndex, userInput):
 		value = self._sanitize_value(userInput)
 		func, arg = self._children[fromIndex].conversion
@@ -295,14 +403,14 @@ class UnitModel(QtCore.QAbstractItemModel):
 
 class UnitWindow(object):
 
-	def __init__(self, parent, category, appIconPath):
+	def __init__(self, parent, category, app):
+		self._app = app
 		self._categoryName = category
 		self._selectedIndex = 0
 
 		self._selectedUnitName = QtGui.QLabel()
 		self._selectedUnitValue = QtGui.QLineEdit()
 		self._selectedUnitValue.textEdited.connect(self._on_value_edited)
-		self._selectedUnitValue.editingFinished.connect(self._on_value_edited)
 		self._selectedUnitSymbol = QtGui.QLabel()
 
 		self._selectedUnitLayout = QtGui.QHBoxLayout()
@@ -321,19 +429,9 @@ class UnitWindow(object):
 		if True:
 			self._unitsView.setHeaderHidden(True)
 
-		self._searchButton = QtGui.QPushButton()
-		self._searchEntry = QtGui.QLineEdit()
-		self._searchCloseButton = QtGui.QPushButton()
-
-		self._searchLayout = QtGui.QHBoxLayout()
-		self._searchLayout.addWidget(self._searchButton)
-		self._searchLayout.addWidget(self._searchEntry)
-		self._searchLayout.addWidget(self._searchCloseButton)
-
 		self._layout = QtGui.QVBoxLayout()
 		self._layout.addLayout(self._selectedUnitLayout)
 		self._layout.addWidget(self._unitsView)
-		self._layout.addLayout(self._searchLayout)
 
 		centralWidget = QtGui.QWidget()
 		centralWidget.setLayout(self._layout)
@@ -342,18 +440,27 @@ class UnitWindow(object):
 		if parent is not None:
 			self._window.setWindowModality(QtCore.Qt.WindowModal)
 		self._window.setWindowTitle("%s - %s" % (constants.__pretty_app_name__, category))
-		self._window.setWindowIcon(QtGui.QIcon(appIconPath))
+		self._window.setWindowIcon(QtGui.QIcon(app.appIconPath))
 		self._window.setCentralWidget(centralWidget)
 
 		self._select_unit(0)
 
-		self._window.show()
-		self._hide_search()
+		self._app.jumpAction.triggered.connect(self._on_jump_start)
+		viewMenu = self._window.menuBar().addMenu("&View")
+		viewMenu.addAction(self._app.jumpAction)
 
-	def _hide_search(self):
-		self._searchButton.hide()
-		self._searchEntry.hide()
-		self._searchCloseButton.hide()
+		self._window.show()
+
+	def close(self):
+		self._window.close()
+
+	def select_unit(self, unitName):
+		index = self._unitsModel.index_unit(unitName)
+		self._select_unit(index)
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_jump_start(self, checked = False):
+		self._app.search_units()
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_unit_clicked(self, index):
