@@ -86,6 +86,7 @@ class Gonvert(object):
 		self._jumpAction.setStatusTip("Search for a unit and jump straight to it")
 		self._jumpAction.setToolTip("Search for a unit and jump straight to it")
 		self._jumpAction.setShortcut(QtGui.QKeySequence("CTRL+j"))
+		self._jumpAction.triggered.connect(self._on_jump_start)
 
 		self.request_category()
 
@@ -111,6 +112,10 @@ class Gonvert(object):
 	def jumpAction(self):
 		return self._jumpAction
 
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_jump_start(self, checked = False):
+		self.search_units()
+
 
 class CategoryWindow(object):
 
@@ -122,6 +127,7 @@ class CategoryWindow(object):
 		self._categories.setHeaderLabels(["Categories"])
 		self._categories.itemClicked.connect(self._on_category_clicked)
 		self._categories.setHeaderHidden(True)
+		self._categories.setAlternatingRowColors(True)
 		for catName in unit_data.UNIT_CATEGORIES:
 			twi = QtGui.QTreeWidgetItem(self._categories)
 			twi.setText(0, catName)
@@ -142,11 +148,12 @@ class CategoryWindow(object):
 		viewMenu = self._window.menuBar().addMenu("&View")
 		viewMenu.addAction(self._app.jumpAction)
 
-		self._app.jumpAction.triggered.connect(self._on_jump_start)
-
 		self._window.show()
 
 	def close(self):
+		if self._unitWindow is not None:
+			self._unitWindow.close()
+			self._unitWindow = None
 		self._window.close()
 
 	def selectCategory(self, categoryName):
@@ -155,10 +162,6 @@ class CategoryWindow(object):
 			self._unitWindow = None
 		self._unitWindow = UnitWindow(self._window, categoryName, self._app)
 		return self._unitWindow
-
-	@misc_utils.log_exception(_moduleLogger)
-	def _on_jump_start(self, checked = False):
-		self._app.search_units()
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_category_clicked(self, item, columnIndex):
@@ -184,6 +187,7 @@ class QuickJump(object):
 		self._resultsBox = QtGui.QTreeWidget()
 		self._resultsBox.setHeaderLabels(["Categories", "Units"])
 		self._resultsBox.setHeaderHidden(True)
+		self._resultsBox.setAlternatingRowColors(True)
 		self._resultsBox.itemClicked.connect(self._on_result_clicked)
 
 		self._layout = QtGui.QVBoxLayout()
@@ -435,6 +439,7 @@ class UnitWindow(object):
 		self._unitsView.header().setSortIndicatorShown(True)
 		self._unitsView.header().setClickable(True)
 		self._unitsView.setSortingEnabled(True)
+		self._unitsView.setAlternatingRowColors(True)
 		if True:
 			self._unitsView.setHeaderHidden(True)
 
@@ -453,6 +458,7 @@ class UnitWindow(object):
 		self._window.setCentralWidget(centralWidget)
 
 		self._select_unit(0)
+		self._unitsModel.sort(1)
 
 		self._sortActionGroup = QtGui.QActionGroup(None)
 		self._sortByNameAction = QtGui.QAction(self._sortActionGroup)
@@ -468,6 +474,8 @@ class UnitWindow(object):
 		self._sortByUnitAction.setStatusTip("Sort the units by unit")
 		self._sortByUnitAction.setToolTip("Sort the units by unit")
 
+		self._sortByValueAction.setChecked(True)
+
 		viewMenu = self._window.menuBar().addMenu("&View")
 		viewMenu.addAction(self._app.jumpAction)
 		viewMenu.addSeparator()
@@ -475,7 +483,6 @@ class UnitWindow(object):
 		viewMenu.addAction(self._sortByValueAction)
 		viewMenu.addAction(self._sortByUnitAction)
 
-		self._app.jumpAction.triggered.connect(self._on_jump_start)
 		self._sortByNameAction.triggered.connect(self._on_sort_by_name)
 		self._sortByValueAction.triggered.connect(self._on_sort_by_value)
 		self._sortByUnitAction.triggered.connect(self._on_sort_by_unit)
@@ -500,10 +507,6 @@ class UnitWindow(object):
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_sort_by_unit(self, checked = False):
 		self._unitsModel.sort(3, QtCore.Qt.DescendingOrder)
-
-	@misc_utils.log_exception(_moduleLogger)
-	def _on_jump_start(self, checked = False):
-		self._app.search_units()
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_unit_clicked(self, index):
