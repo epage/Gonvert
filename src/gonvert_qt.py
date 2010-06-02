@@ -51,6 +51,14 @@ def split_number(number):
 
 class Gonvert(object):
 
+	# @todo Remember last selection
+	# @todo Recent
+	# @todo Favorites
+	# @todo Fullscreen support (showFullscreen, showNormal)
+	# @todo Close Window / Quit keyboard shortcuts
+	# @todo Ctrl+l support
+	# @todo Unit conversion window: focus always on input, arrows switch units
+
 	_DATA_PATHS = [
 		os.path.dirname(__file__),
 		os.path.join(os.path.dirname(__file__), "../data"),
