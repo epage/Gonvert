@@ -216,6 +216,7 @@ class QuickJump(object):
 		catWindow = self._app.request_category()
 		unitsWindow = catWindow.selectCategory(categoryName)
 		unitsWindow.select_unit(unitName)
+		self.close()
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_search_edited(self, *args):
@@ -223,6 +224,7 @@ class QuickJump(object):
 		if len(userInput) <  self.MINIMAL_ENTRY:
 			return
 
+		self._resultsBox.clear()
 		lowerInput = str(userInput).lower()
 		for catIndex, category in enumerate(unit_data.UNIT_CATEGORIES):
 			units = unit_data.get_units(category)
