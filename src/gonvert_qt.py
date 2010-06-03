@@ -53,7 +53,8 @@ class Gonvert(object):
 
 	# @todo Persist settings
 	# @todo Favorites
-	# @todo Fullscreen support (showFullscreen, showNormal)
+	# @todo Add menus to all windows
+	# @bug Fix the resurrecting window problem
 	# @todo Close Window / Quit keyboard shortcuts
 	# @todo Ctrl+l support
 	# @todo Unit conversion window: focus always on input, arrows switch units
@@ -77,6 +78,7 @@ class Gonvert(object):
 			raise RuntimeError("UI Descriptor not found!")
 		self._appIconPath = appIconPath
 		self._recent = []
+		self._isFullscreen = False
 
 		self._jumpWindow = None
 		self._recentWindow = None
@@ -95,6 +97,11 @@ class Gonvert(object):
 		self._recentAction.setToolTip("View the recent units")
 		self._recentAction.setShortcut(QtGui.QKeySequence("CTRL+r"))
 		self._recentAction.triggered.connect(self._on_recent_start)
+
+		self._fullscreenAction = QtGui.QAction(None)
+		self._fullscreenAction.setText("Toggle Fullscreen")
+		self._fullscreenAction.setShortcut(QtGui.QKeySequence("CTRL+Enter"))
+		self._fullscreenAction.triggered.connect(self._on_toggle_fullscreen)
 
 		self.request_category()
 
@@ -149,6 +156,24 @@ class Gonvert(object):
 	def recentAction(self):
 		return self._recentAction
 
+	@property
+	def fullscreenAction(self):
+		return self._fullscreenAction
+
+	def _walk_children(self):
+		if self._catWindow is not None:
+			yield self._catWindow
+		if self._jumpWindow is not None:
+			yield self._jumpWindow
+		if self._recentWindow is not None:
+			yield self._recentWindow
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_toggle_fullscreen(self, checked = False):
+		self._isFullscreen = not self._isFullscreen
+		for window in self._walk_children():
+			window.setFullscreen(self._isFullscreen)
+
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_jump_start(self, checked = False):
 		self.search_units()
@@ -187,23 +212,35 @@ class CategoryWindow(object):
 		self._window.setCentralWidget(centralWidget)
 
 		viewMenu = self._window.menuBar().addMenu("&View")
+		viewMenu.addAction(self._app.fullscreenAction)
+		viewMenu.addSeparator()
 		viewMenu.addAction(self._app.jumpAction)
 		viewMenu.addAction(self._app.recentAction)
 
 		self._window.show()
 
-	def close(self):
+	def walk_children(self):
 		if self._unitWindow is not None:
-			self._unitWindow.close()
-			self._unitWindow = None
+			yield self._unitWindow
+
+	def close(self):
+		for child in self.walk_children():
+			child.close()
 		self._window.close()
 
 	def selectCategory(self, categoryName):
-		if self._unitWindow is not None:
-			self._unitWindow.close()
-			self._unitWindow = None
+		for child in self.walk_children():
+			child.close()
 		self._unitWindow = UnitWindow(self._window, categoryName, self._app)
 		return self._unitWindow
+
+	def setFullscreen(self, isFullscreen):
+		if isFullscreen:
+			self._window.showFullScreen()
+		else:
+			self._window.showNormal()
+		for child in self.walk_children():
+			child.setFullscreen(isFullscreen)
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_category_clicked(self, item, columnIndex):
@@ -250,6 +287,12 @@ class QuickJump(object):
 
 	def close(self):
 		self._window.close()
+
+	def setFullscreen(self, isFullscreen):
+		if isFullscreen:
+			self._window.showFullScreen()
+		else:
+			self._window.showNormal()
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_result_clicked(self, item, columnIndex):
@@ -311,6 +354,12 @@ class Recent(object):
 
 	def close(self):
 		self._window.close()
+
+	def setFullscreen(self, isFullscreen):
+		if isFullscreen:
+			self._window.showFullScreen()
+		else:
+			self._window.showNormal()
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_result_clicked(self, item, columnIndex):
@@ -569,6 +618,8 @@ class UnitWindow(object):
 		self._sortByValueAction.setChecked(True)
 
 		viewMenu = self._window.menuBar().addMenu("&View")
+		viewMenu.addAction(self._app.fullscreenAction)
+		viewMenu.addSeparator()
 		viewMenu.addAction(self._app.jumpAction)
 		viewMenu.addAction(self._app.recentAction)
 		viewMenu.addSeparator()
@@ -584,6 +635,12 @@ class UnitWindow(object):
 
 	def close(self):
 		self._window.close()
+
+	def setFullscreen(self, isFullscreen):
+		if isFullscreen:
+			self._window.showFullScreen()
+		else:
+			self._window.showNormal()
 
 	def select_unit(self, unitName):
 		index = self._unitsModel.index_unit(unitName)
