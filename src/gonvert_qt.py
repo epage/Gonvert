@@ -53,7 +53,6 @@ class Gonvert(object):
 
 	# @todo Persist settings
 	# @todo Favorites
-	# @todo Add menus to all windows
 	# @bug Fix the resurrecting window problem
 	# @todo Ctrl+l support
 	# @todo Unit conversion window: focus always on input, arrows switch units
