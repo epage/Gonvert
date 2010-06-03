@@ -423,6 +423,7 @@ class UnitModel(QtCore.QAbstractItemModel):
 		for key in unit_data.get_units(self._categoryName):
 			conversion, unit, description = self._unitData[key]
 			self._children.append(UnitData(key, unit, description, conversion))
+		self._sortSettings = None
 
 	@misc_utils.log_exception(_moduleLogger)
 	def columnCount(self, parent):
@@ -448,6 +449,7 @@ class UnitModel(QtCore.QAbstractItemModel):
 
 	@misc_utils.log_exception(_moduleLogger)
 	def sort(self, column, order = QtCore.Qt.AscendingOrder):
+		self._sortSettings = column, order
 		isReverse = order == QtCore.Qt.AscendingOrder
 		if column == 0:
 			key_func = lambda item: item.name
@@ -530,11 +532,13 @@ class UnitModel(QtCore.QAbstractItemModel):
 			newValue = func.from_base(base, arg)
 			child.update_value(newValue)
 
+		if self._sortSettings is not None:
+			self.sort(*self._sortSettings)
 		self._all_changed()
 
 	def _all_changed(self):
-		topLeft = self.createIndex(0, 1, self._children[0])
-		bottomRight = self.createIndex(len(self._children)-1, 2, self._children[-1])
+		topLeft = self.createIndex(0, 0, self._children[0])
+		bottomRight = self.createIndex(len(self._children)-1, len(UnitData.HEADERS)-1, self._children[-1])
 		self.dataChanged.emit(topLeft, bottomRight)
 
 	def _sanitize_value(self, userEntry):
