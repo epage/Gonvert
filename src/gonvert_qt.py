@@ -51,7 +51,7 @@ def split_number(number):
 
 class Gonvert(object):
 
-	# @todo Remember last selection
+	# @todo Persist settings
 	# @todo Favorites
 	# @todo Fullscreen support (showFullscreen, showNormal)
 	# @todo Close Window / Quit keyboard shortcuts
