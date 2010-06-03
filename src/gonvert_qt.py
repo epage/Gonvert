@@ -55,7 +55,6 @@ class Gonvert(object):
 	# @todo Favorites
 	# @todo Add menus to all windows
 	# @bug Fix the resurrecting window problem
-	# @todo Close Window / Quit keyboard shortcuts
 	# @todo Ctrl+l support
 	# @todo Unit conversion window: focus always on input, arrows switch units
 
@@ -102,6 +101,11 @@ class Gonvert(object):
 		self._fullscreenAction.setText("Toggle Fullscreen")
 		self._fullscreenAction.setShortcut(QtGui.QKeySequence("CTRL+Enter"))
 		self._fullscreenAction.triggered.connect(self._on_toggle_fullscreen)
+
+		self._quitAction = QtGui.QAction(None)
+		self._quitAction.setText("Quit")
+		self._quitAction.setShortcut(QtGui.QKeySequence("CTRL+q"))
+		self._quitAction.triggered.connect(self._on_quit)
 
 		self.request_category()
 
@@ -160,6 +164,10 @@ class Gonvert(object):
 	def fullscreenAction(self):
 		return self._fullscreenAction
 
+	@property
+	def quitAction(self):
+		return self._quitAction
+
 	def _walk_children(self):
 		if self._catWindow is not None:
 			yield self._catWindow
@@ -181,6 +189,11 @@ class Gonvert(object):
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_recent_start(self, checked = False):
 		self.show_recent()
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_quit(self, checked = False):
+		for window in self._walk_children():
+			window.close()
 
 
 class CategoryWindow(object):
@@ -210,6 +223,15 @@ class CategoryWindow(object):
 		self._window.setWindowTitle("%s - Categories" % constants.__pretty_app_name__)
 		self._window.setWindowIcon(QtGui.QIcon(self._app.appIconPath))
 		self._window.setCentralWidget(centralWidget)
+
+		self._closeWindowAction = QtGui.QAction(None)
+		self._closeWindowAction.setText("Window")
+		self._closeWindowAction.setShortcut(QtGui.QKeySequence("CTRL+w"))
+		self._closeWindowAction.triggered.connect(self._on_close_window)
+
+		fileMenu = self._window.menuBar().addMenu("&File")
+		fileMenu.addAction(self._closeWindowAction)
+		fileMenu.addAction(self._app.quitAction)
 
 		viewMenu = self._window.menuBar().addMenu("&View")
 		viewMenu.addAction(self._app.fullscreenAction)
@@ -241,6 +263,10 @@ class CategoryWindow(object):
 			self._window.showNormal()
 		for child in self.walk_children():
 			child.setFullscreen(isFullscreen)
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_close_window(self, checked = True):
+		self.close()
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_category_clicked(self, item, columnIndex):
@@ -283,6 +309,18 @@ class QuickJump(object):
 		self._window.setWindowIcon(QtGui.QIcon(self._app.appIconPath))
 		self._window.setCentralWidget(centralWidget)
 
+		self._closeWindowAction = QtGui.QAction(None)
+		self._closeWindowAction.setText("Window")
+		self._closeWindowAction.setShortcut(QtGui.QKeySequence("CTRL+w"))
+		self._closeWindowAction.triggered.connect(self._on_close_window)
+
+		fileMenu = self._window.menuBar().addMenu("&File")
+		fileMenu.addAction(self._closeWindowAction)
+		fileMenu.addAction(self._app.quitAction)
+
+		viewMenu = self._window.menuBar().addMenu("&View")
+		viewMenu.addAction(self._app.fullscreenAction)
+
 		self._window.show()
 
 	def close(self):
@@ -293,6 +331,10 @@ class QuickJump(object):
 			self._window.showFullScreen()
 		else:
 			self._window.showNormal()
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_close_window(self, checked = True):
+		self.close()
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_result_clicked(self, item, columnIndex):
@@ -350,6 +392,18 @@ class Recent(object):
 			twi.setText(0, cat)
 			twi.setText(1, unit)
 
+		self._closeWindowAction = QtGui.QAction(None)
+		self._closeWindowAction.setText("Window")
+		self._closeWindowAction.setShortcut(QtGui.QKeySequence("CTRL+w"))
+		self._closeWindowAction.triggered.connect(self._on_close_window)
+
+		fileMenu = self._window.menuBar().addMenu("&File")
+		fileMenu.addAction(self._closeWindowAction)
+		fileMenu.addAction(self._app.quitAction)
+
+		viewMenu = self._window.menuBar().addMenu("&View")
+		viewMenu.addAction(self._app.fullscreenAction)
+
 		self._window.show()
 
 	def close(self):
@@ -360,6 +414,10 @@ class Recent(object):
 			self._window.showFullScreen()
 		else:
 			self._window.showNormal()
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_close_window(self, checked = True):
+		self.close()
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_result_clicked(self, item, columnIndex):
@@ -621,6 +679,15 @@ class UnitWindow(object):
 
 		self._sortByValueAction.setChecked(True)
 
+		self._closeWindowAction = QtGui.QAction(None)
+		self._closeWindowAction.setText("Close Window")
+		self._closeWindowAction.setShortcut(QtGui.QKeySequence("CTRL+w"))
+		self._closeWindowAction.triggered.connect(self._on_close_window)
+
+		fileMenu = self._window.menuBar().addMenu("&File")
+		fileMenu.addAction(self._closeWindowAction)
+		fileMenu.addAction(self._app.quitAction)
+
 		viewMenu = self._window.menuBar().addMenu("&View")
 		viewMenu.addAction(self._app.fullscreenAction)
 		viewMenu.addSeparator()
@@ -649,6 +716,10 @@ class UnitWindow(object):
 	def select_unit(self, unitName):
 		index = self._unitsModel.index_unit(unitName)
 		self._select_unit(index)
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_close_window(self, checked = True):
+		self.close()
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_sort_by_name(self, checked = False):
