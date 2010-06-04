@@ -6,6 +6,7 @@ from __future__ import with_statement
 import sys
 import os
 import math
+import simplejson
 import logging
 
 from PyQt4 import QtGui
@@ -51,7 +52,6 @@ def split_number(number):
 
 class Gonvert(object):
 
-	# @todo Persist settings
 	# @todo Favorites
 	# @bug Fix the resurrecting window problem
 	# @todo Unit conversion window: focus always on input, arrows switch units
@@ -64,7 +64,7 @@ class Gonvert(object):
 		'/usr/lib/gonvert',
 	]
 
-	def __init__(self):
+	def __init__(self, app):
 		self._dataPath = ""
 		for dataPath in self._DATA_PATHS:
 			appIconPath = os.path.join(dataPath, "pixmaps", "gonvert.png")
@@ -73,6 +73,7 @@ class Gonvert(object):
 				break
 		else:
 			raise RuntimeError("UI Descriptor not found!")
+		self._app = app
 		self._appIconPath = appIconPath
 		self._recent = []
 		self._isFullscreen = False
@@ -111,7 +112,9 @@ class Gonvert(object):
 		self._quitAction.setShortcut(QtGui.QKeySequence("CTRL+q"))
 		self._quitAction.triggered.connect(self._on_quit)
 
+		self._app.lastWindowClosed.connect(self._on_app_quit)
 		self.request_category()
+		self.load_settings()
 
 	def request_category(self):
 		if self._catWindow is not None:
@@ -140,6 +143,7 @@ class Gonvert(object):
 			self._recent.remove(catUnit)
 		except ValueError:
 			pass # ignore if its not already in the recent history
+		assert catUnit not in self._recent
 		self._recent.append(catUnit)
 
 	def get_recent_unit(self, categoryName):
@@ -151,6 +155,30 @@ class Gonvert(object):
 
 	def get_recent(self):
 		return reversed(self._recent)
+
+	def load_settings(self):
+		try:
+			with open(constants._user_settings_, "r") as settingsFile:
+				settings = simplejson.load(settingsFile)
+		except IOError, e:
+			settings = {}
+		self._isFullscreen = settings.get("isFullScreen", self._isFullscreen)
+		recent = settings.get("recent", self._recent)
+		for category, unit in recent:
+			self.add_recent(category, unit)
+
+		for window in self._walk_children():
+			window.set_fullscreen(self._isFullscreen)
+		if self._recent:
+			self._catWindow.select_category(self._recent[-1][0])
+
+	def save_settings(self):
+		settings = {
+			"isFullScreen": self._isFullscreen,
+			"recent": self._recent,
+		}
+		with open(constants._user_settings_, "w") as settingsFile:
+			simplejson.dump(settings, settingsFile)
 
 	@property
 	def appIconPath(self):
@@ -185,10 +213,14 @@ class Gonvert(object):
 			yield self._recentWindow
 
 	@misc_utils.log_exception(_moduleLogger)
+	def _on_app_quit(self, checked = False):
+		self.save_settings()
+
+	@misc_utils.log_exception(_moduleLogger)
 	def _on_toggle_fullscreen(self, checked = False):
 		self._isFullscreen = not self._isFullscreen
 		for window in self._walk_children():
-			window.setFullscreen(self._isFullscreen)
+			window.set_fullscreen(self._isFullscreen)
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_jump_start(self, checked = False):
@@ -267,19 +299,19 @@ class CategoryWindow(object):
 			child.close()
 		self._window.close()
 
-	def selectCategory(self, categoryName):
+	def select_category(self, categoryName):
 		for child in self.walk_children():
 			child.close()
 		self._unitWindow = UnitWindow(self._window, categoryName, self._app)
 		return self._unitWindow
 
-	def setFullscreen(self, isFullscreen):
+	def set_fullscreen(self, isFullscreen):
 		if isFullscreen:
 			self._window.showFullScreen()
 		else:
 			self._window.showNormal()
 		for child in self.walk_children():
-			child.setFullscreen(isFullscreen)
+			child.set_fullscreen(isFullscreen)
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_close_window(self, checked = True):
@@ -288,7 +320,7 @@ class CategoryWindow(object):
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_category_clicked(self, item, columnIndex):
 		categoryName = unicode(item.text(0))
-		self.selectCategory(categoryName)
+		self.select_category(categoryName)
 
 
 class QuickJump(object):
@@ -345,7 +377,7 @@ class QuickJump(object):
 	def close(self):
 		self._window.close()
 
-	def setFullscreen(self, isFullscreen):
+	def set_fullscreen(self, isFullscreen):
 		if isFullscreen:
 			self._window.showFullScreen()
 		else:
@@ -360,7 +392,7 @@ class QuickJump(object):
 		categoryName = unicode(item.text(0))
 		unitName = unicode(item.text(1))
 		catWindow = self._app.request_category()
-		unitsWindow = catWindow.selectCategory(categoryName)
+		unitsWindow = catWindow.select_category(categoryName)
 		unitsWindow.select_unit(unitName)
 		self.close()
 
@@ -430,7 +462,7 @@ class Recent(object):
 	def close(self):
 		self._window.close()
 
-	def setFullscreen(self, isFullscreen):
+	def set_fullscreen(self, isFullscreen):
 		if isFullscreen:
 			self._window.showFullScreen()
 		else:
@@ -445,7 +477,7 @@ class Recent(object):
 		categoryName = unicode(item.text(0))
 		unitName = unicode(item.text(1))
 		catWindow = self._app.request_category()
-		unitsWindow = catWindow.selectCategory(categoryName)
+		unitsWindow = catWindow.select_category(categoryName)
 		unitsWindow.select_unit(unitName)
 		self.close()
 
@@ -730,7 +762,7 @@ class UnitWindow(object):
 	def close(self):
 		self._window.close()
 
-	def setFullscreen(self, isFullscreen):
+	def set_fullscreen(self, isFullscreen):
 		if isFullscreen:
 			self._window.showFullScreen()
 		else:
@@ -779,7 +811,7 @@ class UnitWindow(object):
 
 def run_gonvert():
 	app = QtGui.QApplication([])
-	handle = Gonvert()
+	handle = Gonvert(app)
 	return app.exec_()
 
 
