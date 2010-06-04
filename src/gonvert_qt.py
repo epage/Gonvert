@@ -54,7 +54,6 @@ class Gonvert(object):
 	# @todo Persist settings
 	# @todo Favorites
 	# @bug Fix the resurrecting window problem
-	# @todo Ctrl+l support
 	# @todo Unit conversion window: focus always on input, arrows switch units
 
 	_DATA_PATHS = [
@@ -77,6 +76,7 @@ class Gonvert(object):
 		self._appIconPath = appIconPath
 		self._recent = []
 		self._isFullscreen = False
+		self._clipboard = QtGui.QApplication.clipboard()
 
 		self._jumpWindow = None
 		self._recentWindow = None
@@ -100,6 +100,11 @@ class Gonvert(object):
 		self._fullscreenAction.setText("Toggle Fullscreen")
 		self._fullscreenAction.setShortcut(QtGui.QKeySequence("CTRL+Enter"))
 		self._fullscreenAction.triggered.connect(self._on_toggle_fullscreen)
+
+		self._logAction = QtGui.QAction(None)
+		self._logAction.setText("Log")
+		self._logAction.setShortcut(QtGui.QKeySequence("CTRL+l"))
+		self._logAction.triggered.connect(self._on_log)
 
 		self._quitAction = QtGui.QAction(None)
 		self._quitAction.setText("Quit")
@@ -164,6 +169,10 @@ class Gonvert(object):
 		return self._fullscreenAction
 
 	@property
+	def logAction(self):
+		return self._logAction
+
+	@property
 	def quitAction(self):
 		return self._quitAction
 
@@ -188,6 +197,13 @@ class Gonvert(object):
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_recent_start(self, checked = False):
 		self.show_recent()
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_log(self, checked = False):
+		with open(constants._user_logpath_, "r") as f:
+			logLines = f.xreadlines()
+			log = "".join(logLines)
+			self._clipboard.setText(log)
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_quit(self, checked = False):
@@ -237,6 +253,8 @@ class CategoryWindow(object):
 		viewMenu.addSeparator()
 		viewMenu.addAction(self._app.jumpAction)
 		viewMenu.addAction(self._app.recentAction)
+
+		self._window.addAction(self._app.logAction)
 
 		self._window.show()
 
@@ -320,6 +338,8 @@ class QuickJump(object):
 		viewMenu = self._window.menuBar().addMenu("&View")
 		viewMenu.addAction(self._app.fullscreenAction)
 
+		self._window.addAction(self._app.logAction)
+
 		self._window.show()
 
 	def close(self):
@@ -402,6 +422,8 @@ class Recent(object):
 
 		viewMenu = self._window.menuBar().addMenu("&View")
 		viewMenu.addAction(self._app.fullscreenAction)
+
+		self._window.addAction(self._app.logAction)
 
 		self._window.show()
 
@@ -700,6 +722,8 @@ class UnitWindow(object):
 		self._sortByNameAction.triggered.connect(self._on_sort_by_name)
 		self._sortByValueAction.triggered.connect(self._on_sort_by_value)
 		self._sortByUnitAction.triggered.connect(self._on_sort_by_unit)
+
+		self._window.addAction(self._app.logAction)
 
 		self._window.show()
 
