@@ -53,7 +53,6 @@ def split_number(number):
 class Gonvert(object):
 
 	# @todo Favorites
-	# @bug Fix the resurrecting window problem
 
 	_DATA_PATHS = [
 		os.path.dirname(__file__),
@@ -120,6 +119,7 @@ class Gonvert(object):
 			self._catWindow.close()
 			self._catWindow = None
 		self._catWindow = CategoryWindow(None, self)
+		self._catWindow.window.destroyed.connect(lambda obj = None: self._on_child_close("_catWindow", obj))
 		return self._catWindow
 
 	def search_units(self):
@@ -127,6 +127,7 @@ class Gonvert(object):
 			self._jumpWindow.close()
 			self._jumpWindow = None
 		self._jumpWindow = QuickJump(None, self)
+		self._jumpWindow.window.destroyed.connect(lambda obj = None: self._on_child_close("_jumpWindow", obj))
 		return self._jumpWindow
 
 	def show_recent(self):
@@ -134,6 +135,7 @@ class Gonvert(object):
 			self._recentWindow.close()
 			self._recentWindow = None
 		self._recentWindow = Recent(None, self)
+		self._recentWindow.window.destroyed.connect(lambda obj = None: self._on_child_close("_recentWindow", obj))
 		return self._recentWindow
 
 	def add_recent(self, categoryName, unitName):
@@ -216,6 +218,13 @@ class Gonvert(object):
 		self.save_settings()
 
 	@misc_utils.log_exception(_moduleLogger)
+	def _on_child_close(self, name, obj = None):
+		if not hasattr(self, name):
+			_moduleLogger.info("Something weird going on when we don't have a %s" % name)
+			return
+		setattr(self, name, None)
+
+	@misc_utils.log_exception(_moduleLogger)
 	def _on_toggle_fullscreen(self, checked = False):
 		self._isFullscreen = not self._isFullscreen
 		for window in self._walk_children():
@@ -264,6 +273,7 @@ class CategoryWindow(object):
 		centralWidget.setLayout(self._layout)
 
 		self._window = QtGui.QMainWindow(parent)
+		self._window.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
 		if parent is not None:
 			self._window.setWindowModality(QtCore.Qt.WindowModal)
 		self._window.setWindowTitle("%s - Categories" % constants.__pretty_app_name__)
@@ -289,6 +299,10 @@ class CategoryWindow(object):
 
 		self._window.show()
 
+	@property
+	def window(self):
+		return self._window
+
 	def walk_children(self):
 		if self._unitWindow is not None:
 			yield self._unitWindow
@@ -302,6 +316,7 @@ class CategoryWindow(object):
 		for child in self.walk_children():
 			child.close()
 		self._unitWindow = UnitWindow(self._window, categoryName, self._app)
+		self._unitWindow.window.destroyed.connect(self._on_child_close)
 		return self._unitWindow
 
 	def set_fullscreen(self, isFullscreen):
@@ -311,6 +326,10 @@ class CategoryWindow(object):
 			self._window.showNormal()
 		for child in self.walk_children():
 			child.set_fullscreen(isFullscreen)
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_child_close(self, obj = None):
+		self._unitWindow = None
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_close_window(self, checked = True):
@@ -351,6 +370,7 @@ class QuickJump(object):
 		centralWidget.setLayout(self._layout)
 
 		self._window = QtGui.QMainWindow(parent)
+		self._window.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
 		if parent is not None:
 			self._window.setWindowModality(QtCore.Qt.WindowModal)
 		self._window.setWindowTitle("%s - Quick Jump" % constants.__pretty_app_name__)
@@ -372,6 +392,10 @@ class QuickJump(object):
 		self._window.addAction(self._app.logAction)
 
 		self._window.show()
+
+	@property
+	def window(self):
+		return self._window
 
 	def close(self):
 		self._window.close()
@@ -431,6 +455,7 @@ class Recent(object):
 		centralWidget.setLayout(self._layout)
 
 		self._window = QtGui.QMainWindow(parent)
+		self._window.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
 		if parent is not None:
 			self._window.setWindowModality(QtCore.Qt.WindowModal)
 		self._window.setWindowTitle("%s - Recent" % constants.__pretty_app_name__)
@@ -457,6 +482,10 @@ class Recent(object):
 		self._window.addAction(self._app.logAction)
 
 		self._window.show()
+
+	@property
+	def window(self):
+		return self._window
 
 	def close(self):
 		self._window.close()
@@ -703,6 +732,7 @@ class UnitWindow(object):
 		centralWidget.setLayout(self._layout)
 
 		self._window = QtGui.QMainWindow(parent)
+		self._window.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
 		if parent is not None:
 			self._window.setWindowModality(QtCore.Qt.WindowModal)
 		self._window.setWindowTitle("%s - %s" % (constants.__pretty_app_name__, category))
@@ -770,6 +800,10 @@ class UnitWindow(object):
 		self._window.addAction(self._previousUnitAction)
 
 		self._window.show()
+
+	@property
+	def window(self):
+		return self._window
 
 	def close(self):
 		self._window.close()
