@@ -54,7 +54,6 @@ class Gonvert(object):
 
 	# @todo Favorites
 	# @bug Fix the resurrecting window problem
-	# @todo Unit conversion window: focus always on input, arrows switch units
 
 	_DATA_PATHS = [
 		os.path.dirname(__file__),
@@ -623,6 +622,7 @@ class UnitModel(QtCore.QAbstractItemModel):
 			return len(self._children)
 
 	def get_unit(self, index):
+		assert 0 <= index
 		return self._children[index]
 
 	def index_unit(self, unitName):
@@ -732,6 +732,16 @@ class UnitWindow(object):
 
 		self._sortByValueAction.setChecked(True)
 
+		self._previousUnitAction = QtGui.QAction(None)
+		self._previousUnitAction.setText("Previous Unit")
+		self._previousUnitAction.setShortcut(QtGui.QKeySequence("Up"))
+		self._previousUnitAction.triggered.connect(self._on_previous_unit)
+
+		self._nextUnitAction = QtGui.QAction(None)
+		self._nextUnitAction.setText("Next Unit")
+		self._nextUnitAction.setShortcut(QtGui.QKeySequence("Down"))
+		self._nextUnitAction.triggered.connect(self._on_next_unit)
+
 		self._closeWindowAction = QtGui.QAction(None)
 		self._closeWindowAction.setText("Close Window")
 		self._closeWindowAction.setShortcut(QtGui.QKeySequence("CTRL+w"))
@@ -756,6 +766,8 @@ class UnitWindow(object):
 		self._sortByUnitAction.triggered.connect(self._on_sort_by_unit)
 
 		self._window.addAction(self._app.logAction)
+		self._window.addAction(self._nextUnitAction)
+		self._window.addAction(self._previousUnitAction)
 
 		self._window.show()
 
@@ -771,6 +783,14 @@ class UnitWindow(object):
 	def select_unit(self, unitName):
 		index = self._unitsModel.index_unit(unitName)
 		self._select_unit(index)
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_previous_unit(self, checked = True):
+		self._select_unit(self._selectedIndex - 1)
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_next_unit(self, checked = True):
+		self._select_unit(self._selectedIndex + 1)
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_close_window(self, checked = True):
