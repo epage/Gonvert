@@ -19,9 +19,14 @@ __email__ = "anthony@unihedron.com"
 __version__ = constants.__version__
 __build__ = constants.__build__
 __changelog__ = """
-0.9.3
-* Rotation support through Ctrl+o
-* Switching from scrollbar to panning
+1.0.0
+* Switched from GTK to QT in preparation for Meego, all previous features still present
+* Except removed the current form of search
+* Added a "Recent" window
+* Added a "Quick Jump" window (to replace old form of search)
+* Added favorites to limit the number of categories and units shown
+* Should be auto-rotatable (might not be working for some reason)
+* Should auto-enable Fn on Maemo 5
 """
 
 
@@ -73,15 +78,8 @@ def build_package(distribution):
 	p.depends = ", ".join([
 		"python2.6 | python2.5",
 		"python-gtk2 | python2.5-gtk2",
-		"python-xml | python2.5-xml",
-		"python-dbus | python2.5-dbus",
+		"python-pyqt4 | python2.5-pyqt4",
 	])
-	maemoSpecificDepends = ", python-osso | python2.5-osso, python-hildon | python2.5-hildon"
-	p.depends += {
-		"debian": ", python-glade2",
-		"diablo": maemoSpecificDepends,
-		"fremantle": maemoSpecificDepends + ", python-glade2",
-	}[distribution]
 	p.recommends = ", ".join([
 	])
 	p.section = {

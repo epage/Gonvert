@@ -10,7 +10,7 @@ sys.path.append("/usr/lib/gonvert/")
 
 
 import constants
-import gonvert_glade
+import gonvert_qt
 
 
 try:
@@ -26,4 +26,4 @@ _moduleLogger.info("Kernel: %s (%s) for %s" % os.uname()[2:])
 _moduleLogger.info("Hostname: %s" % os.uname()[1])
 
 
-gonvert_glade.run_gonvert()
+gonvert_qt.run_gonvert()
