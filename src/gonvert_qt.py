@@ -1134,6 +1134,7 @@ class UnitWindow(object):
 	def _on_value_edited(self, *args):
 		userInput = self._selectedUnitValue.text()
 		self._unitsModel.update_values(self._selectedIndex, str(userInput))
+		self._update_favorites()
 
 	def _select_unit(self, index):
 		unit = self._unitsModel.get_unit(index)
