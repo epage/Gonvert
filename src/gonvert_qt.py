@@ -981,6 +981,7 @@ class UnitWindow(object):
 
 		self._selectedUnitName = QtGui.QLabel()
 		self._selectedUnitValue = QtGui.QLineEdit()
+		self._selectedUnitValue.setInputMethodHints(QtCore.Qt.ImhPreferNumbers)
 		self._selectedUnitValue.textEdited.connect(self._on_value_edited)
 		self._selectedUnitSymbol = QtGui.QLabel()
 
