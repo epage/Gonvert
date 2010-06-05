@@ -651,7 +651,11 @@ class CategoryWindow(object):
 			child.close()
 		self._unitWindow = UnitWindow(self._window, categoryName, self._app)
 		self._unitWindow.window.destroyed.connect(self._on_child_close)
-		# @todo Add scroll to category
+
+		i = unit_data.UNIT_CATEGORIES.index(categoryName)
+		rootIndex = self._categories.rootIndex()
+		currentIndex = self._categories.model().index(i, 0, rootIndex)
+		self._categories.scrollTo(currentIndex)
 		return self._unitWindow
 
 	def set_fullscreen(self, isFullscreen):
