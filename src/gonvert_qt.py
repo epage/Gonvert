@@ -55,6 +55,9 @@ def split_number(number):
 
 class Gonvert(object):
 
+	# @todo get subwindows working
+	# @todo rotation support
+
 	_DATA_PATHS = [
 		os.path.dirname(__file__),
 		os.path.join(os.path.dirname(__file__), "../data"),
@@ -926,12 +929,22 @@ class UnitModel(QtCore.QAbstractItemModel):
 			newValue = func.from_base(base, arg)
 			child.update_value(newValue)
 
-		if self._sortSettings is not None:
+		if (
+			self._sortSettings is not None and
+			self._sortSettings[0]  in [UnitData.VALUE_COLUMN_0, UnitData.VALUE_COLUMN_1]
+		):
 			self.sort(*self._sortSettings)
-		self._all_changed()
+			self._all_changed()
+		else:
+			self._values_changed()
 
 	def __len__(self):
 		return len(self._children)
+
+	def _values_changed(self):
+		topLeft = self.createIndex(0, UnitData.VALUE_COLUMN_0, self._children[0])
+		bottomRight = self.createIndex(len(self._children)-1, UnitData.VALUE_COLUMN_1, self._children[-1])
+		self.dataChanged.emit(topLeft, bottomRight)
 
 	def _all_changed(self):
 		topLeft = self.createIndex(0, 0, self._children[0])
@@ -975,13 +988,31 @@ class UnitWindow(object):
 		self._unitsView.setModel(self._unitsModel)
 		self._unitsView.clicked.connect(self._on_unit_clicked)
 		self._unitsView.setUniformRowHeights(True)
-		self._unitsView.header().setSortIndicatorShown(True)
-		self._unitsView.header().setClickable(True)
 		self._unitsView.setSortingEnabled(True)
+		self._unitsView.setTextElideMode(QtCore.Qt.ElideNone)
+		self._unitsView.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 		if not IS_MAEMO:
 			self._unitsView.setAlternatingRowColors(True)
 		if True:
 			self._unitsView.setHeaderHidden(True)
+
+		viewHeader = self._unitsView.header()
+		viewHeader.setSortIndicatorShown(True)
+		viewHeader.setClickable(True)
+
+		viewHeader.setResizeMode(UnitData.NAME_COLUMN, QtGui.QHeaderView.ResizeToContents)
+		viewHeader.setResizeMode(UnitData.VALUE_COLUMN_0, QtGui.QHeaderView.ResizeToContents)
+		viewHeader.setResizeMode(UnitData.VALUE_COLUMN_1, QtGui.QHeaderView.ResizeToContents)
+		viewHeader.setResizeMode(UnitData.UNIT_COLUMN, QtGui.QHeaderView.ResizeToContents)
+		viewHeader.setStretchLastSection(False)
+
+		# Trying to make things faster by locking in the initial size of the immutable columns
+		nameSize = viewHeader.sectionSize(UnitData.NAME_COLUMN)
+		viewHeader.setResizeMode(UnitData.NAME_COLUMN, QtGui.QHeaderView.Fixed)
+		viewHeader.resizeSection(UnitData.NAME_COLUMN, nameSize)
+		unitSize = viewHeader.sectionSize(UnitData.UNIT_COLUMN)
+		viewHeader.setResizeMode(UnitData.UNIT_COLUMN, QtGui.QHeaderView.Fixed)
+		viewHeader.resizeSection(UnitData.UNIT_COLUMN, unitSize)
 
 		self._layout = QtGui.QVBoxLayout()
 		self._layout.addLayout(self._selectedUnitLayout)
@@ -1003,7 +1034,7 @@ class UnitWindow(object):
 			self.select_unit(defaultUnitName)
 		else:
 			self._select_unit(0)
-		self._unitsModel.sort(UnitData.VALUE_COLUMN_0)
+		self._unitsModel.sort(UnitData.NAME_COLUMN)
 
 		self._sortActionGroup = QtGui.QActionGroup(None)
 		self._sortByNameAction = QtGui.QAction(self._sortActionGroup)
@@ -1117,7 +1148,7 @@ class UnitWindow(object):
 		if self._favoritesWindow is not None:
 			yield self._favoritesWindow
 
-	def _update_favorites(self):
+	def _update_favorites(self, force = False):
 		if self._app.showFavoritesAction.isChecked():
 			unitNames = list(self._unitsModel.get_unit_names())
 			for i, unitName in enumerate(unitNames):
@@ -1126,8 +1157,9 @@ class UnitWindow(object):
 				else:
 					self._unitsView.setRowHidden(i, self._unitsView.rootIndex(), False)
 		else:
-			for i in xrange(len(self._unitsModel)):
-				self._unitsView.setRowHidden(i, self._unitsView.rootIndex(), False)
+			if force:
+				for i in xrange(len(self._unitsModel)):
+					self._unitsView.setRowHidden(i, self._unitsView.rootIndex(), False)
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_choose_favorites(self, obj = None):
@@ -1155,7 +1187,7 @@ class UnitWindow(object):
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_close_favorites(self, obj = None):
 		self._favoritesWindow = None
-		self._update_favorites()
+		self._update_favorites(force=True)
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_previous_unit(self, checked = True):
