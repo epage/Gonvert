@@ -19,7 +19,6 @@ __email__ = "anthony@unihedron.com"
 __version__ = constants.__version__
 __build__ = constants.__build__
 __changelog__ = """
-1.0.0
 * Switched from GTK to QT in preparation for Meego, all previous features still present
 * Except removed the current form of search
 * Added a "Recent" window
@@ -77,9 +76,12 @@ def build_package(distribution):
 	p.license = "gpl"
 	p.depends = ", ".join([
 		"python2.6 | python2.5",
-		"python-gtk2 | python2.5-gtk2",
-		"python-pyqt4 | python2.5-qt4",
 	])
+	p.depends += {
+		"debian": ", python-qt4",
+		"diablo": ", python2.5-qt4-core, python2.5-qt4-gui",
+		"fremantle": ", python2.5-qt4-core, python2.5-qt4-gui, python2.5-qt4-maemo5",
+	}[distribution]
 	p.recommends = ", ".join([
 	])
 	p.section = {
