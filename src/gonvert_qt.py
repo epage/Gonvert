@@ -514,6 +514,10 @@ class UnitData(object):
 
 	HEADERS = ["Name", "Value", "", "Unit"]
 	ALIGNMENT = [QtCore.Qt.AlignLeft, QtCore.Qt.AlignRight, QtCore.Qt.AlignLeft, QtCore.Qt.AlignLeft]
+	NAME_COLUMN = 0
+	VALUE_COLUMN_0 = 1
+	VALUE_COLUMN_1 = 2
+	UNIT_COLUMN = 3
 
 	def __init__(self, name, unit, description, conversion):
 		self._name = name
@@ -590,11 +594,11 @@ class UnitModel(QtCore.QAbstractItemModel):
 	def sort(self, column, order = QtCore.Qt.AscendingOrder):
 		self._sortSettings = column, order
 		isReverse = order == QtCore.Qt.AscendingOrder
-		if column == 0:
+		if column == UnitData.NAME_COLUMN:
 			key_func = lambda item: item.name
-		elif column in [1, 2]:
+		elif column in [UnitData.VALUE_COLUMN_0, UnitData.VALUE_COLUMN_1]:
 			key_func = lambda item: item.value
-		elif column == 3:
+		elif column == UnitData.UNIT_COLUMN:
 			key_func = lambda item: item.unit
 		self._children.sort(key=key_func, reverse = isReverse)
 
@@ -744,7 +748,7 @@ class UnitWindow(object):
 			self.select_unit(defaultUnitName)
 		else:
 			self._select_unit(0)
-		self._unitsModel.sort(1)
+		self._unitsModel.sort(UnitData.VALUE_COLUMN_0)
 
 		self._sortActionGroup = QtGui.QActionGroup(None)
 		self._sortByNameAction = QtGui.QAction(self._sortActionGroup)
@@ -832,15 +836,15 @@ class UnitWindow(object):
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_sort_by_name(self, checked = False):
-		self._unitsModel.sort(0, QtCore.Qt.DescendingOrder)
+		self._unitsModel.sort(UnitData.NAME_COLUMN, QtCore.Qt.DescendingOrder)
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_sort_by_value(self, checked = False):
-		self._unitsModel.sort(1)
+		self._unitsModel.sort(UnitData.VALUE_COLUMN_0)
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_sort_by_unit(self, checked = False):
-		self._unitsModel.sort(3, QtCore.Qt.DescendingOrder)
+		self._unitsModel.sort(UnitData.UNIT_COLUMN, QtCore.Qt.DescendingOrder)
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_unit_clicked(self, index):
