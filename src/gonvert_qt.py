@@ -131,17 +131,13 @@ class Gonvert(object):
 		return self._catWindow
 
 	def search_units(self):
-		if self._jumpWindow is not None:
-			self._jumpWindow.close()
-			self._jumpWindow = None
+		self._close_windows()
 		self._jumpWindow = QuickJump(None, self)
 		self._jumpWindow.window.destroyed.connect(lambda obj = None: self._on_child_close("_jumpWindow", obj))
 		return self._jumpWindow
 
 	def show_recent(self):
-		if self._recentWindow is not None:
-			self._recentWindow.close()
-			self._recentWindow = None
+		self._close_windows()
 		self._recentWindow = Recent(None, self)
 		self._recentWindow.window.destroyed.connect(lambda obj = None: self._on_child_close("_recentWindow", obj))
 		return self._recentWindow
@@ -254,6 +250,13 @@ class Gonvert(object):
 		if self._recentWindow is not None:
 			yield self._recentWindow
 
+	def _close_windows(self):
+		for window in self._walk_children():
+			window.close()
+		self._catWindow = None
+		self._jumpWindow = None
+		self._recentWindow = None
+
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_app_quit(self, checked = False):
 		self.save_settings()
@@ -287,8 +290,7 @@ class Gonvert(object):
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_quit(self, checked = False):
-		for window in self._walk_children():
-			window.close()
+		self._close_windows()
 
 
 class QuickJump(object):
