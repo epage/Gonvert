@@ -74,3 +74,18 @@ try:
 	show_progress_indicator = _maemo_show_progress_indicator
 except AttributeError:
 	show_progress_indicator = _null_show_progress_indicator
+
+
+def _null_mark_numbers_preferred(widget):
+	pass
+
+
+def _newqt_mark_numbers_preferred(widget):
+	widget.setInputMethodHints(QtCore.Qt.ImhPreferNumbers)
+
+
+try:
+	QtCore.Qt.ImhPreferNumbers
+	mark_numbers_preferred = _newqt_mark_numbers_preferred
+except AttributeError:
+	mark_numbers_preferred = _null_mark_numbers_preferred
