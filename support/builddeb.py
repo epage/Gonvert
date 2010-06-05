@@ -19,13 +19,7 @@ __email__ = "anthony@unihedron.com"
 __version__ = constants.__version__
 __build__ = constants.__build__
 __changelog__ = """
-* Switched from GTK to QT in preparation for Meego, all previous features still present
-* Except removed the current form of search
-* Added a "Recent" window
-* Added a "Quick Jump" window (to replace old form of search)
-* Added favorites to limit the number of categories and units shown
-* Should be auto-rotatable (might not be working for some reason)
-* Should auto-enable Fn on Maemo 5
+* Maemo 4.1 support
 """
 
 
@@ -70,7 +64,6 @@ def build_package(distribution):
 	p.prettyName = constants.__pretty_app_name__
 	p.description = __description__
 	p.bugTracker = "https://bugs.maemo.org/enter_bug.cgi?product=Gonvert"
-	p.upgradeDescription = __changelog__.split("\n\n", 1)[0]
 	p.author = __author__
 	p.mail = __email__
 	p.license = "gpl"
