@@ -460,8 +460,6 @@ class Recent(object):
 
 class FavoriteCategoriesWindow(object):
 
-	# @todo Add All, None, and Invert actions
-
 	def __init__(self, parent, app, source, hidden):
 		self._app = app
 		self._source = list(source)
@@ -473,16 +471,31 @@ class FavoriteCategoriesWindow(object):
 		self._categories.setAlternatingRowColors(True)
 		self._categories.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
 		self._categories.setSelectionMode(QtGui.QAbstractItemView.MultiSelection)
+		self._childWidgets = []
 		for catName in self._source:
 			twi = QtGui.QTreeWidgetItem(self._categories)
 			twi.setText(0, catName)
+			self._childWidgets.append(twi)
 			if catName not in self._hidden:
 				self._categories.setItemSelected(twi, True)
 		self._selection = self._categories.selectionModel()
 		self._selection.selectionChanged.connect(self._on_selection_changed)
 
+		self._allButton = QtGui.QPushButton("All")
+		self._allButton.clicked.connect(self._on_select_all)
+		self._invertButton = QtGui.QPushButton("Invert")
+		self._invertButton.clicked.connect(self._on_invert_selection)
+		self._noneButton = QtGui.QPushButton("None")
+		self._noneButton.clicked.connect(self._on_select_none)
+
+		self._buttonLayout = QtGui.QHBoxLayout()
+		self._buttonLayout.addWidget(self._allButton)
+		self._buttonLayout.addWidget(self._invertButton)
+		self._buttonLayout.addWidget(self._noneButton)
+
 		self._layout = QtGui.QVBoxLayout()
 		self._layout.addWidget(self._categories)
+		self._layout.addLayout(self._buttonLayout)
 
 		centralWidget = QtGui.QWidget()
 		centralWidget.setLayout(self._layout)
@@ -524,6 +537,22 @@ class FavoriteCategoriesWindow(object):
 			self._window.showFullScreen()
 		else:
 			self._window.showNormal()
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_select_all(self, checked = False):
+		for child in self._childWidgets:
+			self._categories.setItemSelected(child, True)
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_invert_selection(self, checked = False):
+		for child in self._childWidgets:
+			isSelected = self._categories.isItemSelected(child)
+			self._categories.setItemSelected(child, not isSelected)
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_select_none(self, checked = False):
+		for child in self._childWidgets:
+			self._categories.setItemSelected(child, False)
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_selection_changed(self, selected, deselected):
