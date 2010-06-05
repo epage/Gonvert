@@ -291,233 +291,6 @@ class Gonvert(object):
 			window.close()
 
 
-class CategoryWindow(object):
-
-	def __init__(self, parent, app):
-		self._app = app
-		self._unitWindow = None
-		self._favoritesWindow = None
-
-		self._categories = QtGui.QTreeWidget()
-		self._categories.setHeaderLabels(["Categories"])
-		self._categories.itemClicked.connect(self._on_category_clicked)
-		self._categories.setHeaderHidden(True)
-		self._categories.setAlternatingRowColors(True)
-		for catName in unit_data.UNIT_CATEGORIES:
-			twi = QtGui.QTreeWidgetItem(self._categories)
-			twi.setText(0, catName)
-
-		self._layout = QtGui.QVBoxLayout()
-		self._layout.addWidget(self._categories)
-
-		centralWidget = QtGui.QWidget()
-		centralWidget.setLayout(self._layout)
-
-		self._window = QtGui.QMainWindow(parent)
-		self._window.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
-		if parent is not None:
-			self._window.setWindowModality(QtCore.Qt.WindowModal)
-		self._window.setWindowTitle("%s - Categories" % constants.__pretty_app_name__)
-		self._window.setWindowIcon(QtGui.QIcon(self._app.appIconPath))
-		self._window.setCentralWidget(centralWidget)
-
-		self._chooseFavoritesAction = QtGui.QAction(None)
-		self._chooseFavoritesAction.setText("Select Favorites")
-		self._chooseFavoritesAction.setShortcut(QtGui.QKeySequence("CTRL+f"))
-		self._chooseFavoritesAction.triggered.connect(self._on_choose_favorites)
-
-		self._app.showFavoritesAction.toggled.connect(self._on_show_favorites)
-
-		self._closeWindowAction = QtGui.QAction(None)
-		self._closeWindowAction.setText("Window")
-		self._closeWindowAction.setShortcut(QtGui.QKeySequence("CTRL+w"))
-		self._closeWindowAction.triggered.connect(self._on_close_window)
-
-		fileMenu = self._window.menuBar().addMenu("&Units")
-		fileMenu.addAction(self._chooseFavoritesAction)
-		fileMenu.addAction(self._closeWindowAction)
-		fileMenu.addAction(self._app.quitAction)
-
-		viewMenu = self._window.menuBar().addMenu("&View")
-		viewMenu.addAction(self._app.showFavoritesAction)
-		viewMenu.addSeparator()
-		viewMenu.addAction(self._app.jumpAction)
-		viewMenu.addAction(self._app.recentAction)
-		viewMenu.addSeparator()
-		viewMenu.addAction(self._app.fullscreenAction)
-
-		self._window.addAction(self._app.logAction)
-
-		self._update_favorites()
-		self._window.show()
-
-	@property
-	def window(self):
-		return self._window
-
-	def walk_children(self):
-		if self._unitWindow is not None:
-			yield self._unitWindow
-		if self._favoritesWindow is not None:
-			yield self._favoritesWindow
-
-	def close(self):
-		for child in self.walk_children():
-			child.close()
-		self._window.close()
-
-	def select_category(self, categoryName):
-		for child in self.walk_children():
-			child.close()
-		self._unitWindow = UnitWindow(self._window, categoryName, self._app)
-		self._unitWindow.window.destroyed.connect(self._on_child_close)
-		# @todo Add scroll to category
-		return self._unitWindow
-
-	def set_fullscreen(self, isFullscreen):
-		if isFullscreen:
-			self._window.showFullScreen()
-		else:
-			self._window.showNormal()
-		for child in self.walk_children():
-			child.set_fullscreen(isFullscreen)
-
-	def _update_favorites(self):
-		if self._app.showFavoritesAction.isChecked():
-			assert self._categories.topLevelItemCount() == len(unit_data.UNIT_CATEGORIES)
-			for i, catName in enumerate(unit_data.UNIT_CATEGORIES):
-				if catName in self._app.hiddenCategories:
-					self._categories.setRowHidden(i, self._categories.rootIndex(), True)
-				else:
-					self._categories.setRowHidden(i, self._categories.rootIndex(), False)
-		else:
-			for i in xrange(self._categories.topLevelItemCount()):
-				self._categories.setRowHidden(i, self._categories.rootIndex(), False)
-
-	@misc_utils.log_exception(_moduleLogger)
-	def _on_choose_favorites(self, obj = None):
-		assert self._favoritesWindow is None
-		self._favoritesWindow = FavoriteCategoriesWindow(
-			self._window,
-			self._app,
-			unit_data.UNIT_CATEGORIES,
-			self._app.hiddenCategories
-		)
-		self._favoritesWindow.window.destroyed.connect(self._on_close_favorites)
-		return self._favoritesWindow
-
-	@misc_utils.log_exception(_moduleLogger)
-	def _on_show_favorites(self, checked = True):
-		if checked:
-			assert self._categories.topLevelItemCount() == len(unit_data.UNIT_CATEGORIES)
-			for i, catName in enumerate(unit_data.UNIT_CATEGORIES):
-				if catName in self._app.hiddenCategories:
-					self._categories.setRowHidden(i, self._categories.rootIndex(), True)
-		else:
-			for i in xrange(self._categories.topLevelItemCount()):
-				self._categories.setRowHidden(i, self._categories.rootIndex(), False)
-
-	@misc_utils.log_exception(_moduleLogger)
-	def _on_close_favorites(self, obj = None):
-		self._favoritesWindow = None
-		self._update_favorites()
-
-	@misc_utils.log_exception(_moduleLogger)
-	def _on_child_close(self, obj = None):
-		self._unitWindow = None
-
-	@misc_utils.log_exception(_moduleLogger)
-	def _on_close_window(self, checked = True):
-		self.close()
-
-	@misc_utils.log_exception(_moduleLogger)
-	def _on_category_clicked(self, item, columnIndex):
-		categoryName = unicode(item.text(0))
-		self.select_category(categoryName)
-
-
-class FavoriteCategoriesWindow(object):
-
-	# @todo Add All, None, and Invert actions
-
-	def __init__(self, parent, app, source, hidden):
-		self._app = app
-		self._source = list(source)
-		self._hidden = hidden
-
-		self._categories = QtGui.QTreeWidget()
-		self._categories.setHeaderLabels(["Categories"])
-		self._categories.setHeaderHidden(True)
-		self._categories.setAlternatingRowColors(True)
-		self._categories.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
-		self._categories.setSelectionMode(QtGui.QAbstractItemView.MultiSelection)
-		for catName in self._source:
-			twi = QtGui.QTreeWidgetItem(self._categories)
-			twi.setText(0, catName)
-			if catName not in self._hidden:
-				self._categories.setItemSelected(twi, True)
-		self._selection = self._categories.selectionModel()
-		self._selection.selectionChanged.connect(self._on_selection_changed)
-
-		self._layout = QtGui.QVBoxLayout()
-		self._layout.addWidget(self._categories)
-
-		centralWidget = QtGui.QWidget()
-		centralWidget.setLayout(self._layout)
-
-		self._window = QtGui.QMainWindow(parent)
-		self._window.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
-		if parent is not None:
-			self._window.setWindowModality(QtCore.Qt.WindowModal)
-		self._window.setWindowTitle("%s - Favorites" % constants.__pretty_app_name__)
-		self._window.setWindowIcon(QtGui.QIcon(self._app.appIconPath))
-		self._window.setCentralWidget(centralWidget)
-
-		self._closeWindowAction = QtGui.QAction(None)
-		self._closeWindowAction.setText("Window")
-		self._closeWindowAction.setShortcut(QtGui.QKeySequence("CTRL+w"))
-		self._closeWindowAction.triggered.connect(self._on_close_window)
-
-		fileMenu = self._window.menuBar().addMenu("&Units")
-		fileMenu.addAction(self._closeWindowAction)
-		fileMenu.addAction(self._app.quitAction)
-
-		viewMenu = self._window.menuBar().addMenu("&View")
-		viewMenu.addAction(self._app.fullscreenAction)
-
-		self._window.addAction(self._app.logAction)
-
-		self._window.show()
-
-	@property
-	def window(self):
-		return self._window
-
-	def close(self):
-		self._window.close()
-
-	def set_fullscreen(self, isFullscreen):
-		if isFullscreen:
-			self._window.showFullScreen()
-		else:
-			self._window.showNormal()
-
-	@misc_utils.log_exception(_moduleLogger)
-	def _on_selection_changed(self, selected, deselected):
-		self._hidden.clear()
-		selectedNames = set(
-			str(item.text(0))
-			for item in self._categories.selectedItems()
-		)
-		for name in self._source:
-			if name not in selectedNames:
-				self._hidden.add(name)
-
-	@misc_utils.log_exception(_moduleLogger)
-	def _on_close_window(self, checked = True):
-		self.close()
-
-
 class QuickJump(object):
 
 	MINIMAL_ENTRY = 3
@@ -685,6 +458,233 @@ class Recent(object):
 		unitsWindow = catWindow.select_category(categoryName)
 		unitsWindow.select_unit(unitName)
 		self.close()
+
+
+class FavoriteCategoriesWindow(object):
+
+	# @todo Add All, None, and Invert actions
+
+	def __init__(self, parent, app, source, hidden):
+		self._app = app
+		self._source = list(source)
+		self._hidden = hidden
+
+		self._categories = QtGui.QTreeWidget()
+		self._categories.setHeaderLabels(["Categories"])
+		self._categories.setHeaderHidden(True)
+		self._categories.setAlternatingRowColors(True)
+		self._categories.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
+		self._categories.setSelectionMode(QtGui.QAbstractItemView.MultiSelection)
+		for catName in self._source:
+			twi = QtGui.QTreeWidgetItem(self._categories)
+			twi.setText(0, catName)
+			if catName not in self._hidden:
+				self._categories.setItemSelected(twi, True)
+		self._selection = self._categories.selectionModel()
+		self._selection.selectionChanged.connect(self._on_selection_changed)
+
+		self._layout = QtGui.QVBoxLayout()
+		self._layout.addWidget(self._categories)
+
+		centralWidget = QtGui.QWidget()
+		centralWidget.setLayout(self._layout)
+
+		self._window = QtGui.QMainWindow(parent)
+		self._window.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
+		if parent is not None:
+			self._window.setWindowModality(QtCore.Qt.WindowModal)
+		self._window.setWindowTitle("%s - Favorites" % constants.__pretty_app_name__)
+		self._window.setWindowIcon(QtGui.QIcon(self._app.appIconPath))
+		self._window.setCentralWidget(centralWidget)
+
+		self._closeWindowAction = QtGui.QAction(None)
+		self._closeWindowAction.setText("Window")
+		self._closeWindowAction.setShortcut(QtGui.QKeySequence("CTRL+w"))
+		self._closeWindowAction.triggered.connect(self._on_close_window)
+
+		fileMenu = self._window.menuBar().addMenu("&Units")
+		fileMenu.addAction(self._closeWindowAction)
+		fileMenu.addAction(self._app.quitAction)
+
+		viewMenu = self._window.menuBar().addMenu("&View")
+		viewMenu.addAction(self._app.fullscreenAction)
+
+		self._window.addAction(self._app.logAction)
+
+		self._window.show()
+
+	@property
+	def window(self):
+		return self._window
+
+	def close(self):
+		self._window.close()
+
+	def set_fullscreen(self, isFullscreen):
+		if isFullscreen:
+			self._window.showFullScreen()
+		else:
+			self._window.showNormal()
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_selection_changed(self, selected, deselected):
+		self._hidden.clear()
+		selectedNames = set(
+			str(item.text(0))
+			for item in self._categories.selectedItems()
+		)
+		for name in self._source:
+			if name not in selectedNames:
+				self._hidden.add(name)
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_close_window(self, checked = True):
+		self.close()
+
+
+class CategoryWindow(object):
+
+	def __init__(self, parent, app):
+		self._app = app
+		self._unitWindow = None
+		self._favoritesWindow = None
+
+		self._categories = QtGui.QTreeWidget()
+		self._categories.setHeaderLabels(["Categories"])
+		self._categories.itemClicked.connect(self._on_category_clicked)
+		self._categories.setHeaderHidden(True)
+		self._categories.setAlternatingRowColors(True)
+		for catName in unit_data.UNIT_CATEGORIES:
+			twi = QtGui.QTreeWidgetItem(self._categories)
+			twi.setText(0, catName)
+
+		self._layout = QtGui.QVBoxLayout()
+		self._layout.addWidget(self._categories)
+
+		centralWidget = QtGui.QWidget()
+		centralWidget.setLayout(self._layout)
+
+		self._window = QtGui.QMainWindow(parent)
+		self._window.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
+		if parent is not None:
+			self._window.setWindowModality(QtCore.Qt.WindowModal)
+		self._window.setWindowTitle("%s - Categories" % constants.__pretty_app_name__)
+		self._window.setWindowIcon(QtGui.QIcon(self._app.appIconPath))
+		self._window.setCentralWidget(centralWidget)
+
+		self._chooseFavoritesAction = QtGui.QAction(None)
+		self._chooseFavoritesAction.setText("Select Favorites")
+		self._chooseFavoritesAction.setShortcut(QtGui.QKeySequence("CTRL+f"))
+		self._chooseFavoritesAction.triggered.connect(self._on_choose_favorites)
+
+		self._app.showFavoritesAction.toggled.connect(self._on_show_favorites)
+
+		self._closeWindowAction = QtGui.QAction(None)
+		self._closeWindowAction.setText("Window")
+		self._closeWindowAction.setShortcut(QtGui.QKeySequence("CTRL+w"))
+		self._closeWindowAction.triggered.connect(self._on_close_window)
+
+		fileMenu = self._window.menuBar().addMenu("&Units")
+		fileMenu.addAction(self._chooseFavoritesAction)
+		fileMenu.addAction(self._closeWindowAction)
+		fileMenu.addAction(self._app.quitAction)
+
+		viewMenu = self._window.menuBar().addMenu("&View")
+		viewMenu.addAction(self._app.showFavoritesAction)
+		viewMenu.addSeparator()
+		viewMenu.addAction(self._app.jumpAction)
+		viewMenu.addAction(self._app.recentAction)
+		viewMenu.addSeparator()
+		viewMenu.addAction(self._app.fullscreenAction)
+
+		self._window.addAction(self._app.logAction)
+
+		self._update_favorites()
+		self._window.show()
+
+	@property
+	def window(self):
+		return self._window
+
+	def walk_children(self):
+		if self._unitWindow is not None:
+			yield self._unitWindow
+		if self._favoritesWindow is not None:
+			yield self._favoritesWindow
+
+	def close(self):
+		for child in self.walk_children():
+			child.close()
+		self._window.close()
+
+	def select_category(self, categoryName):
+		for child in self.walk_children():
+			child.close()
+		self._unitWindow = UnitWindow(self._window, categoryName, self._app)
+		self._unitWindow.window.destroyed.connect(self._on_child_close)
+		# @todo Add scroll to category
+		return self._unitWindow
+
+	def set_fullscreen(self, isFullscreen):
+		if isFullscreen:
+			self._window.showFullScreen()
+		else:
+			self._window.showNormal()
+		for child in self.walk_children():
+			child.set_fullscreen(isFullscreen)
+
+	def _update_favorites(self):
+		if self._app.showFavoritesAction.isChecked():
+			assert self._categories.topLevelItemCount() == len(unit_data.UNIT_CATEGORIES)
+			for i, catName in enumerate(unit_data.UNIT_CATEGORIES):
+				if catName in self._app.hiddenCategories:
+					self._categories.setRowHidden(i, self._categories.rootIndex(), True)
+				else:
+					self._categories.setRowHidden(i, self._categories.rootIndex(), False)
+		else:
+			for i in xrange(self._categories.topLevelItemCount()):
+				self._categories.setRowHidden(i, self._categories.rootIndex(), False)
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_choose_favorites(self, obj = None):
+		assert self._favoritesWindow is None
+		self._favoritesWindow = FavoriteCategoriesWindow(
+			self._window,
+			self._app,
+			unit_data.UNIT_CATEGORIES,
+			self._app.hiddenCategories
+		)
+		self._favoritesWindow.window.destroyed.connect(self._on_close_favorites)
+		return self._favoritesWindow
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_show_favorites(self, checked = True):
+		if checked:
+			assert self._categories.topLevelItemCount() == len(unit_data.UNIT_CATEGORIES)
+			for i, catName in enumerate(unit_data.UNIT_CATEGORIES):
+				if catName in self._app.hiddenCategories:
+					self._categories.setRowHidden(i, self._categories.rootIndex(), True)
+		else:
+			for i in xrange(self._categories.topLevelItemCount()):
+				self._categories.setRowHidden(i, self._categories.rootIndex(), False)
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_close_favorites(self, obj = None):
+		self._favoritesWindow = None
+		self._update_favorites()
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_child_close(self, obj = None):
+		self._unitWindow = None
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_close_window(self, checked = True):
+		self.close()
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_category_clicked(self, item, columnIndex):
+		categoryName = unicode(item.text(0))
+		self.select_category(categoryName)
 
 
 class UnitData(object):
