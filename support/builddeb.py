@@ -19,7 +19,8 @@ __email__ = "anthony@unihedron.com"
 __version__ = constants.__version__
 __build__ = constants.__build__
 __changelog__ = """
-* Optification
+* A condensed view of unit conversion for those who so chose
+* Changed the way windows handle closing
 """
 
 
