@@ -13,6 +13,7 @@ from PyQt4 import QtGui
 from PyQt4 import QtCore
 
 import constants
+import maeqt
 from util import misc as misc_utils
 import unit_data
 
@@ -54,9 +55,6 @@ def split_number(number):
 
 
 class Gonvert(object):
-
-	# @todo get subwindows working
-	# @todo rotation support
 
 	_DATA_PATHS = [
 		os.path.dirname(__file__),
@@ -324,6 +322,8 @@ class QuickJump(object):
 
 		self._window = QtGui.QMainWindow(parent)
 		self._window.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
+		maeqt.set_autorient(self._window, True)
+		maeqt.set_stackable(self._window, True)
 		if parent is not None:
 			self._window.setWindowModality(QtCore.Qt.WindowModal)
 		self._window.setWindowTitle("%s - Quick Jump" % constants.__pretty_app_name__)
@@ -416,6 +416,8 @@ class Recent(object):
 
 		self._window = QtGui.QMainWindow(parent)
 		self._window.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
+		maeqt.set_autorient(self._window, True)
+		maeqt.set_stackable(self._window, True)
 		if parent is not None:
 			self._window.setWindowModality(QtCore.Qt.WindowModal)
 		self._window.setWindowTitle("%s - Recent" % constants.__pretty_app_name__)
@@ -521,6 +523,8 @@ class FavoriteCategoriesWindow(object):
 
 		self._window = QtGui.QMainWindow(parent)
 		self._window.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
+		maeqt.set_autorient(self._window, True)
+		maeqt.set_stackable(self._window, True)
 		if parent is not None:
 			self._window.setWindowModality(QtCore.Qt.WindowModal)
 		self._window.setWindowTitle("%s - Favorites" % constants.__pretty_app_name__)
@@ -619,6 +623,8 @@ class CategoryWindow(object):
 
 		self._window = QtGui.QMainWindow(parent)
 		self._window.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
+		maeqt.set_autorient(self._window, True)
+		maeqt.set_stackable(self._window, True)
 		if parent is not None:
 			self._window.setWindowModality(QtCore.Qt.WindowModal)
 		self._window.setWindowTitle("%s - Categories" % constants.__pretty_app_name__)
@@ -1023,6 +1029,8 @@ class UnitWindow(object):
 
 		self._window = QtGui.QMainWindow(parent)
 		self._window.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
+		maeqt.set_autorient(self._window, True)
+		maeqt.set_stackable(self._window, True)
 		if parent is not None:
 			self._window.setWindowModality(QtCore.Qt.WindowModal)
 		self._window.setWindowTitle("%s - %s" % (constants.__pretty_app_name__, category))
