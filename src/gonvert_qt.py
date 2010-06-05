@@ -159,14 +159,14 @@ class Gonvert(object):
 	def search_units(self):
 		jumpWindow = QuickJump(None, self)
 		jumpWindow.window.destroyed.connect(lambda obj = None: self._on_child_close("_jumpWindow", obj))
-		self._close_windows()
+		self._fake_close_windows()
 		self._jumpWindow = jumpWindow
 		return self._jumpWindow
 
 	def show_recent(self):
 		recentWindow = Recent(None, self)
 		recentWindow.window.destroyed.connect(lambda obj = None: self._on_child_close("_recentWindow", obj))
-		self._close_windows()
+		self._fake_close_windows()
 		self._recentWindow = recentWindow
 		return self._recentWindow
 
@@ -287,6 +287,18 @@ class Gonvert(object):
 			yield self._jumpWindow
 		if self._recentWindow is not None:
 			yield self._recentWindow
+
+	def _fake_close_windows(self):
+		if self._catWindow is not None:
+			self._catWindow.hide()
+		if self._quickWindow is not None:
+			self._quickWindow.hide()
+		if self._jumpWindow is not None:
+			self._jumpWindow.close()
+			self._jumpWindow = None
+		if self._recentWindow is not None:
+			self._recentWindow.close()
+			self._recentWindow = None
 
 	def _close_windows(self):
 		for window in self._walk_children():
