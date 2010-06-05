@@ -20,6 +20,9 @@ import unit_data
 _moduleLogger = logging.getLogger("gonvert_glade")
 
 
+IS_MAEMO = True
+
+
 def change_menu_label(widgets, labelname, newtext):
 	item_label = widgets.get_widget(labelname).get_children()[0]
 	item_label.set_text(newtext)
@@ -305,7 +308,8 @@ class QuickJump(object):
 		self._resultsBox = QtGui.QTreeWidget()
 		self._resultsBox.setHeaderLabels(["Categories", "Units"])
 		self._resultsBox.setHeaderHidden(True)
-		self._resultsBox.setAlternatingRowColors(True)
+		if not IS_MAEMO:
+			self._resultsBox.setAlternatingRowColors(True)
 		self._resultsBox.itemClicked.connect(self._on_result_clicked)
 
 		self._layout = QtGui.QVBoxLayout()
@@ -328,12 +332,17 @@ class QuickJump(object):
 		self._closeWindowAction.setShortcut(QtGui.QKeySequence("CTRL+w"))
 		self._closeWindowAction.triggered.connect(self._on_close_window)
 
-		fileMenu = self._window.menuBar().addMenu("&Units")
-		fileMenu.addAction(self._closeWindowAction)
-		fileMenu.addAction(self._app.quitAction)
+		if IS_MAEMO:
+			self._window.addAction(self._closeWindowAction)
+			self._window.addAction(self._app.quitAction)
+			self._window.addAction(self._app.fullscreenAction)
+		else:
+			fileMenu = self._window.menuBar().addMenu("&Units")
+			fileMenu.addAction(self._closeWindowAction)
+			fileMenu.addAction(self._app.quitAction)
 
-		viewMenu = self._window.menuBar().addMenu("&View")
-		viewMenu.addAction(self._app.fullscreenAction)
+			viewMenu = self._window.menuBar().addMenu("&View")
+			viewMenu.addAction(self._app.fullscreenAction)
 
 		self._window.addAction(self._app.logAction)
 
@@ -392,7 +401,8 @@ class Recent(object):
 		self._resultsBox = QtGui.QTreeWidget()
 		self._resultsBox.setHeaderLabels(["Categories", "Units"])
 		self._resultsBox.setHeaderHidden(True)
-		self._resultsBox.setAlternatingRowColors(True)
+		if not IS_MAEMO:
+			self._resultsBox.setAlternatingRowColors(True)
 		self._resultsBox.itemClicked.connect(self._on_result_clicked)
 
 		self._layout = QtGui.QVBoxLayout()
@@ -419,12 +429,17 @@ class Recent(object):
 		self._closeWindowAction.setShortcut(QtGui.QKeySequence("CTRL+w"))
 		self._closeWindowAction.triggered.connect(self._on_close_window)
 
-		fileMenu = self._window.menuBar().addMenu("&Units")
-		fileMenu.addAction(self._closeWindowAction)
-		fileMenu.addAction(self._app.quitAction)
+		if IS_MAEMO:
+			self._window.addAction(self._closeWindowAction)
+			self._window.addAction(self._app.quitAction)
+			self._window.addAction(self._app.fullscreenAction)
+		else:
+			fileMenu = self._window.menuBar().addMenu("&Units")
+			fileMenu.addAction(self._closeWindowAction)
+			fileMenu.addAction(self._app.quitAction)
 
-		viewMenu = self._window.menuBar().addMenu("&View")
-		viewMenu.addAction(self._app.fullscreenAction)
+			viewMenu = self._window.menuBar().addMenu("&View")
+			viewMenu.addAction(self._app.fullscreenAction)
 
 		self._window.addAction(self._app.logAction)
 
@@ -468,7 +483,8 @@ class FavoriteCategoriesWindow(object):
 		self._categories = QtGui.QTreeWidget()
 		self._categories.setHeaderLabels(["Categories"])
 		self._categories.setHeaderHidden(True)
-		self._categories.setAlternatingRowColors(True)
+		if not IS_MAEMO:
+			self._categories.setAlternatingRowColors(True)
 		self._categories.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
 		self._categories.setSelectionMode(QtGui.QAbstractItemView.MultiSelection)
 		self._childWidgets = []
@@ -513,12 +529,17 @@ class FavoriteCategoriesWindow(object):
 		self._closeWindowAction.setShortcut(QtGui.QKeySequence("CTRL+w"))
 		self._closeWindowAction.triggered.connect(self._on_close_window)
 
-		fileMenu = self._window.menuBar().addMenu("&Units")
-		fileMenu.addAction(self._closeWindowAction)
-		fileMenu.addAction(self._app.quitAction)
+		if IS_MAEMO:
+			self._window.addAction(self._closeWindowAction)
+			self._window.addAction(self._app.quitAction)
+			self._window.addAction(self._app.fullscreenAction)
+		else:
+			fileMenu = self._window.menuBar().addMenu("&Units")
+			fileMenu.addAction(self._closeWindowAction)
+			fileMenu.addAction(self._app.quitAction)
 
-		viewMenu = self._window.menuBar().addMenu("&View")
-		viewMenu.addAction(self._app.fullscreenAction)
+			viewMenu = self._window.menuBar().addMenu("&View")
+			viewMenu.addAction(self._app.fullscreenAction)
 
 		self._window.addAction(self._app.logAction)
 
@@ -581,7 +602,8 @@ class CategoryWindow(object):
 		self._categories.setHeaderLabels(["Categories"])
 		self._categories.itemClicked.connect(self._on_category_clicked)
 		self._categories.setHeaderHidden(True)
-		self._categories.setAlternatingRowColors(True)
+		if not IS_MAEMO:
+			self._categories.setAlternatingRowColors(True)
 		for catName in unit_data.UNIT_CATEGORIES:
 			twi = QtGui.QTreeWidgetItem(self._categories)
 			twi.setText(0, catName)
@@ -612,18 +634,32 @@ class CategoryWindow(object):
 		self._closeWindowAction.setShortcut(QtGui.QKeySequence("CTRL+w"))
 		self._closeWindowAction.triggered.connect(self._on_close_window)
 
-		fileMenu = self._window.menuBar().addMenu("&Units")
-		fileMenu.addAction(self._chooseFavoritesAction)
-		fileMenu.addAction(self._closeWindowAction)
-		fileMenu.addAction(self._app.quitAction)
+		if IS_MAEMO:
+			fileMenu = self._window.menuBar().addMenu("&Units")
+			fileMenu.addAction(self._chooseFavoritesAction)
 
-		viewMenu = self._window.menuBar().addMenu("&View")
-		viewMenu.addAction(self._app.showFavoritesAction)
-		viewMenu.addSeparator()
-		viewMenu.addAction(self._app.jumpAction)
-		viewMenu.addAction(self._app.recentAction)
-		viewMenu.addSeparator()
-		viewMenu.addAction(self._app.fullscreenAction)
+			viewMenu = self._window.menuBar().addMenu("&View")
+			viewMenu.addAction(self._app.showFavoritesAction)
+			viewMenu.addSeparator()
+			viewMenu.addAction(self._app.jumpAction)
+			viewMenu.addAction(self._app.recentAction)
+
+			self._window.addAction(self._closeWindowAction)
+			self._window.addAction(self._app.quitAction)
+			self._window.addAction(self._app.fullscreenAction)
+		else:
+			fileMenu = self._window.menuBar().addMenu("&Units")
+			fileMenu.addAction(self._chooseFavoritesAction)
+			fileMenu.addAction(self._closeWindowAction)
+			fileMenu.addAction(self._app.quitAction)
+
+			viewMenu = self._window.menuBar().addMenu("&View")
+			viewMenu.addAction(self._app.showFavoritesAction)
+			viewMenu.addSeparator()
+			viewMenu.addAction(self._app.jumpAction)
+			viewMenu.addAction(self._app.recentAction)
+			viewMenu.addSeparator()
+			viewMenu.addAction(self._app.fullscreenAction)
 
 		self._window.addAction(self._app.logAction)
 
@@ -942,7 +978,8 @@ class UnitWindow(object):
 		self._unitsView.header().setSortIndicatorShown(True)
 		self._unitsView.header().setClickable(True)
 		self._unitsView.setSortingEnabled(True)
-		self._unitsView.setAlternatingRowColors(True)
+		if not IS_MAEMO:
+			self._unitsView.setAlternatingRowColors(True)
 		if True:
 			self._unitsView.setHeaderHidden(True)
 
@@ -1009,22 +1046,40 @@ class UnitWindow(object):
 		self._closeWindowAction.setShortcut(QtGui.QKeySequence("CTRL+w"))
 		self._closeWindowAction.triggered.connect(self._on_close_window)
 
-		fileMenu = self._window.menuBar().addMenu("&Units")
-		fileMenu.addAction(self._chooseFavoritesAction)
-		fileMenu.addAction(self._closeWindowAction)
-		fileMenu.addAction(self._app.quitAction)
+		if IS_MAEMO:
+			self._window.addAction(self._closeWindowAction)
+			self._window.addAction(self._app.quitAction)
+			self._window.addAction(self._app.fullscreenAction)
 
-		viewMenu = self._window.menuBar().addMenu("&View")
-		viewMenu.addAction(self._app.showFavoritesAction)
-		viewMenu.addSeparator()
-		viewMenu.addAction(self._sortByNameAction)
-		viewMenu.addAction(self._sortByValueAction)
-		viewMenu.addAction(self._sortByUnitAction)
-		viewMenu.addSeparator()
-		viewMenu.addAction(self._app.jumpAction)
-		viewMenu.addAction(self._app.recentAction)
-		viewMenu.addSeparator()
-		viewMenu.addAction(self._app.fullscreenAction)
+			fileMenu = self._window.menuBar().addMenu("&Units")
+			fileMenu.addAction(self._chooseFavoritesAction)
+
+			viewMenu = self._window.menuBar().addMenu("&View")
+			viewMenu.addAction(self._app.showFavoritesAction)
+			viewMenu.addSeparator()
+			viewMenu.addAction(self._sortByNameAction)
+			viewMenu.addAction(self._sortByValueAction)
+			viewMenu.addAction(self._sortByUnitAction)
+			viewMenu.addSeparator()
+			viewMenu.addAction(self._app.jumpAction)
+			viewMenu.addAction(self._app.recentAction)
+		else:
+			fileMenu = self._window.menuBar().addMenu("&Units")
+			fileMenu.addAction(self._chooseFavoritesAction)
+			fileMenu.addAction(self._closeWindowAction)
+			fileMenu.addAction(self._app.quitAction)
+
+			viewMenu = self._window.menuBar().addMenu("&View")
+			viewMenu.addAction(self._app.showFavoritesAction)
+			viewMenu.addSeparator()
+			viewMenu.addAction(self._sortByNameAction)
+			viewMenu.addAction(self._sortByValueAction)
+			viewMenu.addAction(self._sortByUnitAction)
+			viewMenu.addSeparator()
+			viewMenu.addAction(self._app.jumpAction)
+			viewMenu.addAction(self._app.recentAction)
+			viewMenu.addSeparator()
+			viewMenu.addAction(self._app.fullscreenAction)
 
 		self._sortByNameAction.triggered.connect(self._on_sort_by_name)
 		self._sortByValueAction.triggered.connect(self._on_sort_by_value)
