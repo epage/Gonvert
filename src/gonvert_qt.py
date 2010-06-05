@@ -84,6 +84,11 @@ class Gonvert(object):
 		self._recentWindow = None
 		self._catWindow = None
 
+		self._condensedAction = QtGui.QAction(None)
+		self._condensedAction.setText("Condensed View")
+		self._condensedAction.setCheckable(True)
+		self._condensedAction.triggered.connect(self._on_condensed_start)
+
 		self._jumpAction = QtGui.QAction(None)
 		self._jumpAction.setText("Quick Jump")
 		self._jumpAction.setStatusTip("Search for a unit and jump straight to it")
@@ -119,15 +124,22 @@ class Gonvert(object):
 		self._quitAction.triggered.connect(self._on_quit)
 
 		self._app.lastWindowClosed.connect(self._on_app_quit)
-		self.request_category()
 		self.load_settings()
+
+		self.request_category()
+		if self._recent:
+			self._catWindow.select_category(self._recent[-1][0])
 
 	def request_category(self):
 		if self._catWindow is not None:
 			self._catWindow.close()
 			self._catWindow = None
-		self._catWindow = CategoryWindow(None, self)
-		self._catWindow.window.destroyed.connect(lambda obj = None: self._on_child_close("_catWindow", obj))
+		if self._condensedAction.isChecked():
+			self._catWindow = QuickConvert(None, self)
+			self._catWindow.window.destroyed.connect(lambda obj = None: self._on_child_close("_catWindow", obj))
+		else:
+			self._catWindow = CategoryWindow(None, self)
+			self._catWindow.window.destroyed.connect(lambda obj = None: self._on_child_close("_catWindow", obj))
 		return self._catWindow
 
 	def search_units(self):
@@ -151,12 +163,16 @@ class Gonvert(object):
 		assert catUnit not in self._recent
 		self._recent.append(catUnit)
 
-	def get_recent_unit(self, categoryName):
+	def get_recent_unit(self, categoryName, fromMostRecent = 0):
+		recentUnitName = ""
 		for catName, unitName in reversed(self._recent):
 			if catName == categoryName:
-				return unitName
-		else:
-			return ""
+				recentUnitName = unitName
+				if fromMostRecent <= 0:
+					break
+				else:
+					fromMostRecent -= 1
+		return recentUnitName
 
 	def get_recent(self):
 		return reversed(self._recent)
@@ -197,8 +213,7 @@ class Gonvert(object):
 
 		self._showFavoritesAction.setChecked(settings.get("showFavorites", True))
 
-		if self._recent:
-			self._catWindow.select_category(self._recent[-1][0])
+		self._condensedAction.setChecked(settings.get("useQuick", self._condensedAction.isChecked()))
 
 	def save_settings(self):
 		settings = {
@@ -210,6 +225,7 @@ class Gonvert(object):
 				for (catName, units) in self._hiddenUnits.iteritems()
 			),
 			"showFavorites": self._showFavoritesAction.isChecked(),
+			"useQuick": self._condensedAction.isChecked(),
 		}
 		with open(constants._user_settings_, "w") as settingsFile:
 			simplejson.dump(settings, settingsFile)
@@ -229,6 +245,10 @@ class Gonvert(object):
 	@property
 	def fullscreenAction(self):
 		return self._fullscreenAction
+
+	@property
+	def condensedAction(self):
+		return self._condensedAction
 
 	@property
 	def logAction(self):
@@ -272,6 +292,10 @@ class Gonvert(object):
 	def _on_toggle_fullscreen(self, checked = False):
 		for window in self._walk_children():
 			window.set_fullscreen(checked)
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_condensed_start(self, checked = False):
+		self.request_category()
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_jump_start(self, checked = False):
@@ -480,7 +504,369 @@ class Recent(object):
 		self.close()
 
 
-class FavoriteCategoriesWindow(object):
+class QuickConvert(object):
+
+	def __init__(self, parent, app):
+		self._app = app
+		self._categoryName = ""
+		self._inputUnitName = ""
+		self._outputUnitName = ""
+		self._unitNames = []
+		self._favoritesWindow = None
+
+		self._inputUnitValue = QtGui.QLineEdit()
+		self._inputUnitValue.setInputMethodHints(QtCore.Qt.ImhPreferNumbers)
+		self._inputUnitValue.textEdited.connect(self._on_value_edited)
+		self._inputUnitSymbol = QtGui.QLabel()
+
+		self._outputUnitValue = QtGui.QLabel()
+		self._outputUnitSymbol = QtGui.QLabel()
+
+		self._conversionLayout = QtGui.QHBoxLayout()
+		self._conversionLayout.addWidget(self._inputUnitValue)
+		self._conversionLayout.addWidget(self._inputUnitSymbol)
+		self._conversionLayout.addWidget(self._outputUnitValue)
+		self._conversionLayout.addWidget(self._outputUnitSymbol)
+
+		self._categoryView = QtGui.QTreeWidget()
+		self._categoryView.setHeaderLabels(["Categories"])
+		self._categoryView.setHeaderHidden(True)
+		if not IS_MAEMO:
+			self._categoryView.setAlternatingRowColors(True)
+		self._categoryView.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
+		self._categoryView.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
+		for catName in unit_data.UNIT_CATEGORIES:
+			twi = QtGui.QTreeWidgetItem(self._categoryView)
+			twi.setText(0, catName)
+		self._categorySelection = self._categoryView.selectionModel()
+		self._categorySelection.selectionChanged.connect(self._on_category_selection_changed)
+
+		self._inputView = QtGui.QTreeWidget()
+		self._inputView.setHeaderLabels(["Input", "Name"])
+		self._inputView.setHeaderHidden(True)
+		self._inputView.header().hideSection(1)
+		if not IS_MAEMO:
+			self._inputView.setAlternatingRowColors(True)
+		self._inputView.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
+		self._inputView.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
+		self._inputSelection = self._inputView.selectionModel()
+		self._inputSelection.selectionChanged.connect(self._on_input_selection_changed)
+
+		self._outputView = QtGui.QTreeWidget()
+		self._outputView.setHeaderLabels(["Output", "Name"])
+		self._outputView.setHeaderHidden(True)
+		self._outputView.header().hideSection(1)
+		if not IS_MAEMO:
+			self._outputView.setAlternatingRowColors(True)
+		self._outputView.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
+		self._outputView.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
+		self._outputWidgets = []
+		self._outputSelection = self._outputView.selectionModel()
+		self._outputSelection.selectionChanged.connect(self._on_output_selection_changed)
+
+		self._selectionLayout = QtGui.QHBoxLayout()
+		self._selectionLayout.addWidget(self._categoryView)
+		self._selectionLayout.addWidget(self._inputView)
+		self._selectionLayout.addWidget(self._outputView)
+
+		self._layout = QtGui.QVBoxLayout()
+		self._layout.addLayout(self._conversionLayout)
+		self._layout.addLayout(self._selectionLayout)
+
+		centralWidget = QtGui.QWidget()
+		centralWidget.setLayout(self._layout)
+
+		self._window = QtGui.QMainWindow(parent)
+		self._window.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
+		maeqt.set_autorient(self._window, True)
+		maeqt.set_stackable(self._window, True)
+		if parent is not None:
+			self._window.setWindowModality(QtCore.Qt.WindowModal)
+		self._window.setWindowTitle("%s - Quick Convert" % (constants.__pretty_app_name__, ))
+		self._window.setWindowIcon(QtGui.QIcon(app.appIconPath))
+		self._window.setCentralWidget(centralWidget)
+
+		self._chooseCatFavoritesAction = QtGui.QAction(None)
+		self._chooseCatFavoritesAction.setText("Select Categories")
+		self._chooseCatFavoritesAction.triggered.connect(self._on_choose_category_favorites)
+
+		self._chooseUnitFavoritesAction = QtGui.QAction(None)
+		self._chooseUnitFavoritesAction.setText("Select Units")
+		self._chooseUnitFavoritesAction.triggered.connect(self._on_choose_unit_favorites)
+
+		self._app.showFavoritesAction.toggled.connect(self._on_show_favorites)
+
+		self._closeWindowAction = QtGui.QAction(None)
+		self._closeWindowAction.setText("Close Window")
+		self._closeWindowAction.setShortcut(QtGui.QKeySequence("CTRL+w"))
+		self._closeWindowAction.triggered.connect(self._on_close_window)
+
+		if IS_MAEMO:
+			self._window.addAction(self._closeWindowAction)
+			self._window.addAction(self._app.quitAction)
+			self._window.addAction(self._app.fullscreenAction)
+
+			fileMenu = self._window.menuBar().addMenu("&Units")
+			fileMenu.addAction(self._chooseCatFavoritesAction)
+			fileMenu.addAction(self._chooseUnitFavoritesAction)
+
+			viewMenu = self._window.menuBar().addMenu("&View")
+			viewMenu.addAction(self._app.showFavoritesAction)
+			viewMenu.addAction(self._app.condensedAction)
+			viewMenu.addSeparator()
+			viewMenu.addAction(self._app.jumpAction)
+			viewMenu.addAction(self._app.recentAction)
+		else:
+			fileMenu = self._window.menuBar().addMenu("&Units")
+			fileMenu.addAction(self._chooseCatFavoritesAction)
+			fileMenu.addAction(self._chooseUnitFavoritesAction)
+			fileMenu.addAction(self._closeWindowAction)
+			fileMenu.addAction(self._app.quitAction)
+
+			viewMenu = self._window.menuBar().addMenu("&View")
+			viewMenu.addAction(self._app.showFavoritesAction)
+			viewMenu.addAction(self._app.condensedAction)
+			viewMenu.addSeparator()
+			viewMenu.addAction(self._app.jumpAction)
+			viewMenu.addAction(self._app.recentAction)
+			viewMenu.addSeparator()
+			viewMenu.addAction(self._app.fullscreenAction)
+
+		self._window.addAction(self._app.logAction)
+
+		self._update_favorites()
+		self.set_fullscreen(self._app.fullscreenAction.isChecked())
+		self._window.show()
+
+	@property
+	def window(self):
+		return self._window
+
+	def close(self):
+		self._window.close()
+
+	def set_fullscreen(self, isFullscreen):
+		if isFullscreen:
+			self._window.showFullScreen()
+		else:
+			self._window.showNormal()
+
+	def select_category(self, categoryName):
+		self._inputUnitValue.setText("")
+		self._inputView.clear()
+		self._outputView.clear()
+		self._categoryName = categoryName
+
+		unitData = unit_data.UNIT_DESCRIPTIONS[categoryName]
+		self._unitNames = list(unit_data.get_units(categoryName))
+		self._unitNames.sort()
+		for key in self._unitNames:
+			conversion, unit, description = unitData[key]
+			if not unit:
+				unit = key
+
+			twi = QtGui.QTreeWidgetItem(self._inputView)
+			twi.setText(0, unit)
+			twi.setText(1, key)
+
+			twi = QtGui.QTreeWidgetItem(self._outputView)
+			twi.setText(0, unit)
+			twi.setText(1, key)
+
+		i = unit_data.UNIT_CATEGORIES.index(categoryName)
+		rootIndex = self._categoryView.rootIndex()
+		currentIndex = self._categoryView.model().index(i, 0, rootIndex)
+		self._categoryView.scrollTo(currentIndex)
+
+		defaultInputUnitName = self._app.get_recent_unit(categoryName)
+		if defaultInputUnitName:
+			self.select_input(defaultInputUnitName)
+			defaultOutputUnitName = self._app.get_recent_unit(categoryName, 1)
+			assert defaultOutputUnitName
+			self.select_output(defaultOutputUnitName)
+
+		return self
+
+	def select_unit(self, name):
+		self.select_input(name)
+
+	def select_input(self, name):
+		self._app.add_recent(self._categoryName, name)
+		self._inputUnitName = name
+
+		unitData = unit_data.UNIT_DESCRIPTIONS[self._categoryName]
+		conversion, unit, description = unitData[name]
+
+		self._inputUnitSymbol.setText(unit if unit else name)
+
+		i = self._unitNames.index(name)
+		rootIndex = self._inputView.rootIndex()
+		currentIndex = self._inputView.model().index(i, 0, rootIndex)
+		self._inputView.scrollTo(currentIndex)
+
+	def select_output(self, name):
+		# Add the output to recent but don't make things weird by making it the most recent
+		self._app.add_recent(self._categoryName, name)
+		self._app.add_recent(self._categoryName, self._inputUnitName)
+		self._outputUnitName = name
+
+		unitData = unit_data.UNIT_DESCRIPTIONS[self._categoryName]
+		conversion, unit, description = unitData[name]
+
+		self._outputUnitSymbol.setText(unit if unit else name)
+
+		i = self._unitNames.index(name)
+		rootIndex = self._outputView.rootIndex()
+		currentIndex = self._outputView.model().index(i, 0, rootIndex)
+		self._outputView.scrollTo(currentIndex)
+
+	def _sanitize_value(self, userEntry):
+		if self._categoryName == "Computer Numbers":
+			if userEntry == '':
+				value = '0'
+			else:
+				value = userEntry
+		else:
+			if userEntry == '':
+				value = 0.0
+			else:
+				value = float(userEntry)
+		return value
+
+	def _update_favorites(self):
+		if self._app.showFavoritesAction.isChecked():
+			assert self._categoryView.topLevelItemCount() == len(unit_data.UNIT_CATEGORIES)
+			for i, catName in enumerate(unit_data.UNIT_CATEGORIES):
+				if catName in self._app.hiddenCategories:
+					self._categoryView.setRowHidden(i, self._categoryView.rootIndex(), True)
+				else:
+					self._categoryView.setRowHidden(i, self._categoryView.rootIndex(), False)
+
+			for i, unitName in enumerate(self._unitNames):
+				if unitName in self._app.get_hidden_units(self._categoryName):
+					self._inputView.setRowHidden(i, self._inputView.rootIndex(), True)
+					self._outputView.setRowHidden(i, self._outputView.rootIndex(), True)
+				else:
+					self._inputView.setRowHidden(i, self._inputView.rootIndex(), False)
+					self._outputView.setRowHidden(i, self._outputView.rootIndex(), False)
+		else:
+			for i in xrange(self._categoryView.topLevelItemCount()):
+				self._categoryView.setRowHidden(i, self._categoryView.rootIndex(), False)
+
+			for i in xrange(len(self._unitNames)):
+				self._inputView.setRowHidden(i, self._inputView.rootIndex(), False)
+				self._outputView.setRowHidden(i, self._outputView.rootIndex(), False)
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_close_window(self, checked = True):
+		self.close()
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_show_favorites(self, checked = True):
+		if checked:
+			assert self._categoryView.topLevelItemCount() == len(unit_data.UNIT_CATEGORIES)
+			for i, catName in enumerate(unit_data.UNIT_CATEGORIES):
+				if catName in self._app.hiddenCategories:
+					self._categoryView.setRowHidden(i, self._categoryView.rootIndex(), True)
+
+			for i, unitName in enumerate(self._unitNames):
+				if unitName in self._app.get_hidden_units(self._categoryName):
+					self._inputView.setRowHidden(i, self._inputView.rootIndex(), True)
+					self._outputView.setRowHidden(i, self._outputView.rootIndex(), True)
+		else:
+			for i in xrange(self._categoryView.topLevelItemCount()):
+				self._categoryView.setRowHidden(i, self._categoryView.rootIndex(), False)
+
+			for i in xrange(len(self._unitNames)):
+				self._inputView.setRowHidden(i, self._inputView.rootIndex(), False)
+				self._outputView.setRowHidden(i, self._outputView.rootIndex(), False)
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_choose_category_favorites(self, obj = None):
+		assert self._favoritesWindow is None
+		self._favoritesWindow = FavoritesWindow(
+			self._window,
+			self._app,
+			unit_data.UNIT_CATEGORIES,
+			self._app.hiddenCategories
+		)
+		self._favoritesWindow.window.destroyed.connect(self._on_close_favorites)
+		return self._favoritesWindow
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_choose_unit_favorites(self, obj = None):
+		assert self._favoritesWindow is None
+		self._favoritesWindow = FavoritesWindow(
+			self._window,
+			self._app,
+			unit_data.get_units(self._categoryName),
+			self._app.get_hidden_units(self._categoryName)
+		)
+		self._favoritesWindow.window.destroyed.connect(self._on_close_favorites)
+		return self._favoritesWindow
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_close_favorites(self, obj = None):
+		self._favoritesWindow = None
+		self._update_favorites()
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_value_edited(self, *args):
+		assert self._categoryName
+		assert self._inputUnitName
+		assert self._outputUnitName
+
+		userInput = str(self._inputUnitValue.text())
+		value = self._sanitize_value(userInput)
+
+		unitData = unit_data.UNIT_DESCRIPTIONS[self._categoryName]
+		inputConversion, _, _ = unitData[self._inputUnitName]
+		outputConversion, _, _ = unitData[self._outputUnitName]
+
+		func, arg = inputConversion
+		base = func.to_base(value, arg)
+
+		func, arg = outputConversion
+		newValue = func.from_base(base, arg)
+		self._outputUnitValue.setText(str(newValue))
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_category_selection_changed(self, selected, deselected):
+		selectedNames = [
+			str(item.text(0))
+			for item in self._categoryView.selectedItems()
+		]
+		assert len(selectedNames) == 1
+		self.select_category(selectedNames[0])
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_input_selection_changed(self, selected, deselected):
+		selectedNames = [
+			str(item.text(1))
+			for item in self._inputView.selectedItems()
+		]
+		if selectedNames:
+			assert len(selectedNames) == 1
+			name = selectedNames[0]
+			self.select_input(name)
+		else:
+			pass
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_output_selection_changed(self, selected, deselected):
+		selectedNames = [
+			str(item.text(1))
+			for item in self._outputView.selectedItems()
+		]
+		if selectedNames:
+			assert len(selectedNames) == 1
+			name = selectedNames[0]
+			self.select_output(name)
+		else:
+			pass
+
+
+class FavoritesWindow(object):
 
 	def __init__(self, parent, app, source, hidden):
 		self._app = app
@@ -651,6 +1037,7 @@ class CategoryWindow(object):
 
 			viewMenu = self._window.menuBar().addMenu("&View")
 			viewMenu.addAction(self._app.showFavoritesAction)
+			viewMenu.addAction(self._app.condensedAction)
 			viewMenu.addSeparator()
 			viewMenu.addAction(self._app.jumpAction)
 			viewMenu.addAction(self._app.recentAction)
@@ -666,6 +1053,7 @@ class CategoryWindow(object):
 
 			viewMenu = self._window.menuBar().addMenu("&View")
 			viewMenu.addAction(self._app.showFavoritesAction)
+			viewMenu.addAction(self._app.condensedAction)
 			viewMenu.addSeparator()
 			viewMenu.addAction(self._app.jumpAction)
 			viewMenu.addAction(self._app.recentAction)
@@ -726,18 +1114,6 @@ class CategoryWindow(object):
 				self._categories.setRowHidden(i, self._categories.rootIndex(), False)
 
 	@misc_utils.log_exception(_moduleLogger)
-	def _on_choose_favorites(self, obj = None):
-		assert self._favoritesWindow is None
-		self._favoritesWindow = FavoriteCategoriesWindow(
-			self._window,
-			self._app,
-			unit_data.UNIT_CATEGORIES,
-			self._app.hiddenCategories
-		)
-		self._favoritesWindow.window.destroyed.connect(self._on_close_favorites)
-		return self._favoritesWindow
-
-	@misc_utils.log_exception(_moduleLogger)
 	def _on_show_favorites(self, checked = True):
 		if checked:
 			assert self._categories.topLevelItemCount() == len(unit_data.UNIT_CATEGORIES)
@@ -747,6 +1123,18 @@ class CategoryWindow(object):
 		else:
 			for i in xrange(self._categories.topLevelItemCount()):
 				self._categories.setRowHidden(i, self._categories.rootIndex(), False)
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_choose_favorites(self, obj = None):
+		assert self._favoritesWindow is None
+		self._favoritesWindow = FavoritesWindow(
+			self._window,
+			self._app,
+			unit_data.UNIT_CATEGORIES,
+			self._app.hiddenCategories
+		)
+		self._favoritesWindow.window.destroyed.connect(self._on_close_favorites)
+		return self._favoritesWindow
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_close_favorites(self, obj = None):
@@ -1098,6 +1486,7 @@ class UnitWindow(object):
 
 			viewMenu = self._window.menuBar().addMenu("&View")
 			viewMenu.addAction(self._app.showFavoritesAction)
+			viewMenu.addAction(self._app.condensedAction)
 			viewMenu.addSeparator()
 			viewMenu.addAction(self._sortByNameAction)
 			viewMenu.addAction(self._sortByValueAction)
@@ -1113,6 +1502,7 @@ class UnitWindow(object):
 
 			viewMenu = self._window.menuBar().addMenu("&View")
 			viewMenu.addAction(self._app.showFavoritesAction)
+			viewMenu.addAction(self._app.condensedAction)
 			viewMenu.addSeparator()
 			viewMenu.addAction(self._sortByNameAction)
 			viewMenu.addAction(self._sortByValueAction)
@@ -1173,18 +1563,6 @@ class UnitWindow(object):
 					self._unitsView.setRowHidden(i, self._unitsView.rootIndex(), False)
 
 	@misc_utils.log_exception(_moduleLogger)
-	def _on_choose_favorites(self, obj = None):
-		assert self._favoritesWindow is None
-		self._favoritesWindow = FavoriteCategoriesWindow(
-			self._window,
-			self._app,
-			unit_data.get_units(self._categoryName),
-			self._app.get_hidden_units(self._categoryName)
-		)
-		self._favoritesWindow.window.destroyed.connect(self._on_close_favorites)
-		return self._favoritesWindow
-
-	@misc_utils.log_exception(_moduleLogger)
 	def _on_show_favorites(self, checked = True):
 		if checked:
 			unitNames = list(self._unitsModel.get_unit_names())
@@ -1194,6 +1572,18 @@ class UnitWindow(object):
 		else:
 			for i in xrange(len(self._unitsModel)):
 				self._unitsView.setRowHidden(i, self._unitsView.rootIndex(), False)
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_choose_favorites(self, obj = None):
+		assert self._favoritesWindow is None
+		self._favoritesWindow = FavoritesWindow(
+			self._window,
+			self._app,
+			unit_data.get_units(self._categoryName),
+			self._app.get_hidden_units(self._categoryName)
+		)
+		self._favoritesWindow.window.destroyed.connect(self._on_close_favorites)
+		return self._favoritesWindow
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_close_favorites(self, obj = None):
