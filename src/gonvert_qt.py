@@ -324,7 +324,7 @@ class QuickJump(object):
 		self._window.setCentralWidget(centralWidget)
 
 		self._closeWindowAction = QtGui.QAction(None)
-		self._closeWindowAction.setText("Window")
+		self._closeWindowAction.setText("Close")
 		self._closeWindowAction.setShortcut(QtGui.QKeySequence("CTRL+w"))
 		self._closeWindowAction.triggered.connect(self._on_close_window)
 
@@ -415,7 +415,7 @@ class Recent(object):
 			twi.setText(1, unit)
 
 		self._closeWindowAction = QtGui.QAction(None)
-		self._closeWindowAction.setText("Window")
+		self._closeWindowAction.setText("Close")
 		self._closeWindowAction.setShortcut(QtGui.QKeySequence("CTRL+w"))
 		self._closeWindowAction.triggered.connect(self._on_close_window)
 
@@ -509,7 +509,7 @@ class FavoriteCategoriesWindow(object):
 		self._window.setCentralWidget(centralWidget)
 
 		self._closeWindowAction = QtGui.QAction(None)
-		self._closeWindowAction.setText("Window")
+		self._closeWindowAction.setText("Close")
 		self._closeWindowAction.setShortcut(QtGui.QKeySequence("CTRL+w"))
 		self._closeWindowAction.triggered.connect(self._on_close_window)
 
@@ -608,7 +608,7 @@ class CategoryWindow(object):
 		self._app.showFavoritesAction.toggled.connect(self._on_show_favorites)
 
 		self._closeWindowAction = QtGui.QAction(None)
-		self._closeWindowAction.setText("Window")
+		self._closeWindowAction.setText("Close")
 		self._closeWindowAction.setShortcut(QtGui.QKeySequence("CTRL+w"))
 		self._closeWindowAction.triggered.connect(self._on_close_window)
 
