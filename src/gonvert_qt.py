@@ -52,8 +52,6 @@ def split_number(number):
 
 class Gonvert(object):
 
-	# @todo Favorites
-
 	_DATA_PATHS = [
 		os.path.dirname(__file__),
 		os.path.join(os.path.dirname(__file__), "../data"),
@@ -74,6 +72,8 @@ class Gonvert(object):
 		self._app = app
 		self._appIconPath = appIconPath
 		self._recent = []
+		self._hiddenCategories = set()
+		self._hiddenUnits = {}
 		self._isFullscreen = False
 		self._clipboard = QtGui.QApplication.clipboard()
 
@@ -97,8 +97,13 @@ class Gonvert(object):
 
 		self._fullscreenAction = QtGui.QAction(None)
 		self._fullscreenAction.setText("Toggle Fullscreen")
+		# @todo Make this checkable
 		self._fullscreenAction.setShortcut(QtGui.QKeySequence("CTRL+Enter"))
 		self._fullscreenAction.triggered.connect(self._on_toggle_fullscreen)
+
+		self._showFavoritesAction = QtGui.QAction(None)
+		self._showFavoritesAction.setCheckable(True)
+		self._showFavoritesAction.setText("Favorites Only")
 
 		self._logAction = QtGui.QAction(None)
 		self._logAction.setText("Log")
@@ -157,16 +162,41 @@ class Gonvert(object):
 	def get_recent(self):
 		return reversed(self._recent)
 
+	@property
+	def hiddenCategories(self):
+		return self._hiddenCategories
+
+	def get_hidden_units(self, categoryName):
+		try:
+			return self._hiddenUnits[categoryName]
+		except KeyError:
+			self._hiddenUnits[categoryName] = set()
+			return self._hiddenUnits[categoryName]
+
 	def load_settings(self):
 		try:
 			with open(constants._user_settings_, "r") as settingsFile:
 				settings = simplejson.load(settingsFile)
 		except IOError, e:
+			_moduleLogger.info("No settings")
 			settings = {}
+		except ValueError:
+			_moduleLogger.info("Settings were corrupt")
+			settings = {}
+
 		self._isFullscreen = settings.get("isFullScreen", self._isFullscreen)
+
 		recent = settings.get("recent", self._recent)
 		for category, unit in recent:
 			self.add_recent(category, unit)
+
+		self._hiddenCategories = set(settings.get("hiddenCategories", set()))
+		self._hiddenUnits = dict(
+			(catName, set(units))
+			for (catName, units) in settings.get("hiddenUnits", {}).iteritems()
+		)
+
+		self._showFavoritesAction.setChecked(settings.get("showFavorites", True))
 
 		for window in self._walk_children():
 			window.set_fullscreen(self._isFullscreen)
@@ -177,6 +207,12 @@ class Gonvert(object):
 		settings = {
 			"isFullScreen": self._isFullscreen,
 			"recent": self._recent,
+			"hiddenCategories": list(self._hiddenCategories),
+			"hiddenUnits": dict(
+				(catName, list(units))
+				for (catName, units) in self._hiddenUnits.iteritems()
+			),
+			"showFavorites": self._showFavoritesAction.isChecked(),
 		}
 		with open(constants._user_settings_, "w") as settingsFile:
 			simplejson.dump(settings, settingsFile)
@@ -204,6 +240,10 @@ class Gonvert(object):
 	@property
 	def quitAction(self):
 		return self._quitAction
+
+	@property
+	def showFavoritesAction(self):
+		return self._showFavoritesAction
 
 	def _walk_children(self):
 		if self._catWindow is not None:
@@ -256,6 +296,7 @@ class CategoryWindow(object):
 	def __init__(self, parent, app):
 		self._app = app
 		self._unitWindow = None
+		self._favoritesWindow = None
 
 		self._categories = QtGui.QTreeWidget()
 		self._categories.setHeaderLabels(["Categories"])
@@ -280,23 +321,34 @@ class CategoryWindow(object):
 		self._window.setWindowIcon(QtGui.QIcon(self._app.appIconPath))
 		self._window.setCentralWidget(centralWidget)
 
+		self._chooseFavoritesAction = QtGui.QAction(None)
+		self._chooseFavoritesAction.setText("Select Favorites")
+		self._chooseFavoritesAction.setShortcut(QtGui.QKeySequence("CTRL+f"))
+		self._chooseFavoritesAction.triggered.connect(self._on_choose_favorites)
+
+		self._app.showFavoritesAction.toggled.connect(self._on_show_favorites)
+
 		self._closeWindowAction = QtGui.QAction(None)
 		self._closeWindowAction.setText("Window")
 		self._closeWindowAction.setShortcut(QtGui.QKeySequence("CTRL+w"))
 		self._closeWindowAction.triggered.connect(self._on_close_window)
 
-		fileMenu = self._window.menuBar().addMenu("&File")
+		fileMenu = self._window.menuBar().addMenu("&Units")
+		fileMenu.addAction(self._chooseFavoritesAction)
 		fileMenu.addAction(self._closeWindowAction)
 		fileMenu.addAction(self._app.quitAction)
 
 		viewMenu = self._window.menuBar().addMenu("&View")
-		viewMenu.addAction(self._app.fullscreenAction)
+		viewMenu.addAction(self._app.showFavoritesAction)
 		viewMenu.addSeparator()
 		viewMenu.addAction(self._app.jumpAction)
 		viewMenu.addAction(self._app.recentAction)
+		viewMenu.addSeparator()
+		viewMenu.addAction(self._app.fullscreenAction)
 
 		self._window.addAction(self._app.logAction)
 
+		self._update_favorites()
 		self._window.show()
 
 	@property
@@ -306,6 +358,8 @@ class CategoryWindow(object):
 	def walk_children(self):
 		if self._unitWindow is not None:
 			yield self._unitWindow
+		if self._favoritesWindow is not None:
+			yield self._favoritesWindow
 
 	def close(self):
 		for child in self.walk_children():
@@ -317,6 +371,7 @@ class CategoryWindow(object):
 			child.close()
 		self._unitWindow = UnitWindow(self._window, categoryName, self._app)
 		self._unitWindow.window.destroyed.connect(self._on_child_close)
+		# @todo Add scroll to category
 		return self._unitWindow
 
 	def set_fullscreen(self, isFullscreen):
@@ -326,6 +381,46 @@ class CategoryWindow(object):
 			self._window.showNormal()
 		for child in self.walk_children():
 			child.set_fullscreen(isFullscreen)
+
+	def _update_favorites(self):
+		if self._app.showFavoritesAction.isChecked():
+			assert self._categories.topLevelItemCount() == len(unit_data.UNIT_CATEGORIES)
+			for i, catName in enumerate(unit_data.UNIT_CATEGORIES):
+				if catName in self._app.hiddenCategories:
+					self._categories.setRowHidden(i, self._categories.rootIndex(), True)
+				else:
+					self._categories.setRowHidden(i, self._categories.rootIndex(), False)
+		else:
+			for i in xrange(self._categories.topLevelItemCount()):
+				self._categories.setRowHidden(i, self._categories.rootIndex(), False)
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_choose_favorites(self, obj = None):
+		assert self._favoritesWindow is None
+		self._favoritesWindow = FavoriteCategoriesWindow(
+			self._window,
+			self._app,
+			unit_data.UNIT_CATEGORIES,
+			self._app.hiddenCategories
+		)
+		self._favoritesWindow.window.destroyed.connect(self._on_close_favorites)
+		return self._favoritesWindow
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_show_favorites(self, checked = True):
+		if checked:
+			assert self._categories.topLevelItemCount() == len(unit_data.UNIT_CATEGORIES)
+			for i, catName in enumerate(unit_data.UNIT_CATEGORIES):
+				if catName in self._app.hiddenCategories:
+					self._categories.setRowHidden(i, self._categories.rootIndex(), True)
+		else:
+			for i in xrange(self._categories.topLevelItemCount()):
+				self._categories.setRowHidden(i, self._categories.rootIndex(), False)
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_close_favorites(self, obj = None):
+		self._favoritesWindow = None
+		self._update_favorites()
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_child_close(self, obj = None):
@@ -339,6 +434,88 @@ class CategoryWindow(object):
 	def _on_category_clicked(self, item, columnIndex):
 		categoryName = unicode(item.text(0))
 		self.select_category(categoryName)
+
+
+class FavoriteCategoriesWindow(object):
+
+	# @todo Add All, None, and Invert actions
+
+	def __init__(self, parent, app, source, hidden):
+		self._app = app
+		self._source = list(source)
+		self._hidden = hidden
+
+		self._categories = QtGui.QTreeWidget()
+		self._categories.setHeaderLabels(["Categories"])
+		self._categories.setHeaderHidden(True)
+		self._categories.setAlternatingRowColors(True)
+		self._categories.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
+		self._categories.setSelectionMode(QtGui.QAbstractItemView.MultiSelection)
+		for catName in self._source:
+			twi = QtGui.QTreeWidgetItem(self._categories)
+			twi.setText(0, catName)
+			if catName not in self._hidden:
+				self._categories.setItemSelected(twi, True)
+		self._selection = self._categories.selectionModel()
+		self._selection.selectionChanged.connect(self._on_selection_changed)
+
+		self._layout = QtGui.QVBoxLayout()
+		self._layout.addWidget(self._categories)
+
+		centralWidget = QtGui.QWidget()
+		centralWidget.setLayout(self._layout)
+
+		self._window = QtGui.QMainWindow(parent)
+		self._window.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
+		if parent is not None:
+			self._window.setWindowModality(QtCore.Qt.WindowModal)
+		self._window.setWindowTitle("%s - Favorites" % constants.__pretty_app_name__)
+		self._window.setWindowIcon(QtGui.QIcon(self._app.appIconPath))
+		self._window.setCentralWidget(centralWidget)
+
+		self._closeWindowAction = QtGui.QAction(None)
+		self._closeWindowAction.setText("Window")
+		self._closeWindowAction.setShortcut(QtGui.QKeySequence("CTRL+w"))
+		self._closeWindowAction.triggered.connect(self._on_close_window)
+
+		fileMenu = self._window.menuBar().addMenu("&Units")
+		fileMenu.addAction(self._closeWindowAction)
+		fileMenu.addAction(self._app.quitAction)
+
+		viewMenu = self._window.menuBar().addMenu("&View")
+		viewMenu.addAction(self._app.fullscreenAction)
+
+		self._window.addAction(self._app.logAction)
+
+		self._window.show()
+
+	@property
+	def window(self):
+		return self._window
+
+	def close(self):
+		self._window.close()
+
+	def set_fullscreen(self, isFullscreen):
+		if isFullscreen:
+			self._window.showFullScreen()
+		else:
+			self._window.showNormal()
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_selection_changed(self, selected, deselected):
+		self._hidden.clear()
+		selectedNames = set(
+			str(item.text(0))
+			for item in self._categories.selectedItems()
+		)
+		for name in self._source:
+			if name not in selectedNames:
+				self._hidden.add(name)
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_close_window(self, checked = True):
+		self.close()
 
 
 class QuickJump(object):
@@ -382,7 +559,7 @@ class QuickJump(object):
 		self._closeWindowAction.setShortcut(QtGui.QKeySequence("CTRL+w"))
 		self._closeWindowAction.triggered.connect(self._on_close_window)
 
-		fileMenu = self._window.menuBar().addMenu("&File")
+		fileMenu = self._window.menuBar().addMenu("&Units")
 		fileMenu.addAction(self._closeWindowAction)
 		fileMenu.addAction(self._app.quitAction)
 
@@ -472,7 +649,7 @@ class Recent(object):
 		self._closeWindowAction.setShortcut(QtGui.QKeySequence("CTRL+w"))
 		self._closeWindowAction.triggered.connect(self._on_close_window)
 
-		fileMenu = self._window.menuBar().addMenu("&File")
+		fileMenu = self._window.menuBar().addMenu("&Units")
 		fileMenu.addAction(self._closeWindowAction)
 		fileMenu.addAction(self._app.quitAction)
 
@@ -658,6 +835,10 @@ class UnitModel(QtCore.QAbstractItemModel):
 		assert 0 <= index
 		return self._children[index]
 
+	def get_unit_names(self):
+		for child in self._children:
+			yield child.name
+
 	def index_unit(self, unitName):
 		for i, child in enumerate(self._children):
 			if child.name == unitName:
@@ -679,6 +860,9 @@ class UnitModel(QtCore.QAbstractItemModel):
 		if self._sortSettings is not None:
 			self.sort(*self._sortSettings)
 		self._all_changed()
+
+	def __len__(self):
+		return len(self._children)
 
 	def _all_changed(self):
 		topLeft = self.createIndex(0, 0, self._children[0])
@@ -705,6 +889,7 @@ class UnitWindow(object):
 		self._app = app
 		self._categoryName = category
 		self._selectedIndex = 0
+		self._favoritesWindow = None
 
 		self._selectedUnitName = QtGui.QLabel()
 		self._selectedUnitValue = QtGui.QLineEdit()
@@ -755,16 +940,26 @@ class UnitWindow(object):
 		self._sortByNameAction.setText("Sort By Name")
 		self._sortByNameAction.setStatusTip("Sort the units by name")
 		self._sortByNameAction.setToolTip("Sort the units by name")
+		self._sortByNameAction.setCheckable(True)
 		self._sortByValueAction = QtGui.QAction(self._sortActionGroup)
 		self._sortByValueAction.setText("Sort By Value")
 		self._sortByValueAction.setStatusTip("Sort the units by value")
 		self._sortByValueAction.setToolTip("Sort the units by value")
+		self._sortByValueAction.setCheckable(True)
 		self._sortByUnitAction = QtGui.QAction(self._sortActionGroup)
 		self._sortByUnitAction.setText("Sort By Unit")
 		self._sortByUnitAction.setStatusTip("Sort the units by unit")
 		self._sortByUnitAction.setToolTip("Sort the units by unit")
+		self._sortByUnitAction.setCheckable(True)
 
 		self._sortByValueAction.setChecked(True)
+
+		self._chooseFavoritesAction = QtGui.QAction(None)
+		self._chooseFavoritesAction.setText("Select Favorites")
+		self._chooseFavoritesAction.setShortcut(QtGui.QKeySequence("CTRL+f"))
+		self._chooseFavoritesAction.triggered.connect(self._on_choose_favorites)
+
+		self._app.showFavoritesAction.toggled.connect(self._on_show_favorites)
 
 		self._previousUnitAction = QtGui.QAction(None)
 		self._previousUnitAction.setText("Previous Unit")
@@ -781,19 +976,22 @@ class UnitWindow(object):
 		self._closeWindowAction.setShortcut(QtGui.QKeySequence("CTRL+w"))
 		self._closeWindowAction.triggered.connect(self._on_close_window)
 
-		fileMenu = self._window.menuBar().addMenu("&File")
+		fileMenu = self._window.menuBar().addMenu("&Units")
+		fileMenu.addAction(self._chooseFavoritesAction)
 		fileMenu.addAction(self._closeWindowAction)
 		fileMenu.addAction(self._app.quitAction)
 
 		viewMenu = self._window.menuBar().addMenu("&View")
-		viewMenu.addAction(self._app.fullscreenAction)
-		viewMenu.addSeparator()
-		viewMenu.addAction(self._app.jumpAction)
-		viewMenu.addAction(self._app.recentAction)
+		viewMenu.addAction(self._app.showFavoritesAction)
 		viewMenu.addSeparator()
 		viewMenu.addAction(self._sortByNameAction)
 		viewMenu.addAction(self._sortByValueAction)
 		viewMenu.addAction(self._sortByUnitAction)
+		viewMenu.addSeparator()
+		viewMenu.addAction(self._app.jumpAction)
+		viewMenu.addAction(self._app.recentAction)
+		viewMenu.addSeparator()
+		viewMenu.addAction(self._app.fullscreenAction)
 
 		self._sortByNameAction.triggered.connect(self._on_sort_by_name)
 		self._sortByValueAction.triggered.connect(self._on_sort_by_value)
@@ -802,7 +1000,9 @@ class UnitWindow(object):
 		self._window.addAction(self._app.logAction)
 		self._window.addAction(self._nextUnitAction)
 		self._window.addAction(self._previousUnitAction)
+		self._window.addAction(self._chooseFavoritesAction)
 
+		self._update_favorites()
 		self._window.show()
 
 	@property
@@ -821,6 +1021,50 @@ class UnitWindow(object):
 	def select_unit(self, unitName):
 		index = self._unitsModel.index_unit(unitName)
 		self._select_unit(index)
+
+	def walk_children(self):
+		if self._favoritesWindow is not None:
+			yield self._favoritesWindow
+
+	def _update_favorites(self):
+		if self._app.showFavoritesAction.isChecked():
+			unitNames = list(self._unitsModel.get_unit_names())
+			for i, unitName in enumerate(unitNames):
+				if unitName in self._app.get_hidden_units(self._categoryName):
+					self._unitsView.setRowHidden(i, self._unitsView.rootIndex(), True)
+				else:
+					self._unitsView.setRowHidden(i, self._unitsView.rootIndex(), False)
+		else:
+			for i in xrange(len(self._unitsModel)):
+				self._unitsView.setRowHidden(i, self._unitsView.rootIndex(), False)
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_choose_favorites(self, obj = None):
+		assert self._favoritesWindow is None
+		self._favoritesWindow = FavoriteCategoriesWindow(
+			self._window,
+			self._app,
+			unit_data.get_units(self._categoryName),
+			self._app.get_hidden_units(self._categoryName)
+		)
+		self._favoritesWindow.window.destroyed.connect(self._on_close_favorites)
+		return self._favoritesWindow
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_show_favorites(self, checked = True):
+		if checked:
+			unitNames = list(self._unitsModel.get_unit_names())
+			for i, unitName in enumerate(unitNames):
+				if unitName in self._app.get_hidden_units(self._categoryName):
+					self._unitsView.setRowHidden(i, self._unitsView.rootIndex(), True)
+		else:
+			for i in xrange(len(self._unitsModel)):
+				self._unitsView.setRowHidden(i, self._unitsView.rootIndex(), False)
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_close_favorites(self, obj = None):
+		self._favoritesWindow = None
+		self._update_favorites()
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_previous_unit(self, checked = True):
