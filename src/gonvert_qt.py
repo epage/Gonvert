@@ -1011,6 +1011,8 @@ class UnitWindow(object):
 		return self._window
 
 	def close(self):
+		for child in self.walk_children():
+			child.close()
 		self._window.close()
 
 	def set_fullscreen(self, isFullscreen):
