@@ -82,7 +82,9 @@ class Gonvert(object):
 
 		self._jumpWindow = None
 		self._recentWindow = None
+		self._mainWindow = None
 		self._catWindow = None
+		self._quickWindow = None
 
 		self._condensedAction = QtGui.QAction(None)
 		self._condensedAction.setText("Condensed View")
@@ -128,30 +130,44 @@ class Gonvert(object):
 
 		self.request_category()
 		if self._recent:
-			self._catWindow.select_category(self._recent[-1][0])
+			self._mainWindow.select_category(self._recent[-1][0])
 
 	def request_category(self):
-		if self._catWindow is not None:
-			self._catWindow.close()
-			self._catWindow = None
+		if self._mainWindow is not None:
+			self._mainWindow.hide()
+
 		if self._condensedAction.isChecked():
-			self._catWindow = QuickConvert(None, self)
-			self._catWindow.window.destroyed.connect(lambda obj = None: self._on_child_close("_catWindow", obj))
+			if self._quickWindow is None:
+				self._quickWindow = QuickConvert(None, self)
+				self._quickWindow.window.destroyed.connect(lambda obj = None: self._on_child_close("_quickWindow", obj))
+			else:
+				self._quickWindow.show()
+			self._mainWindow = self._quickWindow
 		else:
-			self._catWindow = CategoryWindow(None, self)
-			self._catWindow.window.destroyed.connect(lambda obj = None: self._on_child_close("_catWindow", obj))
-		return self._catWindow
+			if self._catWindow is None:
+				self._catWindow = CategoryWindow(None, self)
+				self._catWindow.window.destroyed.connect(lambda obj = None: self._on_child_close("_catWindow", obj))
+			else:
+				self._catWindow.window.show()
+			self._mainWindow = self._catWindow
+
+		if self._recent:
+			self._mainWindow.select_category(self._recent[-1][0])
+
+		return self._mainWindow
 
 	def search_units(self):
+		jumpWindow = QuickJump(None, self)
+		jumpWindow.window.destroyed.connect(lambda obj = None: self._on_child_close("_jumpWindow", obj))
 		self._close_windows()
-		self._jumpWindow = QuickJump(None, self)
-		self._jumpWindow.window.destroyed.connect(lambda obj = None: self._on_child_close("_jumpWindow", obj))
+		self._jumpWindow = jumpWindow
 		return self._jumpWindow
 
 	def show_recent(self):
+		recentWindow = Recent(None, self)
+		recentWindow.window.destroyed.connect(lambda obj = None: self._on_child_close("_recentWindow", obj))
 		self._close_windows()
-		self._recentWindow = Recent(None, self)
-		self._recentWindow.window.destroyed.connect(lambda obj = None: self._on_child_close("_recentWindow", obj))
+		self._recentWindow = recentWindow
 		return self._recentWindow
 
 	def add_recent(self, categoryName, unitName):
@@ -265,6 +281,8 @@ class Gonvert(object):
 	def _walk_children(self):
 		if self._catWindow is not None:
 			yield self._catWindow
+		if self._quickWindow is not None:
+			yield self._quickWindow
 		if self._jumpWindow is not None:
 			yield self._jumpWindow
 		if self._recentWindow is not None:
@@ -274,6 +292,7 @@ class Gonvert(object):
 		for window in self._walk_children():
 			window.close()
 		self._catWindow = None
+		self._quickWindow = None
 		self._jumpWindow = None
 		self._recentWindow = None
 
@@ -382,6 +401,12 @@ class QuickJump(object):
 	def window(self):
 		return self._window
 
+	def show(self):
+		self._window.show()
+
+	def hide(self):
+		self._window.hide()
+
 	def close(self):
 		self._window.close()
 
@@ -480,6 +505,12 @@ class Recent(object):
 	@property
 	def window(self):
 		return self._window
+
+	def show(self):
+		self._window.show()
+
+	def hide(self):
+		self._window.hide()
 
 	def close(self):
 		self._window.close()
@@ -641,6 +672,12 @@ class QuickConvert(object):
 	@property
 	def window(self):
 		return self._window
+
+	def show(self):
+		self._window.show()
+
+	def hide(self):
+		self._window.hide()
 
 	def close(self):
 		self._window.close()
@@ -945,6 +982,12 @@ class FavoritesWindow(object):
 	def window(self):
 		return self._window
 
+	def show(self):
+		self._window.show()
+
+	def hide(self):
+		self._window.hide()
+
 	def close(self):
 		self._window.close()
 
@@ -1075,6 +1118,16 @@ class CategoryWindow(object):
 			yield self._unitWindow
 		if self._favoritesWindow is not None:
 			yield self._favoritesWindow
+
+	def show(self):
+		for child in self.walk_children():
+			child.show()
+		self._window.show()
+
+	def hide(self):
+		for child in self.walk_children():
+			child.hide()
+		self._window.hide()
 
 	def close(self):
 		for child in self.walk_children():
@@ -1529,6 +1582,16 @@ class UnitWindow(object):
 	@property
 	def window(self):
 		return self._window
+
+	def show(self):
+		for child in self.walk_children():
+			child.hide()
+		self._window.show()
+
+	def hide(self):
+		for child in self.walk_children():
+			child.hide()
+		self._window.hide()
 
 	def close(self):
 		for child in self.walk_children():
