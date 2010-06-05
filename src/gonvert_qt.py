@@ -74,7 +74,6 @@ class Gonvert(object):
 		self._recent = []
 		self._hiddenCategories = set()
 		self._hiddenUnits = {}
-		self._isFullscreen = False
 		self._clipboard = QtGui.QApplication.clipboard()
 
 		self._jumpWindow = None
@@ -96,10 +95,10 @@ class Gonvert(object):
 		self._recentAction.triggered.connect(self._on_recent_start)
 
 		self._fullscreenAction = QtGui.QAction(None)
-		self._fullscreenAction.setText("Toggle Fullscreen")
-		# @todo Make this checkable
+		self._fullscreenAction.setText("Fullscreen")
+		self._fullscreenAction.setCheckable(True)
 		self._fullscreenAction.setShortcut(QtGui.QKeySequence("CTRL+Enter"))
-		self._fullscreenAction.triggered.connect(self._on_toggle_fullscreen)
+		self._fullscreenAction.toggled.connect(self._on_toggle_fullscreen)
 
 		self._showFavoritesAction = QtGui.QAction(None)
 		self._showFavoritesAction.setCheckable(True)
@@ -184,7 +183,7 @@ class Gonvert(object):
 			_moduleLogger.info("Settings were corrupt")
 			settings = {}
 
-		self._isFullscreen = settings.get("isFullScreen", self._isFullscreen)
+		self._fullscreenAction.setChecked(settings.get("isFullScreen", False))
 
 		recent = settings.get("recent", self._recent)
 		for category, unit in recent:
@@ -198,14 +197,12 @@ class Gonvert(object):
 
 		self._showFavoritesAction.setChecked(settings.get("showFavorites", True))
 
-		for window in self._walk_children():
-			window.set_fullscreen(self._isFullscreen)
 		if self._recent:
 			self._catWindow.select_category(self._recent[-1][0])
 
 	def save_settings(self):
 		settings = {
-			"isFullScreen": self._isFullscreen,
+			"isFullScreen": self._fullscreenAction.isChecked(),
 			"recent": self._recent,
 			"hiddenCategories": list(self._hiddenCategories),
 			"hiddenUnits": dict(
@@ -266,9 +263,8 @@ class Gonvert(object):
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_toggle_fullscreen(self, checked = False):
-		self._isFullscreen = not self._isFullscreen
 		for window in self._walk_children():
-			window.set_fullscreen(self._isFullscreen)
+			window.set_fullscreen(checked)
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_jump_start(self, checked = False):
@@ -341,6 +337,7 @@ class QuickJump(object):
 
 		self._window.addAction(self._app.logAction)
 
+		self.set_fullscreen(self._app.fullscreenAction.isChecked())
 		self._window.show()
 
 	@property
@@ -431,6 +428,7 @@ class Recent(object):
 
 		self._window.addAction(self._app.logAction)
 
+		self.set_fullscreen(self._app.fullscreenAction.isChecked())
 		self._window.show()
 
 	@property
@@ -511,6 +509,7 @@ class FavoriteCategoriesWindow(object):
 
 		self._window.addAction(self._app.logAction)
 
+		self.set_fullscreen(self._app.fullscreenAction.isChecked())
 		self._window.show()
 
 	@property
@@ -600,6 +599,7 @@ class CategoryWindow(object):
 		self._window.addAction(self._app.logAction)
 
 		self._update_favorites()
+		self.set_fullscreen(self._app.fullscreenAction.isChecked())
 		self._window.show()
 
 	@property
@@ -1003,6 +1003,7 @@ class UnitWindow(object):
 		self._window.addAction(self._chooseFavoritesAction)
 
 		self._update_favorites()
+		self.set_fullscreen(self._app.fullscreenAction.isChecked())
 		self._window.show()
 
 	@property
