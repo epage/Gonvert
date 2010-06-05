@@ -76,6 +76,7 @@ def build_package(distribution):
 	p.license = "gpl"
 	p.depends = ", ".join([
 		"python2.6 | python2.5",
+		"python-simplejson",
 	])
 	p.depends += {
 		"debian": ", python-qt4",
