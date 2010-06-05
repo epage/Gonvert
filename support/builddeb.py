@@ -78,7 +78,7 @@ def build_package(distribution):
 	p.depends = ", ".join([
 		"python2.6 | python2.5",
 		"python-gtk2 | python2.5-gtk2",
-		"python-pyqt4 | python2.5-pyqt4",
+		"python-pyqt4 | python2.5-qt4",
 	])
 	p.recommends = ", ".join([
 	])
