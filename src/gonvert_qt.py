@@ -301,8 +301,8 @@ class Gonvert(object):
 			self._recentWindow = None
 
 	def _close_windows(self):
-		for window in self._walk_children():
-			window.close()
+		for child in self._walk_children():
+			child.close()
 		self._catWindow = None
 		self._quickWindow = None
 		self._jumpWindow = None
@@ -1143,11 +1143,13 @@ class CategoryWindow(object):
 
 	def close(self):
 		for child in self.walk_children():
+			child.window.destroyed.disconnect(self._on_child_close)
 			child.close()
 		self._window.close()
 
 	def select_category(self, categoryName):
 		for child in self.walk_children():
+			child.window.destroyed.disconnect(self._on_child_close)
 			child.close()
 		self._unitWindow = UnitWindow(self._window, categoryName, self._app)
 		self._unitWindow.window.destroyed.connect(self._on_child_close)
@@ -1607,6 +1609,7 @@ class UnitWindow(object):
 
 	def close(self):
 		for child in self.walk_children():
+			child.window.destroyed.disconnect(self._on_child_close)
 			child.close()
 		self._window.close()
 
