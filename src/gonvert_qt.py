@@ -1395,8 +1395,8 @@ class UnitModel(QtCore.QAbstractItemModel):
 			self._sortSettings is not None and
 			self._sortSettings[0]  in [UnitData.VALUE_COLUMN_0, UnitData.VALUE_COLUMN_1]
 		):
+			# Sort takes care of marking everything as changed
 			self.sort(*self._sortSettings)
-			self._all_changed()
 		else:
 			self._values_changed()
 
@@ -1499,7 +1499,6 @@ class UnitWindow(object):
 			self.select_unit(defaultUnitName)
 		else:
 			self._select_unit(0)
-		self._unitsModel.sort(UnitData.NAME_COLUMN)
 
 		self._sortActionGroup = QtGui.QActionGroup(None)
 		self._sortByNameAction = QtGui.QAction(self._sortActionGroup)
@@ -1518,7 +1517,10 @@ class UnitWindow(object):
 		self._sortByUnitAction.setToolTip("Sort the units by unit")
 		self._sortByUnitAction.setCheckable(True)
 
-		self._sortByValueAction.setChecked(True)
+		if UnitData.NAME_COLUMN != 0:
+			# By default it sorts by he first column (name)
+			self._unitsModel.sort(UnitData.NAME_COLUMN)
+		self._sortByNameAction.setChecked(True)
 
 		self._chooseFavoritesAction = QtGui.QAction(None)
 		self._chooseFavoritesAction.setText("Select Favorites")
