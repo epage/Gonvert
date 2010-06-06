@@ -151,9 +151,6 @@ class Gonvert(object):
 				self._catWindow.window.show()
 			self._mainWindow = self._catWindow
 
-		if self._recent:
-			self._mainWindow.select_category(self._recent[-1][0])
-
 		return self._mainWindow
 
 	def search_units(self):
@@ -327,6 +324,8 @@ class Gonvert(object):
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_condensed_start(self, checked = False):
 		self.request_category()
+		if self._recent:
+			self._mainWindow.select_category(self._recent[-1][0])
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_jump_start(self, checked = False):
