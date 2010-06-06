@@ -1473,10 +1473,10 @@ class UnitWindow(object):
 		viewHeader.setStretchLastSection(False)
 
 		# Trying to make things faster by locking in the initial size of the immutable columns
-		nameSize = viewHeader.sectionSize(UnitData.NAME_COLUMN)
+		nameSize = min(viewHeader.sectionSize(UnitData.NAME_COLUMN), 125)
 		viewHeader.setResizeMode(UnitData.NAME_COLUMN, QtGui.QHeaderView.Fixed)
 		viewHeader.resizeSection(UnitData.NAME_COLUMN, nameSize)
-		unitSize = viewHeader.sectionSize(UnitData.UNIT_COLUMN)
+		unitSize = min(viewHeader.sectionSize(UnitData.UNIT_COLUMN), 125)
 		viewHeader.setResizeMode(UnitData.UNIT_COLUMN, QtGui.QHeaderView.Fixed)
 		viewHeader.resizeSection(UnitData.UNIT_COLUMN, unitSize)
 
