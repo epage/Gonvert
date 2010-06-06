@@ -701,7 +701,10 @@ class QuickConvert(object):
 
 	def select_category(self, categoryName):
 		self._inputUnitValue.setText("")
+		self._inputUnitSymbol.setText("")
 		self._inputView.clear()
+		self._outputUnitValue.setText("")
+		self._outputUnitSymbol.setText("")
 		self._outputView.clear()
 		self._categoryName = categoryName
 
