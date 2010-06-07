@@ -635,6 +635,7 @@ class QuickConvert(object):
 		self._chooseUnitFavoritesAction = QtGui.QAction(None)
 		self._chooseUnitFavoritesAction.setText("Select Units")
 		self._chooseUnitFavoritesAction.triggered.connect(self._on_choose_unit_favorites)
+		self._chooseUnitFavoritesAction.setEnabled(False)
 
 		self._app.showFavoritesAction.toggled.connect(self._on_show_favorites)
 
@@ -707,6 +708,7 @@ class QuickConvert(object):
 		self._outputUnitSymbol.setText("")
 		self._outputView.clear()
 		self._categoryName = categoryName
+		self._chooseUnitFavoritesAction.setEnabled(True)
 
 		unitData = unit_data.UNIT_DESCRIPTIONS[categoryName]
 		self._unitNames = list(unit_data.get_units(categoryName))
