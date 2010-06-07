@@ -380,8 +380,6 @@ class QuickJump(object):
 		self._window.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
 		maeqt.set_autorient(self._window, True)
 		maeqt.set_stackable(self._window, True)
-		if parent is not None:
-			self._window.setWindowModality(QtCore.Qt.WindowModal)
 		self._window.setWindowTitle("%s - Quick Jump" % constants.__pretty_app_name__)
 		self._window.setWindowIcon(QtGui.QIcon(self._app.appIconPath))
 		self._window.setCentralWidget(centralWidget)
@@ -480,8 +478,6 @@ class Recent(object):
 		self._window.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
 		maeqt.set_autorient(self._window, True)
 		maeqt.set_stackable(self._window, True)
-		if parent is not None:
-			self._window.setWindowModality(QtCore.Qt.WindowModal)
 		self._window.setWindowTitle("%s - Recent" % constants.__pretty_app_name__)
 		self._window.setWindowIcon(QtGui.QIcon(self._app.appIconPath))
 		self._window.setCentralWidget(centralWidget)
@@ -622,8 +618,6 @@ class QuickConvert(object):
 		self._window.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
 		maeqt.set_autorient(self._window, True)
 		maeqt.set_stackable(self._window, True)
-		if parent is not None:
-			self._window.setWindowModality(QtCore.Qt.WindowModal)
 		self._window.setWindowTitle("%s - Quick Convert" % (constants.__pretty_app_name__, ))
 		self._window.setWindowIcon(QtGui.QIcon(app.appIconPath))
 		self._window.setCentralWidget(centralWidget)
@@ -966,8 +960,6 @@ class FavoritesWindow(object):
 		self._window.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
 		maeqt.set_autorient(self._window, True)
 		maeqt.set_stackable(self._window, True)
-		if parent is not None:
-			self._window.setWindowModality(QtCore.Qt.WindowModal)
 		self._window.setWindowTitle("%s - Favorites" % constants.__pretty_app_name__)
 		self._window.setWindowIcon(QtGui.QIcon(self._app.appIconPath))
 		self._window.setCentralWidget(centralWidget)
@@ -1072,8 +1064,6 @@ class CategoryWindow(object):
 		self._window.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
 		maeqt.set_autorient(self._window, True)
 		maeqt.set_stackable(self._window, True)
-		if parent is not None:
-			self._window.setWindowModality(QtCore.Qt.WindowModal)
 		self._window.setWindowTitle("%s - Categories" % constants.__pretty_app_name__)
 		self._window.setWindowIcon(QtGui.QIcon(self._app.appIconPath))
 		self._window.setCentralWidget(centralWidget)
@@ -1493,8 +1483,6 @@ class UnitWindow(object):
 		self._window.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
 		maeqt.set_autorient(self._window, True)
 		maeqt.set_stackable(self._window, True)
-		if parent is not None:
-			self._window.setWindowModality(QtCore.Qt.WindowModal)
 		self._window.setWindowTitle("%s - %s" % (constants.__pretty_app_name__, category))
 		self._window.setWindowIcon(QtGui.QIcon(app.appIconPath))
 		self._window.setCentralWidget(centralWidget)
