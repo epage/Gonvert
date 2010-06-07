@@ -21,6 +21,7 @@ __build__ = constants.__build__
 __changelog__ = """
 * A condensed view of unit conversion for those who so chose
 * Changed the way windows handle closing
+* Improved performance of jumping between some of the windows (including startup)
 """
 
 
