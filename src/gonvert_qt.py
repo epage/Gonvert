@@ -86,6 +86,11 @@ class Gonvert(object):
 		self._catWindow = None
 		self._quickWindow = None
 
+		self._on_jump_close = lambda obj = None: self._on_child_close("_jumpWindow", obj)
+		self._on_recent_close = lambda obj = None: self._on_child_close("_recentWindow", obj)
+		self._on_cat_close = lambda obj = None: self._on_child_close("_catWindow", obj)
+		self._on_quick_close = lambda obj = None: self._on_child_close("_quickWindow", obj)
+
 		self._condensedAction = QtGui.QAction(None)
 		self._condensedAction.setText("Condensed View")
 		self._condensedAction.setCheckable(True)
@@ -139,14 +144,14 @@ class Gonvert(object):
 		if self._condensedAction.isChecked():
 			if self._quickWindow is None:
 				self._quickWindow = QuickConvert(None, self)
-				self._quickWindow.window.destroyed.connect(lambda obj = None: self._on_child_close("_quickWindow", obj))
+				self._quickWindow.window.destroyed.connect(self._on_quick_close)
 			else:
 				self._quickWindow.show()
 			self._mainWindow = self._quickWindow
 		else:
 			if self._catWindow is None:
 				self._catWindow = CategoryWindow(None, self)
-				self._catWindow.window.destroyed.connect(lambda obj = None: self._on_child_close("_catWindow", obj))
+				self._catWindow.window.destroyed.connect(self._on_cat_close)
 			else:
 				self._catWindow.window.show()
 			self._mainWindow = self._catWindow
@@ -155,14 +160,14 @@ class Gonvert(object):
 
 	def search_units(self):
 		jumpWindow = QuickJump(None, self)
-		jumpWindow.window.destroyed.connect(lambda obj = None: self._on_child_close("_jumpWindow", obj))
+		jumpWindow.window.destroyed.connect(self._on_jump_close)
 		self._fake_close_windows()
 		self._jumpWindow = jumpWindow
 		return self._jumpWindow
 
 	def show_recent(self):
 		recentWindow = Recent(None, self)
-		recentWindow.window.destroyed.connect(lambda obj = None: self._on_child_close("_recentWindow", obj))
+		recentWindow.window.destroyed.connect(self._on_recent_close)
 		self._fake_close_windows()
 		self._recentWindow = recentWindow
 		return self._recentWindow
@@ -291,19 +296,31 @@ class Gonvert(object):
 		if self._quickWindow is not None:
 			self._quickWindow.hide()
 		if self._jumpWindow is not None:
+			self._jumpWindow.disconnect(self._on_jump_close)
 			self._jumpWindow.close()
 			self._jumpWindow = None
 		if self._recentWindow is not None:
+			self._recentWindow.disconnect(self._on_recent_close)
 			self._recentWindow.close()
 			self._recentWindow = None
 
 	def _close_windows(self):
-		for child in self._walk_children():
-			child.close()
-		self._catWindow = None
-		self._quickWindow = None
-		self._jumpWindow = None
-		self._recentWindow = None
+		if self._catWindow is not None:
+			self._catWindow.disconnect(self._on_cat_close)
+			self._catWindow.close()
+			self._catWindow = None
+		if self._quickWindow is not None:
+			self._quickWindow.disconnect(self._on_quick_close)
+			self._quickWindow.close()
+			self._quickWindow = None
+		if self._jumpWindow is not None:
+			self._jumpWindow.disconnect(self._on_jump_close)
+			self._jumpWindow.close()
+			self._jumpWindow = None
+		if self._recentWindow is not None:
+			self._recentWindow.disconnect(self._on_recent_close)
+			self._recentWindow.close()
+			self._recentWindow = None
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_app_quit(self, checked = False):
