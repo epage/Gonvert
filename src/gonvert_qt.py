@@ -572,7 +572,7 @@ class QuickConvert(object):
 
 		self._categoryView = QtGui.QTreeWidget()
 		self._categoryView.setHeaderLabels(["Categories"])
-		self._categoryView.setHeaderHidden(True)
+		self._categoryView.setHeaderHidden(False)
 		if not IS_MAEMO:
 			self._categoryView.setAlternatingRowColors(True)
 		self._categoryView.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
@@ -584,8 +584,8 @@ class QuickConvert(object):
 		self._categorySelection.selectionChanged.connect(self._on_category_selection_changed)
 
 		self._inputView = QtGui.QTreeWidget()
-		self._inputView.setHeaderLabels(["Input", "Name"])
-		self._inputView.setHeaderHidden(True)
+		self._inputView.setHeaderLabels(["From", "Name"])
+		self._inputView.setHeaderHidden(False)
 		self._inputView.header().hideSection(1)
 		if not IS_MAEMO:
 			self._inputView.setAlternatingRowColors(True)
@@ -595,8 +595,8 @@ class QuickConvert(object):
 		self._inputSelection.selectionChanged.connect(self._on_input_selection_changed)
 
 		self._outputView = QtGui.QTreeWidget()
-		self._outputView.setHeaderLabels(["Output", "Name"])
-		self._outputView.setHeaderHidden(True)
+		self._outputView.setHeaderLabels(["To", "Name"])
+		self._outputView.setHeaderHidden(False)
 		self._outputView.header().hideSection(1)
 		if not IS_MAEMO:
 			self._outputView.setAlternatingRowColors(True)
