@@ -120,6 +120,25 @@ class Gonvert(object):
 		self._showFavoritesAction.setCheckable(True)
 		self._showFavoritesAction.setText("Favorites Only")
 
+		self._sortActionGroup = QtGui.QActionGroup(None)
+		self._sortByNameAction = QtGui.QAction(self._sortActionGroup)
+		self._sortByNameAction.setText("Sort By Name")
+		self._sortByNameAction.setStatusTip("Sort the units by name")
+		self._sortByNameAction.setToolTip("Sort the units by name")
+		self._sortByNameAction.setCheckable(True)
+		self._sortByValueAction = QtGui.QAction(self._sortActionGroup)
+		self._sortByValueAction.setText("Sort By Value")
+		self._sortByValueAction.setStatusTip("Sort the units by value")
+		self._sortByValueAction.setToolTip("Sort the units by value")
+		self._sortByValueAction.setCheckable(True)
+		self._sortByUnitAction = QtGui.QAction(self._sortActionGroup)
+		self._sortByUnitAction.setText("Sort By Unit")
+		self._sortByUnitAction.setStatusTip("Sort the units by unit")
+		self._sortByUnitAction.setToolTip("Sort the units by unit")
+		self._sortByUnitAction.setCheckable(True)
+
+		self._sortByNameAction.setChecked(True)
+
 		self._logAction = QtGui.QAction(None)
 		self._logAction.setText("Log")
 		self._logAction.setShortcut(QtGui.QKeySequence("CTRL+l"))
@@ -267,6 +286,18 @@ class Gonvert(object):
 	@property
 	def condensedAction(self):
 		return self._condensedAction
+
+	@property
+	def sortByNameAction(self):
+		return self._sortByNameAction
+
+	@property
+	def sortByValueAction(self):
+		return self._sortByValueAction
+
+	@property
+	def sortByUnitAction(self):
+		return self._sortByUnitAction
 
 	@property
 	def logAction(self):
@@ -1525,27 +1556,17 @@ class UnitWindow(object):
 		else:
 			self._select_unit(0)
 
-		self._sortActionGroup = QtGui.QActionGroup(None)
-		self._sortByNameAction = QtGui.QAction(self._sortActionGroup)
-		self._sortByNameAction.setText("Sort By Name")
-		self._sortByNameAction.setStatusTip("Sort the units by name")
-		self._sortByNameAction.setToolTip("Sort the units by name")
-		self._sortByNameAction.setCheckable(True)
-		self._sortByValueAction = QtGui.QAction(self._sortActionGroup)
-		self._sortByValueAction.setText("Sort By Value")
-		self._sortByValueAction.setStatusTip("Sort the units by value")
-		self._sortByValueAction.setToolTip("Sort the units by value")
-		self._sortByValueAction.setCheckable(True)
-		self._sortByUnitAction = QtGui.QAction(self._sortActionGroup)
-		self._sortByUnitAction.setText("Sort By Unit")
-		self._sortByUnitAction.setStatusTip("Sort the units by unit")
-		self._sortByUnitAction.setToolTip("Sort the units by unit")
-		self._sortByUnitAction.setCheckable(True)
-
-		if UnitData.NAME_COLUMN != 0:
+		if self._app.sortByNameAction.isChecked():
+			sortColumn = UnitData.NAME_COLUMN
+		elif self._app.sortByValueAction.isChecked():
+			sortColumn = UnitData.VALUE_COLUMN_0
+		elif self._app.sortByUnitAction.isChecked():
+			sortColumn = UnitData.UNIT_COLUMN
+		else:
+			raise RuntimeError("No sort column selected")
+		if sortColumn != 0:
 			# By default it sorts by he first column (name)
-			self._unitsModel.sort(UnitData.NAME_COLUMN)
-		self._sortByNameAction.setChecked(True)
+			self._unitsModel.sort(sortColumn)
 
 		self._chooseFavoritesAction = QtGui.QAction(None)
 		self._chooseFavoritesAction.setText("Select Favorites")
@@ -1581,9 +1602,9 @@ class UnitWindow(object):
 			viewMenu.addAction(self._app.showFavoritesAction)
 			viewMenu.addAction(self._app.condensedAction)
 			viewMenu.addSeparator()
-			viewMenu.addAction(self._sortByNameAction)
-			viewMenu.addAction(self._sortByValueAction)
-			viewMenu.addAction(self._sortByUnitAction)
+			viewMenu.addAction(self._app.sortByNameAction)
+			viewMenu.addAction(self._app.sortByValueAction)
+			viewMenu.addAction(self._app.sortByUnitAction)
 			viewMenu.addSeparator()
 			viewMenu.addAction(self._app.jumpAction)
 			viewMenu.addAction(self._app.recentAction)
@@ -1597,18 +1618,18 @@ class UnitWindow(object):
 			viewMenu.addAction(self._app.showFavoritesAction)
 			viewMenu.addAction(self._app.condensedAction)
 			viewMenu.addSeparator()
-			viewMenu.addAction(self._sortByNameAction)
-			viewMenu.addAction(self._sortByValueAction)
-			viewMenu.addAction(self._sortByUnitAction)
+			viewMenu.addAction(self._app.sortByNameAction)
+			viewMenu.addAction(self._app.sortByValueAction)
+			viewMenu.addAction(self._app.sortByUnitAction)
 			viewMenu.addSeparator()
 			viewMenu.addAction(self._app.jumpAction)
 			viewMenu.addAction(self._app.recentAction)
 			viewMenu.addSeparator()
 			viewMenu.addAction(self._app.fullscreenAction)
 
-		self._sortByNameAction.triggered.connect(self._on_sort_by_name)
-		self._sortByValueAction.triggered.connect(self._on_sort_by_value)
-		self._sortByUnitAction.triggered.connect(self._on_sort_by_unit)
+		self._app.sortByNameAction.triggered.connect(self._on_sort_by_name)
+		self._app.sortByValueAction.triggered.connect(self._on_sort_by_value)
+		self._app.sortByUnitAction.triggered.connect(self._on_sort_by_unit)
 
 		self._window.addAction(self._app.logAction)
 		self._window.addAction(self._nextUnitAction)
