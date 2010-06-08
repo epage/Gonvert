@@ -5,7 +5,7 @@ import sys
 import logging
 
 
-_moduleLogger = logging.getLogger("gonvert")
+_moduleLogger = logging.getLogger(__name__)
 sys.path.append("/opt/gonvert/lib")
 
 

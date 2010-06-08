@@ -18,7 +18,7 @@ from util import misc as misc_utils
 import unit_data
 
 
-_moduleLogger = logging.getLogger("gonvert_glade")
+_moduleLogger = logging.getLogger(__name__)
 
 
 IS_MAEMO = True

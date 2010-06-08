@@ -28,7 +28,8 @@ else:
 	_ = gettext.gettext
 
 
-_moduleLogger = logging.getLogger("gonvert_glade")
+_moduleLogger = logging.getLogger(__name__)
+
 
 if gettext is not None:
 	gettext.bindtextdomain('gonvert', '/usr/share/locale')
