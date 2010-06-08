@@ -1076,6 +1076,8 @@ class CategoryWindow(object):
 		self._categories.setHeaderLabels(["Categories"])
 		self._categories.itemClicked.connect(self._on_category_clicked)
 		self._categories.setHeaderHidden(True)
+		self._categories.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
+		self._categories.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
 		if not IS_MAEMO:
 			self._categories.setAlternatingRowColors(True)
 		for catName in unit_data.UNIT_CATEGORIES:
@@ -1477,6 +1479,8 @@ class UnitWindow(object):
 		self._unitsView.setSortingEnabled(True)
 		self._unitsView.setTextElideMode(QtCore.Qt.ElideNone)
 		self._unitsView.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+		self._unitsView.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
+		self._unitsView.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
 		if not IS_MAEMO:
 			self._unitsView.setAlternatingRowColors(True)
 		if True:
