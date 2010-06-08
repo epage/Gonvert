@@ -157,22 +157,28 @@ class Gonvert(object):
 			self._mainWindow.select_category(self._recent[-1][0])
 
 	def request_category(self):
-		if self._mainWindow is not None:
-			self._mainWindow.hide()
 
 		if self._condensedAction.isChecked():
+			if self._catWindow is not None:
+				self._catWindow.hide()
+
 			if self._quickWindow is None:
 				self._quickWindow = QuickConvert(None, self)
 				self._quickWindow.window.destroyed.connect(self._on_quick_close)
 			else:
 				self._quickWindow.show()
+
 			self._mainWindow = self._quickWindow
 		else:
+			if self._quickWindow is not None:
+				self._quickWindow.hide()
+
 			if self._catWindow is None:
 				self._catWindow = CategoryWindow(None, self)
 				self._catWindow.window.destroyed.connect(self._on_cat_close)
 			else:
 				self._catWindow.window.show()
+
 			self._mainWindow = self._catWindow
 
 		return self._mainWindow
@@ -180,14 +186,12 @@ class Gonvert(object):
 	def search_units(self):
 		jumpWindow = QuickJump(None, self)
 		jumpWindow.window.destroyed.connect(self._on_jump_close)
-		self._fake_close_windows()
 		self._jumpWindow = jumpWindow
 		return self._jumpWindow
 
 	def show_recent(self):
 		recentWindow = Recent(None, self)
 		recentWindow.window.destroyed.connect(self._on_recent_close)
-		self._fake_close_windows()
 		self._recentWindow = recentWindow
 		return self._recentWindow
 
@@ -348,20 +352,6 @@ class Gonvert(object):
 			yield self._jumpWindow
 		if self._recentWindow is not None:
 			yield self._recentWindow
-
-	def _fake_close_windows(self):
-		if self._catWindow is not None:
-			self._catWindow.hide()
-		if self._quickWindow is not None:
-			self._quickWindow.hide()
-		if self._jumpWindow is not None:
-			self._jumpWindow.window.destroyed.disconnect(self._on_jump_close)
-			self._jumpWindow.close()
-			self._jumpWindow = None
-		if self._recentWindow is not None:
-			self._recentWindow.window.destroyed.disconnect(self._on_recent_close)
-			self._recentWindow.close()
-			self._recentWindow = None
 
 	def _close_windows(self):
 		if self._catWindow is not None:
