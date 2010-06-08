@@ -3,5 +3,5 @@ Encoding=UTF-8
 Version=1.0
 Type=Application
 Name=Gonvert
-Exec=/usr/bin/run-standalone.sh /usr/bin/gonvert.py
+Exec=/usr/bin/run-standalone.sh /opt/gonvert/bin/gonvert.py
 Icon=gonvert

@@ -6,7 +6,7 @@ import logging
 
 
 _moduleLogger = logging.getLogger("gonvert")
-sys.path.append("/usr/lib/gonvert/")
+sys.path.append("/opt/gonvert/lib")
 
 
 import constants

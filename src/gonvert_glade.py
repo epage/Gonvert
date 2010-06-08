@@ -70,9 +70,8 @@ class Gonvert(object):
 	_glade_files = [
 		os.path.join(os.path.dirname(__file__), "gonvert.glade"),
 		os.path.join(os.path.dirname(__file__), "../data/gonvert.glade"),
-		os.path.join(os.path.dirname(__file__), "../lib/gonvert.glade"),
+		os.path.join(os.path.dirname(__file__), "../share/gonvert.glade"),
 		'/usr/share/gonvert/gonvert.glade',
-		'/usr/lib/gonvert/gonvert.glade',
 	]
 
 	UNITS_NAME_IDX = 0

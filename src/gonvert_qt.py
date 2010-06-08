@@ -58,10 +58,10 @@ class Gonvert(object):
 
 	_DATA_PATHS = [
 		os.path.dirname(__file__),
+		os.path.join(os.path.dirname(__file__), "../share"),
 		os.path.join(os.path.dirname(__file__), "../data"),
-		os.path.join(os.path.dirname(__file__), "../lib"),
 		'/usr/share/gonvert',
-		'/usr/lib/gonvert',
+		'/opt/gonvert/share',
 	]
 
 	def __init__(self, app):

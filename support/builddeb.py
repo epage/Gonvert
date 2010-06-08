@@ -19,7 +19,7 @@ __email__ = "anthony@unihedron.com"
 __version__ = constants.__version__
 __build__ = constants.__build__
 __changelog__ = """
-* Maemo 4.1 support
+* Optification
 """
 
 
@@ -95,9 +95,9 @@ def build_package(distribution):
 		"diablo": "data-pixmaps-gonvert.png",
 		"fremantle": "data-pixmaps-gonvert.png", # Fremantle natively uses 48x48
 	}[distribution]
-	p["/usr/bin"] = [ "gonvert.py" ]
+	p["/opt/gonvert/bin"] = [ "gonvert.py" ]
 	for relPath, files in unflatten_files(find_files("src", ".")).iteritems():
-		fullPath = "/usr/lib/gonvert"
+		fullPath = "/opt/gonvert/lib"
 		if relPath:
 			fullPath += os.sep+relPath
 		p[fullPath] = list(
@@ -105,7 +105,7 @@ def build_package(distribution):
 			for (oldName, newName) in files
 		)
 	for relPath, files in unflatten_files(find_files("data", ".")).iteritems():
-		fullPath = "/usr/share/gonvert"
+		fullPath = "/opt/gonvert/share"
 		if relPath:
 			fullPath += os.sep+relPath
 		p[fullPath] = list(
