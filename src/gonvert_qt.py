@@ -712,6 +712,8 @@ class QuickConvert(object):
 			self._window.showNormal()
 
 	def select_category(self, categoryName):
+		self._inputUnitName = ""
+		self._outputUnitName = ""
 		self._inputUnitValue.setText("")
 		self._inputUnitSymbol.setText("")
 		self._inputView.clear()
