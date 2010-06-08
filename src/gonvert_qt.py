@@ -296,29 +296,29 @@ class Gonvert(object):
 		if self._quickWindow is not None:
 			self._quickWindow.hide()
 		if self._jumpWindow is not None:
-			self._jumpWindow.disconnect(self._on_jump_close)
+			self._jumpWindow.window.destroyed.disconnect(self._on_jump_close)
 			self._jumpWindow.close()
 			self._jumpWindow = None
 		if self._recentWindow is not None:
-			self._recentWindow.disconnect(self._on_recent_close)
+			self._recentWindow.window.destroyed.disconnect(self._on_recent_close)
 			self._recentWindow.close()
 			self._recentWindow = None
 
 	def _close_windows(self):
 		if self._catWindow is not None:
-			self._catWindow.disconnect(self._on_cat_close)
+			self._catWindow.window.destroyed.disconnect(self._on_cat_close)
 			self._catWindow.close()
 			self._catWindow = None
 		if self._quickWindow is not None:
-			self._quickWindow.disconnect(self._on_quick_close)
+			self._quickWindow.window.destroyed.disconnect(self._on_quick_close)
 			self._quickWindow.close()
 			self._quickWindow = None
 		if self._jumpWindow is not None:
-			self._jumpWindow.disconnect(self._on_jump_close)
+			self._jumpWindow.window.destroyed.disconnect(self._on_jump_close)
 			self._jumpWindow.close()
 			self._jumpWindow = None
 		if self._recentWindow is not None:
-			self._recentWindow.disconnect(self._on_recent_close)
+			self._recentWindow.window.destroyed.disconnect(self._on_recent_close)
 			self._recentWindow.close()
 			self._recentWindow = None
 
@@ -1156,9 +1156,9 @@ class CategoryWindow(object):
 			yield self._favoritesWindow
 
 	def show(self):
+		self._window.show()
 		for child in self.walk_children():
 			child.show()
-		self._window.show()
 
 	def hide(self):
 		for child in self.walk_children():
