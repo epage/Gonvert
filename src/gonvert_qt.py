@@ -24,11 +24,6 @@ _moduleLogger = logging.getLogger(__name__)
 IS_MAEMO = True
 
 
-def change_menu_label(widgets, labelname, newtext):
-	item_label = widgets.get_widget(labelname).get_children()[0]
-	item_label.set_text(newtext)
-
-
 def split_number(number):
 	try:
 		fractional, integer = math.modf(number)
