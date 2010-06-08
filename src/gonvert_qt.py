@@ -238,6 +238,25 @@ class Gonvert(object):
 
 		self._fullscreenAction.setChecked(settings.get("isFullScreen", False))
 
+		sortBy = settings.get("sortBy", "name")
+		if sortBy not in ["name", "value", "unit"]:
+			_moduleLogger.info("Setting sortBy is not a valid value: %s" % sortBy)
+			sortBy = "name"
+		if sortBy == "name":
+			self._sortByNameAction.setChecked(True)
+			self._sortByValueAction.setChecked(False)
+			self._sortByUnitAction.setChecked(False)
+		elif sortBy == "value":
+			self._sortByNameAction.setChecked(False)
+			self._sortByValueAction.setChecked(True)
+			self._sortByUnitAction.setChecked(False)
+		elif sortBy == "unit":
+			self._sortByNameAction.setChecked(False)
+			self._sortByValueAction.setChecked(False)
+			self._sortByUnitAction.setChecked(True)
+		else:
+			raise RuntimeError("How did this sortBy come about? %s" % sortBy)
+
 		recent = settings.get("recent", self._recent)
 		for category, unit in recent:
 			self.add_recent(category, unit)
@@ -253,6 +272,14 @@ class Gonvert(object):
 		self._condensedAction.setChecked(settings.get("useQuick", self._condensedAction.isChecked()))
 
 	def save_settings(self):
+		if self._sortByNameAction.isChecked():
+			sortBy = "name"
+		elif self._sortByValueAction.isChecked():
+			sortBy = "value"
+		elif self._sortByUnitAction.isChecked():
+			sortBy = "unit"
+		else:
+			raise RuntimeError("Unknown sorting value")
 		settings = {
 			"isFullScreen": self._fullscreenAction.isChecked(),
 			"recent": self._recent,
@@ -263,6 +290,7 @@ class Gonvert(object):
 			),
 			"showFavorites": self._showFavoritesAction.isChecked(),
 			"useQuick": self._condensedAction.isChecked(),
+			"sortBy": sortBy,
 		}
 		with open(constants._user_settings_, "w") as settingsFile:
 			simplejson.dump(settings, settingsFile)

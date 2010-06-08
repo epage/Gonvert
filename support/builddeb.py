@@ -22,6 +22,7 @@ __changelog__ = """
 * A condensed view of unit conversion for those who so chose
 * Changed the way windows handle closing
 * Improved performance of jumping between some of the windows (including startup)
+* Persisting the sort preference
 """
 
 
