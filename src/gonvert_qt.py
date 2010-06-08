@@ -770,6 +770,9 @@ class QuickConvert(object):
 		currentIndex = self._inputView.model().index(i, 0, rootIndex)
 		self._inputView.scrollTo(currentIndex)
 
+		if "" not in [self._categoryName, self._inputUnitName, self._outputUnitName]:
+			self._update_conversion()
+
 	def select_output(self, name):
 		# Add the output to recent but don't make things weird by making it the most recent
 		self._app.add_recent(self._categoryName, name)
@@ -786,6 +789,9 @@ class QuickConvert(object):
 		currentIndex = self._outputView.model().index(i, 0, rootIndex)
 		self._outputView.scrollTo(currentIndex)
 
+		if "" not in [self._categoryName, self._inputUnitName, self._outputUnitName]:
+			self._update_conversion()
+
 	def _sanitize_value(self, userEntry):
 		if self._categoryName == "Computer Numbers":
 			if userEntry == '':
@@ -798,6 +804,25 @@ class QuickConvert(object):
 			else:
 				value = float(userEntry)
 		return value
+
+	def _update_conversion(self):
+		assert self._categoryName
+		assert self._inputUnitName
+		assert self._outputUnitName
+
+		userInput = str(self._inputUnitValue.text())
+		value = self._sanitize_value(userInput)
+
+		unitData = unit_data.UNIT_DESCRIPTIONS[self._categoryName]
+		inputConversion, _, _ = unitData[self._inputUnitName]
+		outputConversion, _, _ = unitData[self._outputUnitName]
+
+		func, arg = inputConversion
+		base = func.to_base(value, arg)
+
+		func, arg = outputConversion
+		newValue = func.from_base(base, arg)
+		self._outputUnitValue.setText(str(newValue))
 
 	def _update_favorites(self):
 		if self._app.showFavoritesAction.isChecked():
@@ -878,23 +903,7 @@ class QuickConvert(object):
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_value_edited(self, *args):
-		assert self._categoryName
-		assert self._inputUnitName
-		assert self._outputUnitName
-
-		userInput = str(self._inputUnitValue.text())
-		value = self._sanitize_value(userInput)
-
-		unitData = unit_data.UNIT_DESCRIPTIONS[self._categoryName]
-		inputConversion, _, _ = unitData[self._inputUnitName]
-		outputConversion, _, _ = unitData[self._outputUnitName]
-
-		func, arg = inputConversion
-		base = func.to_base(value, arg)
-
-		func, arg = outputConversion
-		newValue = func.from_base(base, arg)
-		self._outputUnitValue.setText(str(newValue))
+		self._update_conversion()
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_category_selection_changed(self, selected, deselected):
