@@ -19,10 +19,10 @@ __email__ = "anthony@unihedron.com"
 __version__ = constants.__version__
 __build__ = constants.__build__
 __changelog__ = """
-* A condensed view of unit conversion for those who so chose
-* Changed the way windows handle closing
-* Improved performance of jumping between some of the windows (including startup)
-* Persisting the sort preference
+* Switching Condensed View's output to be editable also
+* Fixed scrolling on Maemo
+* On the traditional view, fixed an issue setting a value on the unit being converted
+* Increased the name column size in the traditional view
 """
 
 
@@ -66,11 +66,7 @@ def build_package(distribution):
 	p = py2deb.Py2deb(__appname__)
 	p.prettyName = constants.__pretty_app_name__
 	p.description = __description__
-<<<<<<< HEAD
 	p.bugTracker = "https://bugs.maemo.org/enter_bug.cgi?product=Gonvert"
-=======
-	p.bugTracker = "REPLACEME"
->>>>>>> 6e3215856a887adc778853fcacf0dfcee13701bc
 	p.author = __author__
 	p.mail = __email__
 	p.license = "gpl"
@@ -102,7 +98,6 @@ def build_package(distribution):
 		"diablo": "data-pixmaps-gonvert.png",
 		"fremantle": "data-pixmaps-gonvert.png", # Fremantle natively uses 48x48
 	}[distribution]
-<<<<<<< HEAD
 	p["/opt/gonvert/bin"] = [ "gonvert.py" ]
 	for relPath, files in unflatten_files(find_files("src", ".")).iteritems():
 		fullPath = "/opt/gonvert/lib"
@@ -114,11 +109,6 @@ def build_package(distribution):
 		)
 	for relPath, files in unflatten_files(find_files("data", ".")).iteritems():
 		fullPath = "/opt/gonvert/share"
-=======
-	p["/opt/REPLACEME/bin"] = [ "REPLACEME" ]
-	for relPath, files in unflatten_files(find_files("src", ".")).iteritems():
-		fullPath = "/opt/REPLACEME/lib"
->>>>>>> 6e3215856a887adc778853fcacf0dfcee13701bc
 		if relPath:
 			fullPath += os.sep+relPath
 		p[fullPath] = list(

@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: UTF8 -*-
 
+#@todo Research Fn
+#@todo Research optimizations
+#@todo Look into switching favorites from selection to checking?
+
 from __future__ import with_statement
 
 import sys
@@ -614,11 +618,13 @@ class QuickConvert(object):
 		self._favoritesWindow = None
 
 		self._inputUnitValue = QtGui.QLineEdit()
-		self._inputUnitValue.setInputMethodHints(QtCore.Qt.ImhPreferNumbers)
+		maeqt.mark_numbers_preferred(self._inputUnitValue)
 		self._inputUnitValue.textEdited.connect(self._on_value_edited)
 		self._inputUnitSymbol = QtGui.QLabel()
 
-		self._outputUnitValue = QtGui.QLabel()
+		self._outputUnitValue = QtGui.QLineEdit()
+		maeqt.mark_numbers_preferred(self._outputUnitValue)
+		self._outputUnitValue.textEdited.connect(self._on_output_value_edited)
 		self._outputUnitSymbol = QtGui.QLabel()
 
 		self._conversionLayout = QtGui.QHBoxLayout()
@@ -756,6 +762,39 @@ class QuickConvert(object):
 			self._window.showNormal()
 
 	def select_category(self, categoryName):
+		self._select_category(categoryName)
+
+		i = unit_data.UNIT_CATEGORIES.index(categoryName)
+		rootIndex = self._categoryView.rootIndex()
+		currentIndex = self._categoryView.model().index(i, 0, rootIndex)
+		self._categoryView.scrollTo(currentIndex)
+		self._categoryView.setItemSelected(self._categoryView.topLevelItem(i), True)
+
+		return self
+
+	def select_unit(self, name):
+		self.select_input(name)
+		return self
+
+	def select_input(self, name):
+		self._select_input(name)
+
+		i = self._unitNames.index(name)
+		rootIndex = self._inputView.rootIndex()
+		currentIndex = self._inputView.model().index(i, 0, rootIndex)
+		self._inputView.scrollTo(currentIndex)
+		self._inputView.setItemSelected(self._inputView.topLevelItem(i), True)
+
+	def select_output(self, name):
+		self._select_output(name)
+
+		i = self._unitNames.index(name)
+		rootIndex = self._outputView.rootIndex()
+		currentIndex = self._outputView.model().index(i, 0, rootIndex)
+		self._outputView.scrollTo(currentIndex)
+		self._outputView.setItemSelected(self._outputView.topLevelItem(i), True)
+
+	def _select_category(self, categoryName):
 		self._inputUnitName = ""
 		self._outputUnitName = ""
 		self._inputUnitValue.setText("")
@@ -772,8 +811,7 @@ class QuickConvert(object):
 		self._unitNames.sort()
 		for key in self._unitNames:
 			conversion, unit, description = unitData[key]
-			if not unit:
-				unit = key
+			unit = key
 
 			twi = QtGui.QTreeWidgetItem(self._inputView)
 			twi.setText(0, unit)
@@ -783,11 +821,6 @@ class QuickConvert(object):
 			twi.setText(0, unit)
 			twi.setText(1, key)
 
-		i = unit_data.UNIT_CATEGORIES.index(categoryName)
-		rootIndex = self._categoryView.rootIndex()
-		currentIndex = self._categoryView.model().index(i, 0, rootIndex)
-		self._categoryView.scrollTo(currentIndex)
-
 		defaultInputUnitName = self._app.get_recent_unit(categoryName)
 		if defaultInputUnitName:
 			self.select_input(defaultInputUnitName)
@@ -795,12 +828,7 @@ class QuickConvert(object):
 			assert defaultOutputUnitName
 			self.select_output(defaultOutputUnitName)
 
-		return self
-
-	def select_unit(self, name):
-		self.select_input(name)
-
-	def select_input(self, name):
+	def _select_input(self, name):
 		self._app.add_recent(self._categoryName, name)
 		self._inputUnitName = name
 
@@ -809,15 +837,10 @@ class QuickConvert(object):
 
 		self._inputUnitSymbol.setText(unit if unit else name)
 
-		i = self._unitNames.index(name)
-		rootIndex = self._inputView.rootIndex()
-		currentIndex = self._inputView.model().index(i, 0, rootIndex)
-		self._inputView.scrollTo(currentIndex)
-
 		if "" not in [self._categoryName, self._inputUnitName, self._outputUnitName]:
-			self._update_conversion()
+			self._update_output()
 
-	def select_output(self, name):
+	def _select_output(self, name):
 		# Add the output to recent but don't make things weird by making it the most recent
 		self._app.add_recent(self._categoryName, name)
 		self._app.add_recent(self._categoryName, self._inputUnitName)
@@ -828,13 +851,8 @@ class QuickConvert(object):
 
 		self._outputUnitSymbol.setText(unit if unit else name)
 
-		i = self._unitNames.index(name)
-		rootIndex = self._outputView.rootIndex()
-		currentIndex = self._outputView.model().index(i, 0, rootIndex)
-		self._outputView.scrollTo(currentIndex)
-
 		if "" not in [self._categoryName, self._inputUnitName, self._outputUnitName]:
-			self._update_conversion()
+			self._update_output()
 
 	def _sanitize_value(self, userEntry):
 		if self._categoryName == "Computer Numbers":
@@ -849,7 +867,7 @@ class QuickConvert(object):
 				value = float(userEntry)
 		return value
 
-	def _update_conversion(self):
+	def _update_output(self):
 		assert self._categoryName
 		assert self._inputUnitName
 		assert self._outputUnitName
@@ -867,6 +885,25 @@ class QuickConvert(object):
 		func, arg = outputConversion
 		newValue = func.from_base(base, arg)
 		self._outputUnitValue.setText(str(newValue))
+
+	def _update_input(self):
+		assert self._categoryName
+		assert self._inputUnitName
+		assert self._outputUnitName
+
+		userOutput = str(self._outputUnitValue.text())
+		value = self._sanitize_value(userOutput)
+
+		unitData = unit_data.UNIT_DESCRIPTIONS[self._categoryName]
+		inputConversion, _, _ = unitData[self._inputUnitName]
+		outputConversion, _, _ = unitData[self._outputUnitName]
+
+		func, arg = outputConversion
+		base = func.to_base(value, arg)
+
+		func, arg = inputConversion
+		newValue = func.from_base(base, arg)
+		self._inputUnitValue.setText(str(newValue))
 
 	def _update_favorites(self):
 		if self._app.showFavoritesAction.isChecked():
@@ -947,7 +984,11 @@ class QuickConvert(object):
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_value_edited(self, *args):
-		self._update_conversion()
+		self._update_output()
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_output_value_edited(self, *args):
+		self._update_input()
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_category_selection_changed(self, selected, deselected):
@@ -956,7 +997,7 @@ class QuickConvert(object):
 			for item in self._categoryView.selectedItems()
 		]
 		assert len(selectedNames) == 1
-		self.select_category(selectedNames[0])
+		self._select_category(selectedNames[0])
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_input_selection_changed(self, selected, deselected):
@@ -967,7 +1008,7 @@ class QuickConvert(object):
 		if selectedNames:
 			assert len(selectedNames) == 1
 			name = selectedNames[0]
-			self.select_input(name)
+			self._select_input(name)
 		else:
 			pass
 
@@ -980,7 +1021,7 @@ class QuickConvert(object):
 		if selectedNames:
 			assert len(selectedNames) == 1
 			name = selectedNames[0]
-			self.select_output(name)
+			self._select_output(name)
 		else:
 			pass
 
@@ -1216,16 +1257,13 @@ class CategoryWindow(object):
 		self._window.close()
 
 	def select_category(self, categoryName):
-		for child in self.walk_children():
-			child.window.destroyed.disconnect(self._on_child_close)
-			child.close()
-		self._unitWindow = UnitWindow(self._window, categoryName, self._app)
-		self._unitWindow.window.destroyed.connect(self._on_child_close)
+		self._select_category(categoryName)
 
 		i = unit_data.UNIT_CATEGORIES.index(categoryName)
 		rootIndex = self._categories.rootIndex()
 		currentIndex = self._categories.model().index(i, 0, rootIndex)
 		self._categories.scrollTo(currentIndex)
+		self._categories.setItemSelected(self._categories.topLevelItem(i), True)
 		return self._unitWindow
 
 	def set_fullscreen(self, isFullscreen):
@@ -1235,6 +1273,13 @@ class CategoryWindow(object):
 			self._window.showNormal()
 		for child in self.walk_children():
 			child.set_fullscreen(isFullscreen)
+
+	def _select_category(self, categoryName):
+		for child in self.walk_children():
+			child.window.destroyed.disconnect(self._on_child_close)
+			child.close()
+		self._unitWindow = UnitWindow(self._window, categoryName, self._app)
+		self._unitWindow.window.destroyed.connect(self._on_child_close)
 
 	def _update_favorites(self):
 		if self._app.showFavoritesAction.isChecked():
@@ -1454,8 +1499,6 @@ class UnitModel(QtCore.QAbstractItemModel):
 		func, arg = self._children[fromIndex].conversion
 		base = func.to_base(value, arg)
 		for i, child in enumerate(self._children):
-			if i == fromIndex:
-				continue
 			func, arg = child.conversion
 			newValue = func.from_base(base, arg)
 			child.update_value(newValue)
@@ -1521,14 +1564,12 @@ class UnitWindow(object):
 		self._unitsView.clicked.connect(self._on_unit_clicked)
 		self._unitsView.setUniformRowHeights(True)
 		self._unitsView.setSortingEnabled(True)
-		self._unitsView.setTextElideMode(QtCore.Qt.ElideNone)
 		self._unitsView.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 		self._unitsView.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
 		self._unitsView.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
 		if not IS_MAEMO:
 			self._unitsView.setAlternatingRowColors(True)
-		if True:
-			self._unitsView.setHeaderHidden(True)
+		self._unitsView.setHeaderHidden(True)
 
 		viewHeader = self._unitsView.header()
 		viewHeader.setSortIndicatorShown(True)
@@ -1541,10 +1582,10 @@ class UnitWindow(object):
 		viewHeader.setStretchLastSection(False)
 
 		# Trying to make things faster by locking in the initial size of the immutable columns
-		nameSize = min(viewHeader.sectionSize(UnitData.NAME_COLUMN), 125)
+		nameSize = min(viewHeader.sectionSize(UnitData.NAME_COLUMN), 150)
 		viewHeader.setResizeMode(UnitData.NAME_COLUMN, QtGui.QHeaderView.Fixed)
 		viewHeader.resizeSection(UnitData.NAME_COLUMN, nameSize)
-		unitSize = min(viewHeader.sectionSize(UnitData.UNIT_COLUMN), 125)
+		unitSize = min(viewHeader.sectionSize(UnitData.UNIT_COLUMN), 150)
 		viewHeader.setResizeMode(UnitData.UNIT_COLUMN, QtGui.QHeaderView.Fixed)
 		viewHeader.resizeSection(UnitData.UNIT_COLUMN, unitSize)
 
@@ -1683,6 +1724,9 @@ class UnitWindow(object):
 		index = self._unitsModel.index_unit(unitName)
 		self._select_unit(index)
 
+		qindex = self._unitsModel.createIndex(index, 0, self._unitsModel.get_unit(index))
+		self._unitsView.scrollTo(qindex)
+
 	def walk_children(self):
 		if self._favoritesWindow is not None:
 			yield self._favoritesWindow
@@ -1769,8 +1813,6 @@ class UnitWindow(object):
 		self._selectedUnitSymbol.setText(unit.unit)
 
 		self._selectedIndex = index
-		qindex = self._unitsModel.createIndex(index, 0, self._unitsModel.get_unit(index))
-		self._unitsView.scrollTo(qindex)
 		self._app.add_recent(self._categoryName, self._unitsModel.get_unit(index).name)
 
 
