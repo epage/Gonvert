@@ -23,7 +23,8 @@ __changelog__ = """
 * Fixed scrolling on Maemo
 * On the traditional view, fixed an issue setting a value on the unit being converted
 * Increased the name column size in the traditional view
-"""
+* Switching Favorites to checkboxes from selection
+""".strip()
 
 
 __postinstall__ = """#!/bin/sh -e

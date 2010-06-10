@@ -3,7 +3,6 @@
 
 #@todo Research Fn
 #@todo Research optimizations
-#@todo Look into switching favorites from selection to checking?
 
 from __future__ import with_statement
 
@@ -1036,19 +1035,19 @@ class FavoritesWindow(object):
 		self._categories = QtGui.QTreeWidget()
 		self._categories.setHeaderLabels(["Categories"])
 		self._categories.setHeaderHidden(True)
+		self._categories.setSelectionMode(QtGui.QAbstractItemView.NoSelection)
 		if not IS_MAEMO:
 			self._categories.setAlternatingRowColors(True)
-		self._categories.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
-		self._categories.setSelectionMode(QtGui.QAbstractItemView.MultiSelection)
 		self._childWidgets = []
 		for catName in self._source:
 			twi = QtGui.QTreeWidgetItem(self._categories)
 			twi.setText(0, catName)
 			self._childWidgets.append(twi)
-			if catName not in self._hidden:
-				self._categories.setItemSelected(twi, True)
-		self._selection = self._categories.selectionModel()
-		self._selection.selectionChanged.connect(self._on_selection_changed)
+			if catName in self._hidden:
+				twi.setCheckState(0, QtCore.Qt.Unchecked)
+			else:
+				twi.setCheckState(0, QtCore.Qt.Checked)
+		self._categories.itemChanged.connect(self._on_item_changed)
 
 		self._allButton = QtGui.QPushButton("All")
 		self._allButton.clicked.connect(self._on_select_all)
@@ -1121,29 +1120,36 @@ class FavoritesWindow(object):
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_select_all(self, checked = False):
 		for child in self._childWidgets:
-			self._categories.setItemSelected(child, True)
+			child.setCheckState(0, QtCore.Qt.Checked)
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_invert_selection(self, checked = False):
 		for child in self._childWidgets:
-			isSelected = self._categories.isItemSelected(child)
-			self._categories.setItemSelected(child, not isSelected)
+			state = child.checkState(0)
+			if state == QtCore.Qt.Unchecked:
+				newState = QtCore.Qt.Checked
+			elif state == QtCore.Qt.Checked:
+				newState = QtCore.Qt.Unchecked
+			else:
+				raise RuntimeError("Bad check state %r" % state)
+			child.setCheckState(0, newState)
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_select_none(self, checked = False):
 		for child in self._childWidgets:
-			self._categories.setItemSelected(child, False)
+			child.setCheckState(0, QtCore.Qt.Unchecked)
 
 	@misc_utils.log_exception(_moduleLogger)
-	def _on_selection_changed(self, selected, deselected):
-		self._hidden.clear()
-		selectedNames = set(
-			str(item.text(0))
-			for item in self._categories.selectedItems()
-		)
-		for name in self._source:
-			if name not in selectedNames:
-				self._hidden.add(name)
+	def _on_item_changed(self, item, column):
+		state = item.checkState(column)
+		if state == QtCore.Qt.Unchecked:
+			name = str(item.text(column))
+			self._hidden.add(name)
+		elif state == QtCore.Qt.Checked:
+			name = str(item.text(column))
+			self._hidden.remove(name)
+		else:
+			raise RuntimeError("Bad check state %r" % state)
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_close_window(self, checked = True):
