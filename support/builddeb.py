@@ -19,12 +19,7 @@ __email__ = "anthony@unihedron.com"
 __version__ = constants.__version__
 __build__ = constants.__build__
 __changelog__ = """
-* Switching Condensed View's output to be editable also
-* Fixed scrolling on Maemo
-* On the traditional view, fixed an issue setting a value on the unit being converted
-* Increased the name column size in the traditional view
-* Switching Favorites to checkboxes from selection
-* Attempting some optimizations
+* Further optimizations
 """.strip()
 
 
