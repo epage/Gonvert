@@ -1575,6 +1575,10 @@ class UnitWindow(object):
 		self._selectedUnitValue.textEdited.connect(self._on_value_edited)
 		maeqt.mark_numbers_preferred(self._selectedUnitValue)
 		self._selectedUnitSymbol = QtGui.QLabel()
+		self._updateDelayTimer = QtCore.QTimer()
+		self._updateDelayTimer.setInterval(100)
+		self._updateDelayTimer.setSingleShot(True)
+		self._updateDelayTimer.timeout.connect(self._on_value_edited_delayed)
 
 		self._selectedUnitLayout = QtGui.QHBoxLayout()
 		self._selectedUnitLayout.addWidget(self._selectedUnitName)
@@ -1825,6 +1829,11 @@ class UnitWindow(object):
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_value_edited(self, *args):
+		if not self._updateDelayTimer.isActive():
+			self._updateDelayTimer.start()
+
+	@misc_utils.log_exception(_moduleLogger)
+	def _on_value_edited_delayed(self, *args):
 		userInput = str(self._selectedUnitValue.text())
 		orderChanged = self._unitsModel.update_values(self._selectedIndex, userInput)
 		if orderChanged:
