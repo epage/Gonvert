@@ -19,7 +19,7 @@ __email__ = "anthony@unihedron.com"
 __version__ = constants.__version__
 __build__ = constants.__build__
 __changelog__ = """
-* Further optimizations
+* Adjusting column sizes
 """.strip()
 
 
