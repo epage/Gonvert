@@ -24,6 +24,7 @@ __changelog__ = """
 * On the traditional view, fixed an issue setting a value on the unit being converted
 * Increased the name column size in the traditional view
 * Switching Favorites to checkboxes from selection
+* Attempting some optimizations
 """.strip()
 
 

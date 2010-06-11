@@ -28,6 +28,10 @@ IS_MAEMO = True
 
 
 def split_number(number):
+	if number == 0.0:
+		# Optimize the startup case
+		return "0.", "0"
+
 	try:
 		fractional, integer = math.modf(number)
 	except TypeError:
@@ -39,15 +43,16 @@ def split_number(number):
 		if "e+" in integerDisplay:
 			integerDisplay = number
 			fractionalDisplay = ""
-		elif "e-" in fractionalDisplay and 0.0 < integer:
-			integerDisplay = number
-			fractionalDisplay = ""
 		elif "e-" in fractionalDisplay:
-			integerDisplay = ""
-			fractionalDisplay = number
+			if 0.0 < integer:
+				integerDisplay = number
+				fractionalDisplay = ""
+			else:
+				integerDisplay = ""
+				fractionalDisplay = number
 		else:
-			integerDisplay = integerDisplay.split(".", 1)[0] + "."
-			fractionalDisplay = fractionalDisplay.rsplit(".", 1)[-1]
+			integerDisplay = integerDisplay[0:-2] + "."
+			fractionalDisplay = fractionalDisplay[2:]
 
 	return integerDisplay, fractionalDisplay
 
@@ -1350,6 +1355,11 @@ class UnitData(object):
 	VALUE_COLUMN_1 = 2
 	UNIT_COLUMN = 3
 
+	__slots__ = [
+		"_name", "_unit", "_description", "_conversion",
+		"_value", "_integerDisplay", "_fractionalDisplay",
+	]
+
 	def __init__(self, name, unit, description, conversion):
 		self._name = name
 		self._unit = unit
@@ -1392,6 +1402,10 @@ class UnitModel(QtCore.QAbstractItemModel):
 		super(UnitModel, self).__init__(parent)
 		self._categoryName = categoryName
 		self._unitData = unit_data.UNIT_DESCRIPTIONS[self._categoryName]
+		if self._categoryName == "Computer Numbers":
+			self._sanitize_value = self._sanitize_alpha_value
+		else:
+			self._sanitize_value = self._sanitize_numeric_value
 
 		self._children = []
 		for key in unit_data.get_units(self._categoryName):
@@ -1408,18 +1422,19 @@ class UnitModel(QtCore.QAbstractItemModel):
 
 	@misc_utils.log_exception(_moduleLogger)
 	def data(self, index, role):
-		if not index.isValid():
-			return None
+		#if not index.isValid():
+		#	return None
+
+		if role == QtCore.Qt.DisplayRole:
+			item = index.internalPointer()
+			if isinstance(item, UnitData):
+				return item.data(index.column())
+			elif item is UnitData.HEADERS:
+				return item[index.column()]
 		elif role == QtCore.Qt.TextAlignmentRole:
 			return UnitData.ALIGNMENT[index.column()]
-		elif role != QtCore.Qt.DisplayRole:
+		else:
 			return None
-
-		item = index.internalPointer()
-		if isinstance(item, UnitData):
-			return item.data(index.column())
-		elif item is UnitData.HEADERS:
-			return item[index.column()]
 
 	@misc_utils.log_exception(_moduleLogger)
 	def sort(self, column, order = QtCore.Qt.AscendingOrder):
@@ -1451,11 +1466,10 @@ class UnitModel(QtCore.QAbstractItemModel):
 
 	@misc_utils.log_exception(_moduleLogger)
 	def index(self, row, column, parent):
-		if not self.hasIndex(row, column, parent):
-			return QtCore.QModelIndex()
-
-		if parent.isValid():
-			return QtCore.QModelIndex()
+		#if not self.hasIndex(row, column, parent):
+		#	return QtCore.QModelIndex()
+		#elif parent.isValid():
+		#	return QtCore.QModelIndex()
 
 		parentItem = UnitData.HEADERS
 		childItem = self._children[row]
@@ -1515,8 +1529,10 @@ class UnitModel(QtCore.QAbstractItemModel):
 		):
 			# Sort takes care of marking everything as changed
 			self.sort(*self._sortSettings)
+			return True
 		else:
 			self._values_changed()
+			return False
 
 	def __len__(self):
 		return len(self._children)
@@ -1531,17 +1547,18 @@ class UnitModel(QtCore.QAbstractItemModel):
 		bottomRight = self.createIndex(len(self._children)-1, len(UnitData.HEADERS)-1, self._children[-1])
 		self.dataChanged.emit(topLeft, bottomRight)
 
-	def _sanitize_value(self, userEntry):
-		if self._categoryName == "Computer Numbers":
-			if userEntry == '':
-				value = '0'
-			else:
-				value = userEntry
+	def _sanitize_alpha_value(self, userEntry):
+		if userEntry:
+			value = userEntry
 		else:
-			if userEntry == '':
-				value = 0.0
-			else:
-				value = float(userEntry)
+			value = '0'
+		return value
+
+	def _sanitize_numeric_value(self, userEntry):
+		if userEntry:
+			value = float(userEntry)
+		else:
+			value = 0.0
 		return value
 
 
@@ -1567,15 +1584,15 @@ class UnitWindow(object):
 		self._unitsModel = UnitModel(self._categoryName)
 		self._unitsView = QtGui.QTreeView()
 		self._unitsView.setModel(self._unitsModel)
-		self._unitsView.clicked.connect(self._on_unit_clicked)
 		self._unitsView.setUniformRowHeights(True)
 		self._unitsView.setSortingEnabled(True)
 		self._unitsView.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 		self._unitsView.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
 		self._unitsView.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
+		self._unitsView.setHeaderHidden(True)
+		self._unitsView.clicked.connect(self._on_unit_clicked)
 		if not IS_MAEMO:
 			self._unitsView.setAlternatingRowColors(True)
-		self._unitsView.setHeaderHidden(True)
 
 		viewHeader = self._unitsView.header()
 		viewHeader.setSortIndicatorShown(True)
@@ -1808,9 +1825,10 @@ class UnitWindow(object):
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_value_edited(self, *args):
-		userInput = self._selectedUnitValue.text()
-		self._unitsModel.update_values(self._selectedIndex, str(userInput))
-		self._update_favorites()
+		userInput = str(self._selectedUnitValue.text())
+		orderChanged = self._unitsModel.update_values(self._selectedIndex, userInput)
+		if orderChanged:
+			self._update_favorites()
 
 	def _select_unit(self, index):
 		unit = self._unitsModel.get_unit(index)
@@ -1825,7 +1843,10 @@ class UnitWindow(object):
 def run_gonvert():
 	app = QtGui.QApplication([])
 	handle = Gonvert(app)
-	return app.exec_()
+	if constants.PROFILE_STARTUP:
+		return 0
+	else:
+		return app.exec_()
 
 
 if __name__ == "__main__":

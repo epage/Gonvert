@@ -268,13 +268,15 @@ class function(object):
 	#value is assumed to be a string
 	#convert from a defined function to base
 	def to_base(self, value, (to_base, from_base)):
+		leftOfX, rightOfX = to_base.split("x", 1)
 		y = 0 # "undefined" y was driving me nuts
-		exec "y="+to_base[:to_base.find('x')]+str(value)+to_base[to_base.find('x')+1:]
+		exec "y=" + leftOfX + str(value) + rightOfX
 		return y
 
 	def from_base(self, value, (to_base, from_base)):
+		leftOfX, rightOfX = from_base.split("x", 1)
 		y = 0 # "undefined" y was driving me nuts
-		exec "y="+from_base[:from_base.find('x')]+str(value)+from_base[from_base.find('x')+1:]
+		exec "y=" + leftOfX + str(value) + rightOfX
 		return y
 
 
