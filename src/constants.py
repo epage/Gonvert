@@ -2,7 +2,7 @@ import os
 
 __pretty_app_name__ = "Gonvert"
 __app_name__ = "gonvert"
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 __build__ = 0
 __app_magic__ = 0xdeadbeef
 _data_path_ = os.path.join(os.path.expanduser("~"), ".gonvert")
