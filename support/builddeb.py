@@ -19,7 +19,7 @@ __email__ = "anthony@unihedron.com"
 __version__ = constants.__version__
 __build__ = constants.__build__
 __changelog__ = """
-* Adjusting column sizes
+* Adding back in scrolling when using arrow keys in Units Window
 """.strip()
 
 

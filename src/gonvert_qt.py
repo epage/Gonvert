@@ -1758,6 +1758,15 @@ class UnitWindow(object):
 		if self._favoritesWindow is not None:
 			yield self._favoritesWindow
 
+	def _select_unit(self, index):
+		unit = self._unitsModel.get_unit(index)
+		self._selectedUnitName.setText(unit.name)
+		self._selectedUnitValue.setText(str(unit.value))
+		self._selectedUnitSymbol.setText(unit.unit)
+
+		self._selectedIndex = index
+		self._app.add_recent(self._categoryName, self._unitsModel.get_unit(index).name)
+
 	def _update_favorites(self, force = False):
 		if self._app.showFavoritesAction.isChecked():
 			unitNames = list(self._unitsModel.get_unit_names())
@@ -1801,11 +1810,19 @@ class UnitWindow(object):
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_previous_unit(self, checked = True):
-		self._select_unit(self._selectedIndex - 1)
+		index = self._selectedIndex - 1
+		self._select_unit(index)
+
+		qindex = self._unitsModel.createIndex(index, 0, self._unitsModel.get_unit(index))
+		self._unitsView.scrollTo(qindex)
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_next_unit(self, checked = True):
-		self._select_unit(self._selectedIndex + 1)
+		index = self._selectedIndex + 1
+		self._select_unit(index)
+
+		qindex = self._unitsModel.createIndex(index, 0, self._unitsModel.get_unit(index))
+		self._unitsView.scrollTo(qindex)
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_close_window(self, checked = True):
@@ -1838,15 +1855,6 @@ class UnitWindow(object):
 		orderChanged = self._unitsModel.update_values(self._selectedIndex, userInput)
 		if orderChanged:
 			self._update_favorites()
-
-	def _select_unit(self, index):
-		unit = self._unitsModel.get_unit(index)
-		self._selectedUnitName.setText(unit.name)
-		self._selectedUnitValue.setText(str(unit.value))
-		self._selectedUnitSymbol.setText(unit.unit)
-
-		self._selectedIndex = index
-		self._app.add_recent(self._categoryName, self._unitsModel.get_unit(index).name)
 
 
 def run_gonvert():
