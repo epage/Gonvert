@@ -1770,8 +1770,9 @@ class UnitWindow(object):
 	def _update_favorites(self, force = False):
 		if self._app.showFavoritesAction.isChecked():
 			unitNames = list(self._unitsModel.get_unit_names())
+			hiddenUnits = self._app.get_hidden_units(self._categoryName)
 			for i, unitName in enumerate(unitNames):
-				if unitName in self._app.get_hidden_units(self._categoryName):
+				if unitName in hiddenUnits:
 					self._unitsView.setRowHidden(i, self._unitsView.rootIndex(), True)
 				else:
 					self._unitsView.setRowHidden(i, self._unitsView.rootIndex(), False)
@@ -1784,8 +1785,9 @@ class UnitWindow(object):
 	def _on_show_favorites(self, checked = True):
 		if checked:
 			unitNames = list(self._unitsModel.get_unit_names())
+			hiddenUnits = self._app.get_hidden_units(self._categoryName)
 			for i, unitName in enumerate(unitNames):
-				if unitName in self._app.get_hidden_units(self._categoryName):
+				if unitName in hiddenUnits:
 					self._unitsView.setRowHidden(i, self._unitsView.rootIndex(), True)
 		else:
 			for i in xrange(len(self._unitsModel)):
@@ -1811,18 +1813,32 @@ class UnitWindow(object):
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_previous_unit(self, checked = True):
 		index = self._selectedIndex - 1
-		self._select_unit(index)
+		unitData = self._unitsModel.get_unit(index)
+		unitName = unitData.name
 
-		qindex = self._unitsModel.createIndex(index, 0, self._unitsModel.get_unit(index))
-		self._unitsView.scrollTo(qindex)
+		if self._app.showFavoritesAction.isChecked():
+			hiddenUnits = self._app.get_hidden_units(self._categoryName)
+			while unitName in hiddenUnits:
+				index -= 1
+				unitData = self._unitsModel.get_unit(index)
+				unitName = unitData.name
+
+		self.select_unit(unitName)
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_next_unit(self, checked = True):
 		index = self._selectedIndex + 1
-		self._select_unit(index)
+		unitData = self._unitsModel.get_unit(index)
+		unitName = unitData.name
 
-		qindex = self._unitsModel.createIndex(index, 0, self._unitsModel.get_unit(index))
-		self._unitsView.scrollTo(qindex)
+		if self._app.showFavoritesAction.isChecked():
+			hiddenUnits = self._app.get_hidden_units(self._categoryName)
+			while unitName in hiddenUnits:
+				index += 1
+				unitData = self._unitsModel.get_unit(index)
+				unitName = unitData.name
+
+		self.select_unit(unitName)
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_close_window(self, checked = True):

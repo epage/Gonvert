@@ -20,6 +20,7 @@ __version__ = constants.__version__
 __build__ = constants.__build__
 __changelog__ = """
 * Adding back in scrolling when using arrow keys in Units Window
+* Fixing Units Window arrow keys when only showing favorites
 """.strip()
 
 
