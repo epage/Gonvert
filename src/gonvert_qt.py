@@ -160,7 +160,6 @@ class Gonvert(object):
 			self._mainWindow.select_category(self._recent[-1][0])
 
 	def request_category(self):
-
 		if self._condensedAction.isChecked():
 			if self._catWindow is not None:
 				self._catWindow.hide()
