@@ -10,4 +10,4 @@ _user_settings_ = "%s/settings.json" % _data_path_
 _user_logpath_ = "%s/gonvert.log" % _data_path_
 
 PROFILE_STARTUP = False
-FORCE_HILDON_LIKE = False
+IS_MAEMO = True
