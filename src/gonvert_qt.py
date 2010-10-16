@@ -273,7 +273,7 @@ class Gonvert(object):
 
 		self._showFavoritesAction.setChecked(settings.get("showFavorites", True))
 
-		self._condensedAction.setChecked(settings.get("useQuick", self._condensedAction.isChecked()))
+		self._condensedAction.setChecked(settings.get("useQuick", True))
 
 	def save_settings(self):
 		if self._sortByNameAction.isChecked():
