@@ -442,6 +442,7 @@ class QuickConvert(object):
 		self._categoryView = QtGui.QTreeWidget()
 		self._categoryView.setHeaderLabels(["Categories"])
 		self._categoryView.setHeaderHidden(False)
+		self._categoryView.setRootIsDecorated(False)
 		if not constants.IS_MAEMO:
 			self._categoryView.setAlternatingRowColors(True)
 		self._categoryView.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
@@ -456,6 +457,7 @@ class QuickConvert(object):
 		self._inputView.setHeaderLabels(["From", "Name"])
 		self._inputView.setHeaderHidden(False)
 		self._inputView.header().hideSection(1)
+		self._inputView.setRootIsDecorated(False)
 		if not constants.IS_MAEMO:
 			self._inputView.setAlternatingRowColors(True)
 		self._inputView.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
@@ -467,6 +469,7 @@ class QuickConvert(object):
 		self._outputView.setHeaderLabels(["To", "Name"])
 		self._outputView.setHeaderHidden(False)
 		self._outputView.header().hideSection(1)
+		self._outputView.setRootIsDecorated(False)
 		if not constants.IS_MAEMO:
 			self._outputView.setAlternatingRowColors(True)
 		self._outputView.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
@@ -845,6 +848,7 @@ class CategoryWindow(object):
 		self._categories.setHeaderLabels(["Categories"])
 		self._categories.itemClicked.connect(self._on_category_clicked)
 		self._categories.setHeaderHidden(True)
+		self._categories.setRootIsDecorated(False)
 		self._categories.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
 		self._categories.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
 		if not constants.IS_MAEMO:
@@ -1264,6 +1268,7 @@ class UnitWindow(object):
 		self._unitsView.setModel(self._unitsModel)
 		self._unitsView.setUniformRowHeights(True)
 		self._unitsView.setSortingEnabled(True)
+		self._unitsView.setRootIsDecorated(False)
 		self._unitsView.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 		self._unitsView.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
 		self._unitsView.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
