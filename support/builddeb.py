@@ -67,7 +67,7 @@ def build_package(distribution):
 	p.bugTracker = "https://bugs.maemo.org/enter_bug.cgi?product=Gonvert"
 	p.author = __author__
 	p.mail = __email__
-	p.license = "gpl"
+	p.license = "lgpl"
 	p.depends = ", ".join([
 		"python2.6 | python2.5",
 		"python-simplejson",
