@@ -12,15 +12,19 @@ __appname__ = constants.__app_name__
 __description__ = """Unit Conversions
 A conversion utility that allows conversion between many units like CGS, Ancient, Imperial with many categories like length, mass, numbers, etc. All units converted values shown at once as you type
 .
-Homepage: http://www.unihedron.com/projects/gonvert/index.php
+Homepage: http://gonvert.garage.maemo.org
 """
-__author__ = "Anthony Tekatch"
-__email__ = "anthony@unihedron.com"
+__author__ = "Ed Page"
+__email__ = "eopage@byu.net"
 __version__ = constants.__version__
 __build__ = constants.__build__
 __changelog__ = """
 * Adding back in scrolling when using arrow keys in Units Window
 * Fixing Units Window arrow keys when only showing favorites
+* Removed GTK support
+* Improved startup time
+* Changed the default to condensed mode for better startup time and since people probably will prefer it
+* Saved some wasted horizontal space
 """.strip()
 
 
