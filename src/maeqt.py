@@ -1,4 +1,5 @@
 from PyQt4 import QtCore
+from PyQt4 import QtGui
 
 
 def _null_set_stackable(window, isStackable):
@@ -89,3 +90,33 @@ try:
 	mark_numbers_preferred = _newqt_mark_numbers_preferred
 except AttributeError:
 	mark_numbers_preferred = _null_mark_numbers_preferred
+
+
+def screen_orientation():
+	geom = QtGui.QApplication.desktop().screenGeometry()
+	if geom.width() <= geom.height():
+		return QtCore.Qt.Vertical
+	else:
+		return QtCore.Qt.Horizontal
+
+
+def _null_get_theme_icon(iconNames, fallback = None):
+	icon = fallback if fallback is not None else QtGui.QIcon()
+	return icon
+
+
+def _newqt_get_theme_icon(iconNames, fallback = None):
+	for iconName in iconNames:
+		if QtGui.QIcon.hasThemeIcon(iconName):
+			icon = QtGui.QIcon.fromTheme(iconName)
+			break
+	else:
+		icon = fallback if fallback is not None else QtGui.QIcon()
+	return icon
+
+
+try:
+	QtGui.QIcon.fromTheme
+	get_theme_icon = _newqt_get_theme_icon
+except AttributeError:
+	get_theme_icon = _null_get_theme_icon
