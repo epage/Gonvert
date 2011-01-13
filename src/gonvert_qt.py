@@ -15,7 +15,7 @@ from PyQt4 import QtGui
 from PyQt4 import QtCore
 
 import constants
-import maeqt
+from util import qui_utils
 from util import misc as misc_utils
 import unit_data
 
@@ -424,12 +424,12 @@ class QuickConvert(object):
 		self._favoritesWindow = None
 
 		self._inputUnitValue = QtGui.QLineEdit()
-		maeqt.mark_numbers_preferred(self._inputUnitValue)
+		qui_utils.mark_numbers_preferred(self._inputUnitValue)
 		self._inputUnitValue.textEdited.connect(self._on_value_edited)
 		self._inputUnitSymbol = QtGui.QLabel()
 
 		self._outputUnitValue = QtGui.QLineEdit()
-		maeqt.mark_numbers_preferred(self._outputUnitValue)
+		qui_utils.mark_numbers_preferred(self._outputUnitValue)
 		self._outputUnitValue.textEdited.connect(self._on_output_value_edited)
 		self._outputUnitSymbol = QtGui.QLabel()
 
@@ -492,8 +492,7 @@ class QuickConvert(object):
 
 		self._window = QtGui.QMainWindow(parent)
 		self._window.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
-		maeqt.set_autorient(self._window, True)
-		maeqt.set_stackable(self._window, True)
+		qui_utils.set_stackable(self._window, True)
 		self._window.setWindowTitle("%s - Quick Convert" % (constants.__pretty_app_name__, ))
 		self._window.setWindowIcon(QtGui.QIcon(app.appIconPath))
 		self._window.setCentralWidget(centralWidget)
@@ -865,8 +864,7 @@ class CategoryWindow(object):
 
 		self._window = QtGui.QMainWindow(parent)
 		self._window.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
-		maeqt.set_autorient(self._window, True)
-		maeqt.set_stackable(self._window, True)
+		qui_utils.set_stackable(self._window, True)
 		self._window.setWindowTitle("%s - Categories" % constants.__pretty_app_name__)
 		self._window.setWindowIcon(QtGui.QIcon(self._app.appIconPath))
 		self._window.setCentralWidget(centralWidget)
@@ -1251,7 +1249,7 @@ class UnitWindow(object):
 		self._selectedUnitName = QtGui.QLabel()
 		self._selectedUnitValue = QtGui.QLineEdit()
 		self._selectedUnitValue.textEdited.connect(self._on_value_edited)
-		maeqt.mark_numbers_preferred(self._selectedUnitValue)
+		qui_utils.mark_numbers_preferred(self._selectedUnitValue)
 		self._selectedUnitSymbol = QtGui.QLabel()
 		self._updateDelayTimer = QtCore.QTimer()
 		self._updateDelayTimer.setInterval(100)
@@ -1304,8 +1302,7 @@ class UnitWindow(object):
 
 		self._window = QtGui.QMainWindow(parent)
 		self._window.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
-		maeqt.set_autorient(self._window, True)
-		maeqt.set_stackable(self._window, True)
+		qui_utils.set_stackable(self._window, True)
 		self._window.setWindowTitle("%s - %s" % (constants.__pretty_app_name__, category))
 		self._window.setWindowIcon(QtGui.QIcon(app.appIconPath))
 		self._window.setCentralWidget(centralWidget)

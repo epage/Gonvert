@@ -9,7 +9,7 @@ from PyQt4 import QtGui
 from PyQt4 import QtCore
 
 import constants
-import maeqt
+from util import qui_utils
 from util import misc as misc_utils
 import unit_data
 
@@ -62,8 +62,7 @@ class FavoritesWindow(object):
 
 		self._window = QtGui.QMainWindow(parent)
 		self._window.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
-		maeqt.set_autorient(self._window, True)
-		maeqt.set_stackable(self._window, True)
+		qui_utils.set_stackable(self._window, True)
 		self._window.setWindowTitle("%s - Favorites" % constants.__pretty_app_name__)
 		self._window.setWindowIcon(QtGui.QIcon(self._app.appIconPath))
 		self._window.setCentralWidget(centralWidget)
@@ -179,8 +178,7 @@ class QuickJump(object):
 
 		self._window = QtGui.QMainWindow(parent)
 		self._window.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
-		maeqt.set_autorient(self._window, True)
-		maeqt.set_stackable(self._window, True)
+		qui_utils.set_stackable(self._window, True)
 		self._window.setWindowTitle("%s - Quick Jump" % constants.__pretty_app_name__)
 		self._window.setWindowIcon(QtGui.QIcon(self._app.appIconPath))
 		self._window.setCentralWidget(centralWidget)
@@ -277,8 +275,7 @@ class Recent(object):
 
 		self._window = QtGui.QMainWindow(parent)
 		self._window.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
-		maeqt.set_autorient(self._window, True)
-		maeqt.set_stackable(self._window, True)
+		qui_utils.set_stackable(self._window, True)
 		self._window.setWindowTitle("%s - Recent" % constants.__pretty_app_name__)
 		self._window.setWindowIcon(QtGui.QIcon(self._app.appIconPath))
 		self._window.setCentralWidget(centralWidget)
