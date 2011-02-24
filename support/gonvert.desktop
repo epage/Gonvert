@@ -5,3 +5,4 @@ Type=Application
 Name=Gonvert
 Exec=/usr/bin/run-standalone.sh /opt/gonvert/bin/gonvert.py
 Icon=gonvert
+Categories=Engineering;Science;Education;Utility;Qt;
