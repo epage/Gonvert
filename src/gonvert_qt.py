@@ -831,7 +831,7 @@ class QuickConvert(object):
 			for item in self._outputView.selectedItems()
 		]
 		if selectedNames:
-			assert len(selectedNames) == 1
+			assert len(selectedNames) == 1, selectedNames
 			name = selectedNames[0]
 			self._select_output(name)
 		else:
