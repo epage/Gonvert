@@ -1,0 +1,22 @@
+[Desktop Entry]
+Name=Gonvert
+GenericName=Unit Converter
+Comment=Unit Converter
+#[[[cog
+#	if VARIANT == "fremantle":
+#		cog.outl("Exec=/usr/bin/run-standalone.sh /usr/local/bin/%s" % PROGRAM)
+#	elif VARIANT == "harmattan":
+#		cog.outl("Exec=/usr/bin/invoker --single-instance --type=e /usr/local/bin/%s" % PROGRAM)
+#	elif VARIANT == "ubuntu":
+#		cog.outl("Exec=/usr/local/bin/%s" % PROGRAM)
+#	else:
+#		raise RuntimeError("Unsupported desktop file flavor %r" % PROGRAM)
+#]]]
+Exec=/usr/local/bin/Gonvert
+#[[[end]]]
+Icon=gonvert
+Categories=Engineering;Science;Education;Utility;Qt;
+Type=Application
+Encoding=UTF-8
+Version=1.0
+X-Osso-Type=application/x-executable

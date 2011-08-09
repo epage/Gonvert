@@ -67,15 +67,8 @@ class Gonvert(object):
 
 	def __init__(self, app):
 		self._dataPath = ""
-		for dataPath in self._DATA_PATHS:
-			appIconPath = os.path.join(dataPath, "pixmaps", "gonvert.png")
-			if os.path.isfile(appIconPath):
-				self._dataPath = dataPath
-				break
-		else:
-			raise RuntimeError("UI Descriptor not found!")
 		self._app = app
-		self._appIconPath = appIconPath
+		self._appIconPath = ""
 		self._recent = []
 		self._hiddenCategories = set()
 		self._hiddenUnits = {}
