@@ -138,7 +138,8 @@ setup(
 			"copyright": "gpl",
 			"changelog": CHANGES,
 			"buildversion": str(BUILD),
-			"depends": "python, python-pyside.qtcore, python-pyside.qtgui, python-pyside.qtmaemo5, python-simplejson",
+			"depends": "python2.5, python2.5-qt4-core, python2.5-qt4-gui, python2.5-qt4-maemo5, python-simplejson",
+			#"depends": "python, python-pyside.qtcore, python-pyside.qtgui, python-pyside.qtmaemo5, python-simplejson",
 			"architecture": "any",
 		},
 		"sdist_harmattan": {
