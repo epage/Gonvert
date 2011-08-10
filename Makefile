@@ -1,5 +1,5 @@
 PROJECT_NAME=gonvert
-PACKAGE_NAME=gonvert
+PACKAGE_NAME=$(PROJECT_NAME)
 
 SOURCE_PATH=$(PACKAGE_NAME)
 SOURCE=$(shell find $(SOURCE_PATH) -iname "*.py")
