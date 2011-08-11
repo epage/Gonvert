@@ -19,6 +19,8 @@ QtGui = qt_compat.import_module("QtGui")
 import constants
 from util import qui_utils
 from util import misc as misc_utils
+from util import linux as linux_utils
+
 import unit_data
 
 
@@ -225,8 +227,11 @@ class Gonvert(object):
 			return self._hiddenUnits[categoryName]
 
 	def load_settings(self):
+		settingsPath = linux_utils.get_resource_path(
+			"config", constants.__app_name__, "settings.json"
+		)
 		try:
-			with open(constants._user_settings_, "r") as settingsFile:
+			with open(settingsPath, "r") as settingsFile:
 				settings = simplejson.load(settingsFile)
 		except IOError, e:
 			_moduleLogger.info("No settings")
@@ -291,7 +296,11 @@ class Gonvert(object):
 			"useQuick": self._condensedAction.isChecked(),
 			"sortBy": sortBy,
 		}
-		with open(constants._user_settings_, "w") as settingsFile:
+
+		settingsPath = linux_utils.get_resource_path(
+			"config", constants.__app_name__, "settings.json"
+		)
+		with open(settingsPath, "w") as settingsFile:
 			simplejson.dump(settings, settingsFile)
 
 	@property
@@ -398,7 +407,10 @@ class Gonvert(object):
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_log(self, checked = False):
-		with open(constants._user_logpath_, "r") as f:
+		logPath = linux_utils.get_resource_path(
+			"cache", self._constants.__app_name__, "%s.log" % self._constants.__app_name__
+		)
+		with open(logPath, "r") as f:
 			logLines = f.xreadlines()
 			log = "".join(logLines)
 			self._clipboard.setText(log)
@@ -1547,14 +1559,25 @@ class UnitWindow(object):
 
 def run_gonvert():
 	try:
-		os.makedirs(constants._data_path_)
+		os.makedirs(linux_utils.get_resource_path("config", constants.__app_name__))
+	except OSError, e:
+		if e.errno != 17:
+			raise
+	try:
+		os.makedirs(linux_utils.get_resource_path("cache", constants.__app_name__))
+	except OSError, e:
+		if e.errno != 17:
+			raise
+	try:
+		os.makedirs(linux_utils.get_resource_path("data", constants.__app_name__))
 	except OSError, e:
 		if e.errno != 17:
 			raise
 
+	logPath = linux_utils.get_resource_path("cache", constants.__app_name__, "%s.log" % constants.__app_name__)
 	logFormat = '(%(relativeCreated)5d) %(levelname)-5s %(threadName)s.%(name)s.%(funcName)s: %(message)s'
 	logging.basicConfig(level=logging.DEBUG, format=logFormat)
-	rotating = logging.handlers.RotatingFileHandler(constants._user_logpath_, maxBytes=512*1024, backupCount=1)
+	rotating = logging.handlers.RotatingFileHandler(logPath, maxBytes=512*1024, backupCount=1)
 	rotating.setFormatter(logging.Formatter(logFormat))
 	root = logging.getLogger()
 	root.addHandler(rotating)
