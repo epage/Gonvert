@@ -37,7 +37,9 @@ ICON_CATEGORY="apps"
 ICON_SIZES=[32,48]
 #[[[end]]] (checksum: fefe5943a0176aa799fab0d963c33832)
 
-CHANGES = """Switching from py2deb.py to sdist_maemo
+CHANGES = """* Support for PySide
+* XDG Support
+* Fixed a race condition
 """.strip()
 BUGTRACKER_URL = "https://bugs.maemo.org/enter_bug.cgi?product=Gonvert"
 
