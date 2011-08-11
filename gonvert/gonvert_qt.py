@@ -579,11 +579,12 @@ class QuickConvert(object):
 	def select_category(self, categoryName):
 		self._select_category(categoryName)
 
+		self._categoryView.clearSelection()
 		i = unit_data.UNIT_CATEGORIES.index(categoryName)
 		rootIndex = self._categoryView.rootIndex()
 		currentIndex = self._categoryView.model().index(i, 0, rootIndex)
 		self._categoryView.scrollTo(currentIndex)
-		self._categoryView.setItemSelected(self._categoryView.topLevelItem(i), True)
+		self._categoryView.topLevelItem(i).setSelected(True)
 
 		return self
 
@@ -594,20 +595,22 @@ class QuickConvert(object):
 	def select_input(self, name):
 		self._select_input(name)
 
+		self._inputView.clearSelection()
 		i = self._unitNames.index(name)
 		rootIndex = self._inputView.rootIndex()
 		currentIndex = self._inputView.model().index(i, 0, rootIndex)
 		self._inputView.scrollTo(currentIndex)
-		self._inputView.setItemSelected(self._inputView.topLevelItem(i), True)
+		self._inputView.topLevelItem(i).setSelected(True)
 
 	def select_output(self, name):
 		self._select_output(name)
 
+		self._outputView.clearSelection()
 		i = self._unitNames.index(name)
 		rootIndex = self._outputView.rootIndex()
 		currentIndex = self._outputView.model().index(i, 0, rootIndex)
 		self._outputView.scrollTo(currentIndex)
-		self._outputView.setItemSelected(self._outputView.topLevelItem(i), True)
+		self._outputView.topLevelItem(i).setSelected(True)
 
 	def _select_category(self, categoryName):
 		self._inputUnitName = ""
@@ -813,8 +816,8 @@ class QuickConvert(object):
 			str(item.text(0))
 			for item in self._categoryView.selectedItems()
 		]
-		assert len(selectedNames) == 1
-		self._select_category(selectedNames[0])
+		if selectedNames:
+			self._select_category(selectedNames[0])
 
 	@misc_utils.log_exception(_moduleLogger)
 	def _on_input_selection_changed(self, selected, deselected):
@@ -952,11 +955,12 @@ class CategoryWindow(object):
 	def select_category(self, categoryName):
 		self._select_category(categoryName)
 
+		self._categories.clearSelection()
 		i = unit_data.UNIT_CATEGORIES.index(categoryName)
 		rootIndex = self._categories.rootIndex()
 		currentIndex = self._categories.model().index(i, 0, rootIndex)
 		self._categories.scrollTo(currentIndex)
-		self._categories.setItemSelected(self._categories.topLevelItem(i), True)
+		self._categories.topLevelItem(i).setSelected(True)
 		return self._unitWindow
 
 	def set_fullscreen(self, isFullscreen):
