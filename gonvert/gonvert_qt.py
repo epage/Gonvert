@@ -8,7 +8,11 @@ from __future__ import with_statement
 
 import os
 import math
-import simplejson
+try:
+	import json as simplejson
+except ImportError:
+	print "json not available, falling back to simplejson"
+	import simplejson
 import logging
 import logging.handlers
 

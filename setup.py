@@ -157,7 +157,7 @@ setup(
 			"copyright": "gpl",
 			"changelog": CHANGES,
 			"buildversion": str(BUILD),
-			"depends": "python, python-pyside.qtcore, python-pyside.qtgui, python-xdg, python-simplejson",
+			"depends": "python, python-pyside.qtcore, python-pyside.qtgui, python-xdg",
 			"architecture": "any",
 		},
 		"bdist_rpm": {
