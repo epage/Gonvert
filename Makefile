@@ -5,7 +5,7 @@ SOURCE_PATH=$(PACKAGE_NAME)
 SOURCE=$(shell find $(SOURCE_PATH) -iname "*.py")
 
 PROGRAM=Gonvert
-ICON_SIZES=26 32 48 80
+ICON_SIZES=26 32 48 64 80
 ICONS=$(foreach size, $(ICON_SIZES), data/icons/$(size)/$(PROJECT_NAME).png)
 PACKAGE_VARIANTS=fremantle harmattan ubuntu
 DESKTOP_FILES=$(foreach variant, $(PACKAGE_VARIANTS), data/$(variant)/$(PROJECT_NAME).desktop)
@@ -119,8 +119,8 @@ setup.harmattan.py: setup.py src/constants.py
 	cog.py -c \
 		-D DESKTOP_FILE_PATH=/usr/share/applications \
 		-D INPUT_DESKTOP_FILE=data/$(VARIANT)/$(PROJECT_NAME).desktop \
-		-D ICON_CATEGORY=hildon \
-		-D ICON_SIZES=32,80 \
+		-D ICON_CATEGORY=apps \
+		-D ICON_SIZES=64,80 \
 		-o $@ $<
 	chmod +x $@
 
@@ -144,6 +144,7 @@ $(DESKTOP_FILES): data/template.desktop
 	cog.py -d \
 		-D VARIANT=$(VARIANT) \
 		-D PROGRAM=$(PROGRAM) \
+		-D ICON_NAME=$(PROJECT_NAME) \
 		-o $@ $<
 
 
