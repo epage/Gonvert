@@ -647,7 +647,13 @@ class QuickConvert(object):
 		if defaultInputUnitName:
 			self.select_input(defaultInputUnitName)
 			defaultOutputUnitName = self._app.get_recent_unit(categoryName, 1)
-			assert defaultOutputUnitName
+			if not defaultOutputUnitName:
+				_moduleLogger.error(
+					"Somehow we have an odd numer of items in the history for category %r with only %r present",
+					categoryName,
+					defaultInputUnitName,
+				)
+				defaultOutputUnitName = defaultInputUnitName
 			self.select_output(defaultOutputUnitName)
 
 	def _select_input(self, name):

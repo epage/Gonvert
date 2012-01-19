@@ -78,7 +78,7 @@ upload_diablo:
 upload_fremantle:
 	dput fremantle-extras-builder $(DIST_BASE_PATH)_fremantle/$(PROJECT_NAME)*.changes
 upload_harmattan:
-	./support/obs_upload.sh $(PROJECT_NAME) harmattan dist_harmattan
+	echo "OBS upload disabled" #./support/obs_upload.sh $(PROJECT_NAME) harmattan dist_harmattan
 upload_ubuntu:
 	cp $(DIST_BASE_PATH)_ubuntu/*.deb www/$(PROJECT_NAME).deb
 
